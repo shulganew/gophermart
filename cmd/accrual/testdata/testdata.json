@@ -1,0 +1,17 @@
+{
+    "order": "<number>",
+    "goods": [
+        {
+            "description": "Чайник Bork",
+            "price": 7000
+        },
+        {
+            "description": "Лыжи горные Atomic",
+            "price": 28000
+        },
+        {
+            "description": "Ботинки горнолыжные Salamon",
+            "price": 300
+        }
+    ]
+}

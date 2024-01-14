@@ -4,6 +4,22 @@
 
 
 
+# Curl запросы для быстрого тестирования хендлеров
+
+## GopherAccural
+
+### Order info 
+```bash
+curl -v -H "Content-Type: text/plain" http://localhost:8080/api/orders/8327568377
+```
+### Add order
+```bash
+curl -v -H "Content-Type: application/json" -X POST http://localhost:8080/api/orders -d '{"order":"8327568377","goods":[{"description":"Чайник Bork","price":7000}]}'
+```
+
+
+curl -v -H "Content-Type: application/json" -X POST http://localhost:8080/api/shorten -d '{"url":"https://practicum1.yandex1.ru"}'
+
 # Работа с шаблоном проекта
 
 ## Начало работы
