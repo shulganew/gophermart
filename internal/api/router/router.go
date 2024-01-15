@@ -1,7 +1,10 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
+	"github.com/shulganew/gophermart/internal/api/handlers"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/services"
 )
@@ -13,10 +16,11 @@ func RouteShear(conf *config.Config, market *services.Market, register *services
 
 	r.Route("/", func(r chi.Router) {
 
-		//api
-		//apiHand := handlers.NewHandlerAPI(conf)
-		//r.Post("/api/user/register", http.HandlerFunc(apiHand.GetBrief))
+		userReg := handlers.NewHandlerRegister(conf, register)
+		r.Post("/api/user/register", http.HandlerFunc(userReg.SetUser))
 
+		userLogin := handlers.NewHandlerLogin(conf, register)
+		r.Post("/api/user/login", http.HandlerFunc(userLogin.LoginUser))
 	})
 
 	return

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"flag"
 	"os"
 
@@ -63,6 +64,7 @@ func InitConfig() *Config {
 		config.DSN = dsn
 	} else {
 		zap.S().Errorf("Can't make config for DB, set -d flag or DATABASE_URI env for DSN!")
+		panic(errors.New("Can't make config for DB, set -d flag or DATABASE_URI env for DSN!"))
 	}
 
 	acc, exist := os.LookupEnv(("ACCRUAL_SYSTEM_ADDRESS"))

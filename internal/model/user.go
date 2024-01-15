@@ -3,7 +3,7 @@ package model
 import "github.com/gofrs/uuid"
 
 type User struct {
-	uuid     uuid.UUID
-	login    string
-	password string
+	UUID     *uuid.UUID `json:"-"`
+	Login    string     `json:"login"`
+	Password string     `json:"password"`
 }

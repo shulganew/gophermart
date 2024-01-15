@@ -24,7 +24,7 @@ func InitApp(ctx context.Context, conf config.Config, db *pgx.Conn) (*services.M
 
 	market := services.NewMarket(stor)
 
-	register := services.NewRegister()
+	register := services.NewRegister(stor)
 
 	zap.S().Infoln("Application init complite")
 
