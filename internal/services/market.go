@@ -7,6 +7,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/shulganew/gophermart/internal/model"
 	"go.uber.org/zap"
 )
 
@@ -25,10 +26,10 @@ func NewMarket(stor MarketPlaceholder) *Market {
 	return &Market{stor: stor}
 }
 
-func (m *Market) SetOrder(ctx context.Context, userID *uuid.UUID, order string) (existed bool, err error) {
+func (m *Market) SetOrder(ctx context.Context, order *model.Order) (existed bool, err error) {
 
 	// Add order to the database.
-	err = m.stor.SetOrder(ctx, userID, order)
+	err = m.stor.SetOrder(ctx, order.UserID, order.Onumber)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		// If Order exist in the DataBase

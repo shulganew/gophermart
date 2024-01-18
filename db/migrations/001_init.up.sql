@@ -18,10 +18,16 @@ CREATE TABLE orders (
 CREATE TABLE bonuses (
     id SERIAL, 
     onumber VARCHAR(20) NOT NULL REFERENCES orders(onumber),
-    bonus_used INT DEFAULT 0,
-    bonus_accural INT DEFAULT 0,
-    accrual_time TIMESTAMP NOT NULL
+    bonus_used NUMERIC DEFAULT 0,
+    bonus_accural NUMERIC DEFAULT 0
 );
 
 
 
+	UPDATE orders SET status = 'PROCESSED' WHERE onumber = '1816868606';
+    UPDATE bonuses SET  bonus_accural = '10' WHERE onumber = '1816868606';
+1816868606
+update ud
+set assid = s.assid
+from sale s 
+where ud.id = s.udid;

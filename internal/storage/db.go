@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/model"
 	"go.uber.org/zap"
 )
@@ -92,6 +93,13 @@ func (base *RepoMarket) SetOrder(ctx context.Context, userID *uuid.UUID, order s
 		zap.S().Errorln("Insert order error: ", err)
 		return err
 	}
+
+	_, err = base.master.Exec(ctx, "INSERT INTO bonuses (onumber) VALUES ($1)", order)
+	if err != nil {
+		zap.S().Errorln("Insert order error: ", err)
+		return err
+	}
+
 	return nil
 }
 
@@ -124,4 +132,49 @@ func (base *RepoMarket) IsExistForOtherUsers(ctx context.Context, userID *uuid.U
 	}
 
 	return true, nil
+}
+
+// Load all orders with not finished preparation status
+func (base *RepoMarket) LoadOrders(ctx context.Context) ([]model.Order, error) {
+
+	query := `
+	SELECT users.user_id, orders.onumber, orders.uploaded, orders.status
+	FROM orders INNER JOIN users ON orders.user_id = users.user_id 
+	WHERE status = 'NEW' OR status = 'REGISTERED' OR status = 'PROCESSING'
+	`
+
+	rows, err := base.master.Query(ctx, query)
+
+	orders := []model.Order{}
+	for rows.Next() {
+		var order model.Order
+		var status string
+		err = rows.Scan(&order.UserID, &order.Onumber, &order.Uploaded, &status)
+		if err != nil {
+			return nil, err
+		}
+		order.Status.SetStatus(status)
+
+		orders = append(orders, order)
+	}
+
+	return orders, nil
+}
+
+func (base *RepoMarket) UpdateOrderStatus(ctx context.Context, order *model.Order, status *model.Status, accural *decimal.Decimal) (err error) {
+	_, err = base.master.Exec(ctx, "UPDATE orders SET status = $1 WHERE onumber = $2", status.String(), order.Onumber)
+	if err != nil {
+		zap.S().Errorln("UPDATE order Status error: ", err)
+		return err
+	}
+
+	if accural != nil {
+		_, err = base.master.Exec(ctx, "UPDATE bonuses SET  bonus_accural = $1 WHERE onumber = $2", accural, order.Onumber)
+		if err != nil {
+			zap.S().Errorln("UPDATE order Status error: ", err)
+			return err
+		}
+	}
+
+	return nil
 }

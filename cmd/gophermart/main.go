@@ -30,7 +30,7 @@ func main() {
 	defer db.Close(ctx)
 
 	//Init application
-	market, register := app.InitApp(ctx, *conf, db)
+	market, register, observer := app.InitApp(ctx, conf, db)
 
 	// Graceful shotdown
 	go func(ctx context.Context) {
@@ -42,7 +42,7 @@ func main() {
 	}(ctx)
 
 	//start web
-	if err := http.ListenAndServe(conf.Address, router.RouteShear(conf, market, register)); err != nil {
+	if err := http.ListenAndServe(conf.Address, router.RouteMarket(conf, market, register, observer)); err != nil {
 		panic(err)
 	}
 }

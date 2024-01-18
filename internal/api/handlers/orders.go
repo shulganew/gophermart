@@ -4,20 +4,21 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/ShiraazMoollatjie/goluhn"
 	"github.com/shulganew/gophermart/internal/config"
+	"github.com/shulganew/gophermart/internal/model"
 	"github.com/shulganew/gophermart/internal/services"
 	"go.uber.org/zap"
 )
 
 type HandlerOrder struct {
-	market *services.Market
-	conf   *config.Config
+	market   *services.Market
+	conf     *config.Config
+	observer *services.Observer
 }
 
-func NewHandlerOrder(conf *config.Config, market *services.Market) *HandlerOrder {
+func NewHandlerOrder(conf *config.Config, market *services.Market, observer *services.Observer) *HandlerOrder {
 
-	return &HandlerOrder{market: market, conf: conf}
+	return &HandlerOrder{market: market, conf: conf, observer: observer}
 }
 
 func (u *HandlerOrder) SetOrder(res http.ResponseWriter, req *http.Request) {
@@ -45,16 +46,20 @@ func (u *HandlerOrder) SetOrder(res http.ResponseWriter, req *http.Request) {
 
 	onumber := string(body)
 
-	err = goluhn.Validate(onumber)
-	if err != nil {
+	// Create order
+
+	order := model.NewOrder(userID, onumber)
+
+	isValid := order.IsValid()
+	if !isValid {
 		// 422
 		http.Error(res, "Order nuber not vaild.", http.StatusUnprocessableEntity)
 		return
 	}
 
-	zap.S().Infoln("Order: ", onumber)
+	zap.S().Infoln("Order: ", order)
 
-	isExist, err := u.market.SetOrder(req.Context(), userID, onumber)
+	isExist, err := u.market.SetOrder(req.Context(), order)
 	if !isExist && err != nil {
 		// 500
 		http.Error(res, "Get error during save new order.", http.StatusInternalServerError)
@@ -88,6 +93,9 @@ func (u *HandlerOrder) SetOrder(res http.ResponseWriter, req *http.Request) {
 		}
 
 	}
+
+	// Add order to Observer for status upodating
+	u.observer.AddOreder(order)
 
 	// New number get to work 202
 	res.WriteHeader(http.StatusAccepted)

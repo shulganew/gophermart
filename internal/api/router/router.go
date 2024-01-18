@@ -12,7 +12,7 @@ import (
 )
 
 // Chi Router for application
-func RouteShear(conf *config.Config, market *services.Market, register *services.Register) (r *chi.Mux) {
+func RouteMarket(conf *config.Config, market *services.Market, register *services.Register, observer *services.Observer) (r *chi.Mux) {
 
 	r = chi.NewRouter()
 
@@ -35,7 +35,7 @@ func RouteShear(conf *config.Config, market *services.Market, register *services
 
 		r.Route("/api/user/orders", func(r chi.Router) {
 			r.Use(middlewares.Auth)
-			orders := handlers.NewHandlerOrder(conf, market)
+			orders := handlers.NewHandlerOrder(conf, market, observer)
 			r.Post("/", http.HandlerFunc(orders.SetOrder))
 			r.Get("/", http.HandlerFunc(orders.GetOrders))
 
