@@ -4,10 +4,16 @@ import (
 	"errors"
 	"flag"
 	"os"
+	"time"
 
 	"github.com/shulganew/gophermart/internal/api/validators"
 	"go.uber.org/zap"
 )
+
+// send pass to midleware
+type CtxPassKey struct{}
+
+const TokenExp = time.Hour * 3600
 
 type Config struct {
 	//flag -a, Market address
@@ -18,6 +24,8 @@ type Config struct {
 
 	//dsn connection string
 	DSN string
+
+	PassJWT string
 }
 
 func InitConfig() *Config {
@@ -27,6 +35,8 @@ func InitConfig() *Config {
 	marketAddress := flag.String("a", "localhost:8090", "Service Gophermart address")
 	loyaltyAddress := flag.String("r", "localhost:8080", "Service Loyality address")
 	dsnf := flag.String("d", "", "Data Source Name for DataBase connection")
+	authJWT := flag.String("p", "JWTsecret", "JWT private key")
+
 	flag.Parse()
 
 	//check and parse URL
@@ -40,6 +50,9 @@ func InitConfig() *Config {
 
 	//read OS ENVs
 	addr, exist := os.LookupEnv(("RUN_ADDRESS"))
+
+	// JWT password for users auth
+	config.PassJWT = *authJWT
 
 	//if env var does not exist  - set def value
 	if exist {

@@ -11,13 +11,11 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
-
-const TOKEN_EXP = time.Hour * 1
-const SECRET_KEY = "JWTsecret"
 
 // User registration service
 type Register struct {
@@ -67,7 +65,7 @@ func (r *Register) NewUser(ctx context.Context, user model.User) (existed bool, 
 }
 
 // Validate user in market, if sucsess it return user's id.
-func (r *Register) IsValid(ctx context.Context, untrusted model.User) (userID *uuid.UUID, isValid bool) {
+func (r *Register) IsValid(ctx context.Context, untrusted *model.User) (userID *uuid.UUID, isValid bool) {
 
 	// Get User from storage
 	user, err := r.stor.GetByLogin(ctx, untrusted.Login)
@@ -108,15 +106,15 @@ type Claims struct {
 }
 
 // Create JWT token
-func (r Register) BuildJWTString(user model.User) (string, error) {
+func BuildJWTString(user *model.User, pass string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TOKEN_EXP)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.TokenExp)),
 		},
 		UserID: user.UUID,
 	})
 
-	tokenString, err := token.SignedString([]byte(SECRET_KEY))
+	tokenString, err := token.SignedString([]byte(pass))
 	if err != nil {
 		return "", err
 	}
@@ -125,31 +123,31 @@ func (r Register) BuildJWTString(user model.User) (string, error) {
 }
 
 // Retrive user's UUID from JWT string
-func (r Register) GetUserIDJWT(tokenString string) (uuid *uuid.UUID, err error) {
+func GetUserIDJWT(tokenString string, pass string) (userID *uuid.UUID, err error) {
 	claims := &Claims{}
 	_, err = jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
-		return []byte(SECRET_KEY), nil
+		return []byte(pass), nil
 	})
 
 	return claims.UserID, err
 }
 
-// Retrive  JWT
-func (r Register) GetJWT(tokenString string) (token *jwt.Token, err error) {
+// Create jwt token from string
+func GetJWT(tokenString string, pass string) (token *jwt.Token, err error) {
 	claims := &Claims{}
 	token, err = jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
-		return []byte(SECRET_KEY), nil
+		return []byte(pass), nil
 	})
 
 	return token, err
 }
 
-// Chaeck JWT is Set to Header
-func (r Register) GetHeaderUserIDJWT(header http.Header) bool {
-	jwt := header.Get("Authorization")[len("Bearer "):]
+// Check JWT is Set to Header
+func GetHeaderJWT(header http.Header) (jwt string, isSet bool) {
+	jwt = header.Get("Authorization")[len("Bearer "):]
 	if jwt == "" {
-		return false
+		return "", false
 	}
-	return true
+	return jwt, true
 
 }

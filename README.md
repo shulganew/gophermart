@@ -15,6 +15,9 @@ curl -v -H "Content-Type: text/plain" http://localhost:8080/api/orders/832756837
 ### Add order
 ```bash
 curl -v -H "Content-Type: application/json" -X POST http://localhost:8080/api/orders -d '{"order":"8327568377","goods":[{"description":"Чайник Bork","price":7000}]}'
+
+
+curl -v -H "Content-Type: application/json" -X POST http://localhost:8080/api/orders -d '{"order":"5536373433","goods":[{"description":"Колпак Я люблю баню войлок б40273","price":143},{"description":"Штора д/бережливых 1065BL 170*180см","price":295}]}'
 ```
 
 

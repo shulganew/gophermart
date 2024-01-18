@@ -21,7 +21,7 @@ func NewHandlerLogin(conf *config.Config, register *services.Register) *HandlerL
 }
 
 // Adding new user to Market
-func (u *HandlerLogin) LoginUser(res http.ResponseWriter, req *http.Request) {
+func (h *HandlerLogin) LoginUser(res http.ResponseWriter, req *http.Request) {
 
 	var user model.User
 
@@ -30,20 +30,20 @@ func (u *HandlerLogin) LoginUser(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
-	zap.S().Infoln("Login user:", user.Login)
-	zap.S().Infoln("Login Password:", user.Password)
 
-	userID, isValid := u.register.IsValid(req.Context(), user)
+	userID, isValid := h.register.IsValid(req.Context(), &user)
 	if !isValid {
 		// Wrond user login or password 401
 		http.Error(res, "Wrong login or password", http.StatusUnauthorized)
 		return
 	}
 
+	user.UUID = userID
+
 	zap.S().Infoln("Login sucsess, user id is: ", userID)
 
-	jwt, _ := u.register.BuildJWTString(user)
-	zap.S().Infoln("Create JWT: ", jwt)
+	jwt, _ := services.BuildJWTString(&user, h.conf.PassJWT)
+	zap.S().Debugln("Create JWT: ", jwt)
 
 	res.Header().Add("Content-Type", "text/plain")
 

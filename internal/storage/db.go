@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -66,7 +67,7 @@ func (base *RepoMarket) Register(ctx context.Context, user model.User) error {
 
 func (base *RepoMarket) GetByLogin(ctx context.Context, login string) (*model.User, error) {
 
-	row := base.master.QueryRow(ctx, " SELECT user_id, password FROM users WHERE login = $1", login)
+	row := base.master.QueryRow(ctx, "SELECT user_id, password FROM users WHERE login = $1", login)
 	user := model.User{Login: login}
 	err := row.Scan(&user.UUID, &user.Password)
 	if err != nil {
@@ -75,4 +76,52 @@ func (base *RepoMarket) GetByLogin(ctx context.Context, login string) (*model.Us
 	}
 
 	return &user, nil
+}
+
+func (base *RepoMarket) SetOrder(ctx context.Context, userID *uuid.UUID, order string) error {
+
+	_, err := base.master.Exec(ctx, "INSERT INTO orders (user_id, onumber, uploaded) VALUES ($1, $2, $3)", userID, order, time.Now())
+	if err != nil {
+		var pgErr *pgconn.PgError
+		errors.As(err, &pgErr)
+		// if order exist in DataBase
+		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
+			return pgErr
+		}
+
+		zap.S().Errorln("Insert order error: ", err)
+		return err
+	}
+	return nil
+}
+
+func (base *RepoMarket) IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
+
+	var ordersn int
+	row := base.master.QueryRow(ctx, "SELECT count(*) FROM orders WHERE user_id = $1 AND onumber = $2", userID, order)
+	err = row.Scan(&ordersn)
+	if err != nil {
+		zap.S().Errorln("Error during order search for user: ", userID, order, err)
+		return true, err
+	}
+	if ordersn == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (base *RepoMarket) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
+	var ordersn int
+	row := base.master.QueryRow(ctx, "SELECT count(*) FROM orders WHERE user_id != $1 AND onumber = $2", userID, order)
+	err = row.Scan(&ordersn)
+	if err != nil {
+		zap.S().Errorln("Error during order search for user: ", userID, order, err)
+		return true, err
+	}
+	if ordersn == 0 {
+		return false, nil
+	}
+
+	return true, nil
 }
