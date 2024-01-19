@@ -252,3 +252,28 @@ func (base *RepoMarket) Withdrow(ctx context.Context, userID *uuid.UUID, order s
 	}
 	return nil
 }
+
+func (base *RepoMarket) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds []model.Withdrawals, err error) {
+
+	query := `
+	SELECT  orders.onumber, bonuses.bonus_used, orders.uploaded
+		FROM orders 
+		INNER JOIN users ON orders.user_id = users.user_id
+		INNER JOIN bonuses ON orders.onumber = bonuses.onumber
+		`
+
+	rows, err := base.master.Query(ctx, query)
+
+	for rows.Next() {
+		var wd model.Withdrawals
+
+		err = rows.Scan(&wd.Onumber, &wd.Withdrawn, &wd.Uploaded)
+		if err != nil {
+			return nil, err
+		}
+
+		wds = append(wds, wd)
+	}
+
+	return
+}

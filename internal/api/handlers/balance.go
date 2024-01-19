@@ -7,25 +7,9 @@ import (
 	"github.com/ShiraazMoollatjie/goluhn"
 	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/config"
+	"github.com/shulganew/gophermart/internal/model"
 	"github.com/shulganew/gophermart/internal/services"
 )
-
-type UserBalance struct {
-	Bonus     float64 `json:"current"`
-	Withdrawn float64 `json:"withdrawn"`
-}
-
-func NewUserBalance(bonus *decimal.Decimal, withdrawn *decimal.Decimal) *UserBalance {
-
-	b := bonus.InexactFloat64()
-	w := withdrawn.InexactFloat64()
-	return &UserBalance{Bonus: b, Withdrawn: w}
-}
-
-type Withdraw struct {
-	Onumber   string  `json:"order"`
-	Withdrawn float64 `json:"sum"`
-}
 
 type HandlerBalance struct {
 	market *services.Market
@@ -57,7 +41,7 @@ func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) 
 
 	balance := acc.Sub(*withdrawn)
 
-	userBalance := NewUserBalance(&balance, withdrawn)
+	userBalance := model.NewUserBalance(&balance, withdrawn)
 
 	jsonBalance, err := json.Marshal(userBalance)
 	if err != nil {
@@ -71,7 +55,7 @@ func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) 
 
 }
 
-func (u *HandlerBalance) WithdrawnBalance(res http.ResponseWriter, req *http.Request) {
+func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request) {
 	// get UserID from cxt values
 	ctxConfig := req.Context().Value(config.CtxConfig{}).(config.CtxConfig)
 
@@ -82,7 +66,7 @@ func (u *HandlerBalance) WithdrawnBalance(res http.ResponseWriter, req *http.Req
 
 	userID := ctxConfig.GetUserID()
 
-	var wd Withdraw
+	var wd model.Withdraw
 	if err := json.NewDecoder(req.Body).Decode(&wd); err != nil {
 		// If can't decode 400
 		http.Error(res, err.Error(), http.StatusBadRequest)
@@ -131,5 +115,41 @@ func (u *HandlerBalance) WithdrawnBalance(res http.ResponseWriter, req *http.Req
 	res.WriteHeader(http.StatusOK)
 
 	res.Write([]byte("Done."))
+
+}
+
+func (u *HandlerBalance) GetWithdrawals(res http.ResponseWriter, req *http.Request) {
+
+	// get UserID from cxt values
+	ctxConfig := req.Context().Value(config.CtxConfig{}).(config.CtxConfig)
+
+	// Check from middleware is user authorized 401
+	if !ctxConfig.IsRegistered() {
+		http.Error(res, "JWT not found.", http.StatusUnauthorized)
+	}
+
+	userID := ctxConfig.GetUserID()
+
+	withdrawals, err := u.market.GetWithdrawals(req.Context(), userID)
+	if err != nil {
+		// 500
+		http.Error(res, "Cat't get withdrawals", http.StatusInternalServerError)
+		return
+	}
+	if len(withdrawals) == 0 {
+		// 204 - no withdrawals
+		http.Error(res, "Cat't get withdrawals", http.StatusNoContent)
+		return
+	}
+
+	jsonWithdraw, err := json.Marshal(withdrawals)
+	if err != nil {
+		http.Error(res, "Error during Marshal user's balance", http.StatusInternalServerError)
+	}
+
+	//set status code 200
+	res.WriteHeader(http.StatusOK)
+
+	res.Write([]byte(jsonWithdraw))
 
 }

@@ -41,7 +41,8 @@ func RouteMarket(conf *config.Config, market *services.Market, register *service
 
 			balance := handlers.NewHandlerBalance(conf, market)
 			r.Get("/balance", http.HandlerFunc(balance.GetBalance))
-			r.Post("/balance/withdraw", http.HandlerFunc(balance.WithdrawnBalance))
+			r.Post("/balance/withdraw", http.HandlerFunc(balance.SetWithdraw))
+			r.Get("/withdrawals", http.HandlerFunc(balance.GetWithdrawals))
 		})
 
 	})

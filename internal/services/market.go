@@ -25,6 +25,7 @@ type MarketPlaceholder interface {
 	GetAccruals(ctx context.Context, userID *uuid.UUID) (accrual *decimal.Decimal, err error)
 	GetWithdrawns(ctx context.Context, userID *uuid.UUID) (withdrawn *decimal.Decimal, err error)
 	Withdrow(ctx context.Context, userID *uuid.UUID, order string, amount *decimal.Decimal) error
+	Withdrawals(ctx context.Context, userID *uuid.UUID) ([]model.Withdrawals, error)
 }
 
 func NewMarket(stor MarketPlaceholder) *Market {
@@ -87,4 +88,9 @@ func (m *Market) CheckBalance(ctx context.Context, userID *uuid.UUID, amount *de
 func (m *Market) Withdrow(ctx context.Context, userID *uuid.UUID, order string, amount *decimal.Decimal) error {
 	err := m.stor.Withdrow(ctx, userID, order, amount)
 	return err
+}
+
+func (m *Market) GetWithdrawals(ctx context.Context, userID *uuid.UUID) (wds []model.Withdrawals, err error) {
+	wds, err = m.stor.Withdrawals(ctx, userID)
+	return
 }
