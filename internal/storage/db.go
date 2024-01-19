@@ -242,3 +242,13 @@ func (base *RepoMarket) GetWithdrawns(ctx context.Context, userID *uuid.UUID) (w
 
 	return withdrawn, nil
 }
+
+func (base *RepoMarket) Withdrow(ctx context.Context, userID *uuid.UUID, order string, amount *decimal.Decimal) error {
+
+	_, err := base.master.Exec(ctx, "UPDATE bonuses SET bonus_used = $1 WHERE onumber = $2", amount, order)
+	if err != nil {
+		zap.S().Errorln("Withdrawn update error: ", err)
+		return err
+	}
+	return nil
+}

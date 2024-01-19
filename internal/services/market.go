@@ -24,6 +24,7 @@ type MarketPlaceholder interface {
 	IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error)
 	GetAccruals(ctx context.Context, userID *uuid.UUID) (accrual *decimal.Decimal, err error)
 	GetWithdrawns(ctx context.Context, userID *uuid.UUID) (withdrawn *decimal.Decimal, err error)
+	Withdrow(ctx context.Context, userID *uuid.UUID, order string, amount *decimal.Decimal) error
 }
 
 func NewMarket(stor MarketPlaceholder) *Market {
@@ -68,4 +69,22 @@ func (m *Market) GetBalance(ctx context.Context, userID *uuid.UUID) (acc *decima
 	acc, err = m.stor.GetAccruals(ctx, userID)
 	withdrawn, err = m.stor.GetWithdrawns(ctx, userID)
 	return
+}
+
+func (m *Market) CheckBalance(ctx context.Context, userID *uuid.UUID, amount *decimal.Decimal) (isEnough bool, err error) {
+	acc, err := m.stor.GetAccruals(ctx, userID)
+	if err != nil {
+		return false, err
+	}
+
+	bonuses := acc.Sub(*amount)
+	if bonuses.IsNegative() {
+		return false, nil
+	}
+	return true, nil
+}
+
+func (m *Market) Withdrow(ctx context.Context, userID *uuid.UUID, order string, amount *decimal.Decimal) error {
+	err := m.stor.Withdrow(ctx, userID, order, amount)
+	return err
 }
