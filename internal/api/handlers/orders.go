@@ -1,14 +1,29 @@
 package handlers
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
+	"time"
 
+	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
 	"github.com/shulganew/gophermart/internal/services"
 	"go.uber.org/zap"
 )
+
+type OrderResponse struct {
+	Onumber  string    `json:"number"`
+	Status   string    `json:"status"`
+	Accrual  float64   `json:"accrual,omitempty"`
+	Uploaded time.Time `json:"uploaded_at"`
+}
+
+func NewOrderResponse(order *model.Order) *OrderResponse {
+	acc := order.Bonus.Accrual.InexactFloat64()
+	return &OrderResponse{Onumber: order.Onumber, Status: order.Status.String(), Accrual: acc, Uploaded: order.Uploaded}
+}
 
 type HandlerOrder struct {
 	market   *services.Market
@@ -47,8 +62,7 @@ func (u *HandlerOrder) SetOrder(res http.ResponseWriter, req *http.Request) {
 	onumber := string(body)
 
 	// Create order
-
-	order := model.NewOrder(userID, onumber)
+	order := model.NewOrder(userID, onumber, &decimal.Zero, &decimal.Zero)
 
 	isValid := order.IsValid()
 	if !isValid {
@@ -94,9 +108,6 @@ func (u *HandlerOrder) SetOrder(res http.ResponseWriter, req *http.Request) {
 
 	}
 
-	// Add order to Observer for status upodating
-	u.observer.AddOreder(order)
-
 	// New number get to work 202
 	res.WriteHeader(http.StatusAccepted)
 
@@ -109,18 +120,42 @@ func (u *HandlerOrder) GetOrders(res http.ResponseWriter, req *http.Request) {
 	//get UserID from cxt values
 	ctxConfig := req.Context().Value(config.CtxConfig{}).(config.CtxConfig)
 
-	// Check from middleware is user authorized
+	// Check from middleware is user authorized 401
 	if !ctxConfig.IsRegistered() {
 		http.Error(res, "JWT not found.", http.StatusUnauthorized)
 	}
 
 	userID := ctxConfig.GetUserID()
 
-	zap.S().Infoln("User id from middleware: ", userID)
+	// Load user's orders
+	orders, err := u.market.GetOrders(req.Context(), userID)
+
+	if err != nil {
+		// 500
+		http.Error(res, "Cat't get orders", http.StatusInternalServerError)
+		return
+	}
+
+	if len(orders) == 0 {
+		// 204
+		http.Error(res, "No content", http.StatusNoContent)
+		return
+	}
+	rOrders := make([]OrderResponse, 0)
+	for _, order := range orders {
+		rOrder := NewOrderResponse(&order)
+		rOrders = append(rOrders, *rOrder)
+
+	}
+
+	jsonOrders, err := json.Marshal(rOrders)
+	if err != nil {
+		http.Error(res, "Error during Marshal answer Orders", http.StatusInternalServerError)
+	}
 
 	//set status code 200
 	res.WriteHeader(http.StatusOK)
 
-	res.Write([]byte("List of orders..."))
+	res.Write([]byte(jsonOrders))
 
 }

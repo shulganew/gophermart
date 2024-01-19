@@ -5,12 +5,11 @@ import (
 )
 
 type Bonus struct {
-	order   *Order
-	used    *decimal.Decimal
-	accural *decimal.Decimal
+	Used    *decimal.Decimal
+	Accrual *decimal.Decimal
 }
 
-func NewBonus(order *Order, used *decimal.Decimal, accural *decimal.Decimal) *Bonus {
+func NewBonus(used *decimal.Decimal, accrual *decimal.Decimal) *Bonus {
 
-	return &Bonus{order: order, used: used, accural: accural}
+	return &Bonus{Used: used, Accrual: accrual}
 }

@@ -33,12 +33,14 @@ func RouteMarket(conf *config.Config, market *services.Market, register *service
 		userLogin := handlers.NewHandlerLogin(conf, register)
 		r.Post("/api/user/login", http.HandlerFunc(userLogin.LoginUser))
 
-		r.Route("/api/user/orders", func(r chi.Router) {
+		r.Route("/api/user", func(r chi.Router) {
 			r.Use(middlewares.Auth)
 			orders := handlers.NewHandlerOrder(conf, market, observer)
-			r.Post("/", http.HandlerFunc(orders.SetOrder))
-			r.Get("/", http.HandlerFunc(orders.GetOrders))
+			r.Post("/orders", http.HandlerFunc(orders.SetOrder))
+			r.Get("/orders", http.HandlerFunc(orders.GetOrders))
 
+			balance := handlers.NewHandlerBalance(conf, market)
+			r.Get("/balance", http.HandlerFunc(balance.GetBalance))
 		})
 
 	})

@@ -28,7 +28,7 @@ func InitApp(ctx context.Context, conf *config.Config, db *pgx.Conn) (*services.
 
 	observer := services.NewObserver(stor, conf)
 
-	// Run observe status of orderses in Accural service
+	// Run observe status of orderses in Accrual service
 	observer.Observ(ctx)
 
 	zap.S().Infoln("Application init complite")

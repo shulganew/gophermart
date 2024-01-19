@@ -6,7 +6,7 @@
 
 # Curl запросы для быстрого тестирования хендлеров
 
-## GopherAccural
+## GopherAccrual
 
 ### Order info 
 ```bash

@@ -7,6 +7,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/model"
 	"go.uber.org/zap"
 )
@@ -17,9 +18,12 @@ type Market struct {
 }
 
 type MarketPlaceholder interface {
+	GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Order, error)
 	SetOrder(ctx context.Context, userID *uuid.UUID, order string) error
 	IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error)
 	IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error)
+	GetAccruals(ctx context.Context, userID *uuid.UUID) (accrual *decimal.Decimal, err error)
+	GetWithdrawns(ctx context.Context, userID *uuid.UUID) (withdrawn *decimal.Decimal, err error)
 }
 
 func NewMarket(stor MarketPlaceholder) *Market {
@@ -43,10 +47,25 @@ func (m *Market) SetOrder(ctx context.Context, order *model.Order) (existed bool
 	return false, nil
 }
 
+func (m *Market) GetOrders(ctx context.Context, userID *uuid.UUID) (orders []model.Order, err error) {
+
+	orders, err = m.stor.GetOrders(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return orders, nil
+}
+
 func (m *Market) IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
 	return m.stor.IsExistForUser(ctx, userID, order)
 }
 
 func (m *Market) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
 	return m.stor.IsExistForOtherUsers(ctx, userID, order)
+}
+
+func (m *Market) GetBalance(ctx context.Context, userID *uuid.UUID) (acc *decimal.Decimal, withdrawn *decimal.Decimal, err error) {
+	acc, err = m.stor.GetAccruals(ctx, userID)
+	withdrawn, err = m.stor.GetWithdrawns(ctx, userID)
+	return
 }
