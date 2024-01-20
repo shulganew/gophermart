@@ -24,7 +24,7 @@ func (s *Status) String() string {
 	case REGISTERED:
 		return "REGISTERED"
 	default:
-		return "NEW"
+		return "INVALID"
 	}
 }
 func (s *Status) SetStatus(st string) {
@@ -40,6 +40,6 @@ func (s *Status) SetStatus(st string) {
 	case "REGISTERED":
 		*s = 4
 	default:
-		*s = 5
+		*s = 1
 	}
 }

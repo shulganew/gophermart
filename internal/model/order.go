@@ -9,16 +9,17 @@ import (
 )
 
 type Order struct {
-	UserID   *uuid.UUID
-	Onumber  string
-	Uploaded time.Time
-	Status   Status
-	Bonus    *Bonus
+	UserID     *uuid.UUID
+	Onumber    string
+	Uploaded   time.Time
+	Status     Status
+	isPreOrder bool
+	Bonus      *Bonus
 }
 
-func NewOrder(userID *uuid.UUID, onumber string, used *decimal.Decimal, accrual *decimal.Decimal) *Order {
+func NewOrder(userID *uuid.UUID, onumber string, preoreder bool, used *decimal.Decimal, accrual *decimal.Decimal) *Order {
 
-	return &Order{UserID: userID, Onumber: onumber, Uploaded: time.Now(), Status: Status(0), Bonus: NewBonus(used, accrual)}
+	return &Order{UserID: userID, Onumber: onumber, isPreOrder: preoreder, Uploaded: time.Now(), Status: Status(0), Bonus: NewBonus(used, accrual)}
 }
 
 // Check Luna namber

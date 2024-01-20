@@ -9,6 +9,7 @@ import (
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
 	"github.com/shulganew/gophermart/internal/services"
+	"go.uber.org/zap"
 )
 
 type HandlerBalance struct {
@@ -48,6 +49,9 @@ func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) 
 		http.Error(res, "Error during Marshal user's balance", http.StatusInternalServerError)
 	}
 
+	//set content type
+	res.Header().Add("Content-Type", "application/json")
+
 	//set status code 200
 	res.WriteHeader(http.StatusOK)
 
@@ -72,26 +76,18 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	zap.S().Debugln("Withdrawn order: ", wd.Onumber)
+	zap.S().Debugln("Withdrawn amount: ", wd.Withdrawn)
 	err := goluhn.Validate(wd.Onumber)
 	if err != nil {
 		// 422
+		zap.S().Debugln("Order not luna valid: ", wd.Onumber)
 		http.Error(res, "Order nuber not vaild.", http.StatusUnprocessableEntity)
 		return
 	}
 
 	amount := decimal.NewFromFloat(wd.Withdrawn)
-
-	existed, err := u.market.IsExistForUser(req.Context(), userID, wd.Onumber)
-	if err != nil {
-		// 500
-		http.Error(res, "Error cheking order for user.", http.StatusInternalServerError)
-		return
-	}
-	if !existed {
-		// 422
-		http.Error(res, "Order not existed.", http.StatusUnprocessableEntity)
-		return
-	}
 
 	isEnough, err := u.market.CheckBalance(req.Context(), userID, &amount)
 	if err != nil {
@@ -100,12 +96,19 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 		return
 	}
 	if !isEnough {
-		// 422
+		// 402
 		http.Error(res, "Not enuogh bonuses.", http.StatusPaymentRequired)
 		return
 	}
 
-	err = u.market.Withdrow(req.Context(), userID, wd.Onumber, &amount)
+	order := model.NewOrder(userID, wd.Onumber, true, &amount, &decimal.Zero)
+	existed, err := u.market.SetOrder(req.Context(), true, order)
+	if existed {
+		// 422
+		zap.S().Debugln("Order not luna valid: ", wd.Onumber)
+		http.Error(res, "Order alredy existed.", http.StatusUnprocessableEntity)
+		return
+	}
 	if err != nil {
 		// 500
 		http.Error(res, "Error during withdraw.", http.StatusInternalServerError)
@@ -133,6 +136,7 @@ func (u *HandlerBalance) GetWithdrawals(res http.ResponseWriter, req *http.Reque
 	withdrawals, err := u.market.GetWithdrawals(req.Context(), userID)
 	if err != nil {
 		// 500
+		zap.S().Error("Cat't get withdrawals", err)
 		http.Error(res, "Cat't get withdrawals", http.StatusInternalServerError)
 		return
 	}
@@ -146,6 +150,9 @@ func (u *HandlerBalance) GetWithdrawals(res http.ResponseWriter, req *http.Reque
 	if err != nil {
 		http.Error(res, "Error during Marshal user's balance", http.StatusInternalServerError)
 	}
+
+	//set content type
+	res.Header().Add("Content-Type", "application/json")
 
 	//set status code 200
 	res.WriteHeader(http.StatusOK)

@@ -19,12 +19,11 @@ type Market struct {
 
 type MarketPlaceholder interface {
 	GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Order, error)
-	SetOrder(ctx context.Context, userID *uuid.UUID, order string) error
+	SetOrder(ctx context.Context, userID *uuid.UUID, order string, isPreorder bool, withdraw *decimal.Decimal) error
 	IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error)
 	IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error)
 	GetAccruals(ctx context.Context, userID *uuid.UUID) (accrual *decimal.Decimal, err error)
 	GetWithdrawns(ctx context.Context, userID *uuid.UUID) (withdrawn *decimal.Decimal, err error)
-	Withdrow(ctx context.Context, userID *uuid.UUID, order string, amount *decimal.Decimal) error
 	Withdrawals(ctx context.Context, userID *uuid.UUID) ([]model.Withdrawals, error)
 }
 
@@ -32,15 +31,14 @@ func NewMarket(stor MarketPlaceholder) *Market {
 	return &Market{stor: stor}
 }
 
-func (m *Market) SetOrder(ctx context.Context, order *model.Order) (existed bool, err error) {
-
+func (m *Market) SetOrder(ctx context.Context, isPreOrder bool, order *model.Order) (existed bool, err error) {
 	// Add order to the database.
-	err = m.stor.SetOrder(ctx, order.UserID, order.Onumber)
+	err = m.stor.SetOrder(ctx, order.UserID, order.Onumber, isPreOrder, order.Bonus.Used)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		// If Order exist in the DataBase
 		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
-			zap.S().Infoln("Order exist: ", order)
+			zap.S().Infoln("Order exist: ", order.Onumber)
 			return true, err
 		}
 		zap.S().Errorln("Set order error: ", order)
@@ -83,17 +81,11 @@ func (m *Market) CheckBalance(ctx context.Context, userID *uuid.UUID, amount *de
 	if err != nil {
 		return false, err
 	}
-
 	bonuses := acc.Sub(*amount)
 	if bonuses.IsNegative() {
 		return false, nil
 	}
 	return true, nil
-}
-
-func (m *Market) Withdrow(ctx context.Context, userID *uuid.UUID, order string, amount *decimal.Decimal) error {
-	err := m.stor.Withdrow(ctx, userID, order, amount)
-	return err
 }
 
 func (m *Market) GetWithdrawals(ctx context.Context, userID *uuid.UUID) (wds []model.Withdrawals, err error) {

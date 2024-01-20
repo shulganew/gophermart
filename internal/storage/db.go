@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -35,6 +36,63 @@ func InitDB(ctx context.Context, dsn string) (db *pgx.Conn, err error) {
 
 	// Register Numeric and decimal support
 	pgxdecimal.Register(db.TypeMap())
+
+	// Create tables for Market if not exist
+
+	query := `
+	DO $$
+	BEGIN
+		IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'processing') THEN
+			CREATE TYPE processing AS ENUM ('NEW', 'PROCESSING', 'INVALID', 'PROCESSED', 'REGISTERED');
+		END IF;
+	END$$
+	`
+	_, err = db.Exec(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("error create processing enum:  %w", err)
+	}
+
+	query = `
+	CREATE TABLE IF NOT EXISTS users (
+		id SERIAL, 
+		user_id UUID NOT NULL UNIQUE, 
+		login TEXT NOT NULL UNIQUE, 
+		password TEXT NOT NULL
+		);
+		`
+
+	_, err = db.Exec(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("error create users %w", err)
+	}
+
+	query = `
+	CREATE TABLE IF NOT EXISTS orders (
+		id SERIAL, 
+		user_id UUID NOT NULL REFERENCES users(user_id),
+		onumber VARCHAR(20) NOT NULL UNIQUE,
+		isPreorder BOOLEAN NOT NULL, 
+		uploaded TIMESTAMPTZ NOT NULL,
+		status processing NOT NULL DEFAULT 'NEW'
+		);
+		`
+	_, err = db.Exec(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("error create orders %w", err)
+	}
+
+	query = `
+	CREATE TABLE IF NOT EXISTS bonuses (
+		id SERIAL, 
+		onumber VARCHAR(20) NOT NULL REFERENCES orders(onumber) UNIQUE,
+		bonus_used NUMERIC DEFAULT 0,
+		bonus_accrual NUMERIC DEFAULT 0
+	);
+	`
+	_, err = db.Exec(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("error create bonuses %w", err)
+	}
 
 	return
 }
@@ -85,6 +143,8 @@ func (base *RepoMarket) GetOrders(ctx context.Context, userID *uuid.UUID) ([]mod
 		FROM orders 
 		INNER JOIN users ON orders.user_id = users.user_id
 		INNER JOIN bonuses ON orders.onumber = bonuses.onumber
+		WHERE isPreorder = FALSE
+		ORDER BY orders.uploaded DESC
 		`
 
 	rows, err := base.master.Query(ctx, query)
@@ -111,9 +171,9 @@ func (base *RepoMarket) GetOrders(ctx context.Context, userID *uuid.UUID) ([]mod
 	return orders, nil
 
 }
-func (base *RepoMarket) SetOrder(ctx context.Context, userID *uuid.UUID, order string) error {
+func (base *RepoMarket) SetOrder(ctx context.Context, userID *uuid.UUID, order string, isPreOrder bool, withdrawn *decimal.Decimal) error {
 
-	_, err := base.master.Exec(ctx, "INSERT INTO orders (user_id, onumber, uploaded) VALUES ($1, $2, $3)", userID, order, time.Now())
+	_, err := base.master.Exec(ctx, "INSERT INTO orders (user_id, onumber, isPreorder, uploaded) VALUES ($1, $2, $3, $4)", userID, order, isPreOrder, time.Now())
 	if err != nil {
 		var pgErr *pgconn.PgError
 		errors.As(err, &pgErr)
@@ -126,7 +186,7 @@ func (base *RepoMarket) SetOrder(ctx context.Context, userID *uuid.UUID, order s
 		return err
 	}
 
-	_, err = base.master.Exec(ctx, "INSERT INTO bonuses (onumber) VALUES ($1)", order)
+	_, err = base.master.Exec(ctx, "INSERT INTO bonuses (onumber, bonus_used) VALUES ($1, $2)", order, *withdrawn)
 	if err != nil {
 		zap.S().Errorln("Insert order error: ", err)
 		return err
@@ -172,7 +232,7 @@ func (base *RepoMarket) LoadPocessing(ctx context.Context) ([]model.Order, error
 	query := `
 	SELECT users.user_id, orders.onumber, orders.uploaded, orders.status
 	FROM orders INNER JOIN users ON orders.user_id = users.user_id 
-	WHERE status = 'NEW' OR status = 'REGISTERED' OR status = 'PROCESSING'
+	WHERE (status = 'NEW' OR status = 'REGISTERED' OR status = 'PROCESSING') AND isPreorder = FALSE
 	`
 
 	rows, err := base.master.Query(ctx, query)
@@ -227,6 +287,11 @@ func (base *RepoMarket) GetAccruals(ctx context.Context, userID *uuid.UUID) (acc
 		return nil, err
 	}
 
+	// If Postgres SIM is 0, it return nil
+	if accrual == nil {
+		return &decimal.Zero, nil
+	}
+
 	return accrual, nil
 }
 
@@ -248,16 +313,6 @@ func (base *RepoMarket) GetWithdrawns(ctx context.Context, userID *uuid.UUID) (w
 	return withdrawn, nil
 }
 
-func (base *RepoMarket) Withdrow(ctx context.Context, userID *uuid.UUID, order string, amount *decimal.Decimal) error {
-
-	_, err := base.master.Exec(ctx, "UPDATE bonuses SET bonus_used = $1 WHERE onumber = $2", amount, order)
-	if err != nil {
-		zap.S().Errorln("Withdrawn update error: ", err)
-		return err
-	}
-	return nil
-}
-
 func (base *RepoMarket) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds []model.Withdrawals, err error) {
 
 	query := `
@@ -265,18 +320,19 @@ func (base *RepoMarket) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds
 		FROM orders 
 		INNER JOIN users ON orders.user_id = users.user_id
 		INNER JOIN bonuses ON orders.onumber = bonuses.onumber
+		ORDER BY orders.uploaded DESC
 		`
 
 	rows, err := base.master.Query(ctx, query)
 
 	for rows.Next() {
 		var wd model.Withdrawals
-
-		err = rows.Scan(&wd.Onumber, &wd.Withdrawn, &wd.Uploaded)
+		var updloded time.Time
+		err = rows.Scan(&wd.Onumber, &wd.Withdrawn, &updloded)
 		if err != nil {
 			return nil, err
 		}
-
+		wd.Uploaded = updloded.Format(time.RFC3339)
 		wds = append(wds, wd)
 	}
 

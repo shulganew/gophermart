@@ -43,11 +43,11 @@ func (h *HandlerLogin) LoginUser(res http.ResponseWriter, req *http.Request) {
 	zap.S().Infoln("Login sucsess, user id is: ", userID)
 
 	jwt, _ := services.BuildJWTString(&user, h.conf.PassJWT)
-	zap.S().Debugln("Create JWT: ", jwt)
 
 	res.Header().Add("Content-Type", "text/plain")
 
-	res.Header().Add("Authorization", "Bearer "+jwt)
+
+	res.Header().Add("Authorization", jwt)
 
 	//set status code 200
 	res.WriteHeader(http.StatusOK)

@@ -31,8 +31,8 @@ func InitConfig() *Config {
 
 	config := Config{}
 	//read command line argue
-	marketAddress := flag.String("a", "localhost:8090", "Service Gophermart address")
-	loyaltyAddress := flag.String("r", "localhost:8080", "Service Loyality address")
+	marketAddress := flag.String("a", "localhost:8088", "Service Gophermart address")
+	loyaltyAddress := flag.String("r", "localhost:8090", "Service Loyality address")
 	dsnf := flag.String("d", "", "Data Source Name for DataBase connection")
 	authJWT := flag.String("p", "JWTsecret", "JWT private key")
 
@@ -45,7 +45,7 @@ func InitConfig() *Config {
 
 	//save config
 	config.Address = startaddr + ":" + startport
-	config.Accrual = accaddr + ":" + accport
+	config.Accrual = "http://" + accaddr + ":" + accport
 
 	//read OS ENVs
 	addr, exist := os.LookupEnv(("RUN_ADDRESS"))

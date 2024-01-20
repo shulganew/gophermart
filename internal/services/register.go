@@ -32,12 +32,12 @@ func NewRegister(stor Registrar) *Register {
 }
 
 // Register new user in market
-func (r *Register) NewUser(ctx context.Context, user model.User) (existed bool, err error) {
+func (r *Register) NewUser(ctx context.Context, user model.User) (userID *uuid.UUID, existed bool, err error) {
 	// Generate UUID for new user.
 	uuid, err := uuid.NewV7()
 	if err != nil {
 		zap.S().Errorln("UUID error generation")
-		return true, err
+		return nil, true, err
 	}
 
 	user.UUID = &uuid
@@ -46,7 +46,7 @@ func (r *Register) NewUser(ctx context.Context, user model.User) (existed bool, 
 	hash, err := r.HashPassword(user.Password)
 	if err != nil {
 		zap.S().Errorln("Error creating hash from password")
-		return true, err
+		return nil, true, err
 	}
 	user.Password = hash
 
@@ -57,11 +57,11 @@ func (r *Register) NewUser(ctx context.Context, user model.User) (existed bool, 
 		// If URL exist in DataBase
 		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
 			zap.S().Infoln("User exist: ", user)
-			return true, err
+			return user.UUID, true, err
 		}
 	}
 
-	return false, nil
+	return user.UUID, false, nil
 }
 
 // Validate user in market, if sucsess it return user's id.
@@ -144,10 +144,12 @@ func GetJWT(tokenString string, pass string) (token *jwt.Token, err error) {
 
 // Check JWT is Set to Header
 func GetHeaderJWT(header http.Header) (jwt string, isSet bool) {
-	jwt = header.Get("Authorization")[len("Bearer "):]
-	if jwt == "" {
+
+	auth := header.Get("Authorization")
+	if auth == "" {
 		return "", false
 	}
-	return jwt, true
+
+	return auth, true
 
 }

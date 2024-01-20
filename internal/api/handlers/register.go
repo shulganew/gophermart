@@ -24,16 +24,16 @@ func NewHandlerRegister(conf *config.Config, register *services.Register) *Handl
 // Adding new user to Market
 func (u *HandlerRegister) SetUser(res http.ResponseWriter, req *http.Request) {
 
-	var customer model.User
+	var user model.User
 
-	if err := json.NewDecoder(req.Body).Decode(&customer); err != nil {
+	if err := json.NewDecoder(req.Body).Decode(&user); err != nil {
 		// If can't decode 400
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
-	zap.S().Infoln("New user:", customer.Login)
+	zap.S().Infoln("New user:", user.Login)
 
-	exist, err := u.register.NewUser(req.Context(), customer)
+	userID, exist, err := u.register.NewUser(req.Context(), user)
 	if err != nil {
 		// If can't get UUID or hash pass 500
 		http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -44,8 +44,13 @@ func (u *HandlerRegister) SetUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	user.UUID = userID
+
+	jwt, _ := services.BuildJWTString(&user, u.conf.PassJWT)
+
 	res.Header().Add("Content-Type", "text/plain")
-	//tokenString = tokenString[len("Bearer "):]
+
+	res.Header().Add("Authorization", jwt)
 
 	//set status code 200
 	res.WriteHeader(http.StatusOK)

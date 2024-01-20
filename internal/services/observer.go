@@ -15,15 +15,15 @@ import (
 )
 
 // Check Acceral service every X sec
-const CheckAccrual = 3
+const CheckAccrual = 2
 
 // Check Oraders in DB every X sec
-const UploadData = 10
+const UploadData = 5
 
 type AccrualResponce struct {
-	Order   string `json:"order"`
-	Status  string `json:"status"`
-	Accrual string `json:"accrual"`
+	Order   string  `json:"order"`
+	Status  string  `json:"status"`
+	Accrual float64 `json:"accrual"`
 }
 
 type Observer struct {
@@ -36,9 +36,6 @@ type Observer struct {
 }
 
 type ObserverUpdater interface {
-	// SetOrder(ctx context.Context, userID *uuid.UUID, order string) error
-	// IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error)
-	// IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error)
 	LoadPocessing(ctx context.Context) ([]model.Order, error)
 	UpdateStatus(ctx context.Context, order *model.Order, accrual *decimal.Decimal) error
 }
@@ -72,7 +69,7 @@ func (o *Observer) Observ(ctx context.Context) {
 
 func (o *Observer) ObservAccrual(ctx context.Context) {
 	o.mu.Lock()
-	zap.S().Infoln("ObservAccrual lenth order: ", len(o.orders))
+
 	for key, order := range o.orders {
 		zap.S().Infoln("Orders Key", key, "value: ", order.Onumber, "Len: ", len(o.orders))
 	}
@@ -83,6 +80,7 @@ func (o *Observer) ObservAccrual(ctx context.Context) {
 		if err != nil {
 			zap.S().Errorln("Get order status prepare error ", err)
 		}
+		zap.S().Infoln("Get answer from Accrual system: status: ", status, " Accural: ", accrual)
 		order.Status = *status
 		zap.S().Infoln("Order ", order.Onumber, "Status:", order.Status)
 		//if status PROCESSED or INVALID - update db and remove from orders
@@ -128,7 +126,7 @@ func (o *Observer) getOrderStatus(order *model.Order) (status *model.Status, acc
 
 	client := &http.Client{}
 
-	url, err := url.JoinPath("http://", o.conf.Accrual, "api", "orders", order.Onumber)
+	url, err := url.JoinPath(o.conf.Accrual, "api", "orders", order.Onumber)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -166,13 +164,7 @@ func (o *Observer) getOrderStatus(order *model.Order) (status *model.Status, acc
 	st := model.Status(0)
 	st.SetStatus(accResp.Status)
 
-	var accrual decimal.Decimal
-	if accResp.Accrual != "" {
-		accrual, err = decimal.NewFromString(accResp.Accrual)
-		if err != nil {
-			zap.S().Errorln("Error create decimal from string ", accResp.Accrual, err)
-		}
-	}
+	accrual := decimal.NewFromFloat(accResp.Accrual)
 
 	return &st, &accrual, nil
 }
