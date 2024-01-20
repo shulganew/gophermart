@@ -15,10 +15,10 @@ import (
 )
 
 // Check Acceral service every X sec
-const CheckAccrual = 2
+const CheckAccrual = 10
 
 // Check Oraders in DB every X sec
-const UploadData = 5
+const UploadData = 2
 
 type AccrualResponce struct {
 	Order   string  `json:"order"`
@@ -80,12 +80,17 @@ func (o *Observer) ObservAccrual(ctx context.Context) {
 		if err != nil {
 			zap.S().Errorln("Get order status prepare error ", err)
 		}
+
+		if accrual == nil {
+			accrual = &decimal.Zero
+		}
+
 		zap.S().Infoln("Get answer from Accrual system: status: ", status, " Accural: ", accrual)
 		order.Status = *status
 		zap.S().Infoln("Order ", order.Onumber, "Status:", order.Status)
 		//if status PROCESSED or INVALID - update db and remove from orders
 		if *status == 2 || *status == 3 {
-			err := o.stor.UpdateStatus(ctx, &order, accrual)
+			err = o.stor.UpdateStatus(ctx, &order, accrual)
 			if err != nil {
 				zap.S().Errorln("Get error during update", err)
 			}

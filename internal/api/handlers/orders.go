@@ -110,7 +110,9 @@ func (u *HandlerOrder) SetOrder(res http.ResponseWriter, req *http.Request) {
 		}
 
 	}
-
+	u.observer.AddOreder(order)
+	u.observer.ObservAccrual(req.Context())
+	zap.S().Infoln("New order added!!", order.Onumber)
 	// 202 - New order
 	res.WriteHeader(http.StatusAccepted)
 
