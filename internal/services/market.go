@@ -68,7 +68,13 @@ func (m *Market) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, or
 
 func (m *Market) GetBalance(ctx context.Context, userID *uuid.UUID) (acc *decimal.Decimal, withdrawn *decimal.Decimal, err error) {
 	acc, err = m.stor.GetAccruals(ctx, userID)
+	if err != nil {
+		return nil, nil, err
+	}
 	withdrawn, err = m.stor.GetWithdrawns(ctx, userID)
+	if err != nil {
+		return nil, nil, err
+	}
 	return
 }
 

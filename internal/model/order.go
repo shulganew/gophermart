@@ -24,9 +24,6 @@ func NewOrder(userID *uuid.UUID, onumber string, used *decimal.Decimal, accrual 
 // Check Luna namber
 func (o *Order) IsValid() (isValid bool) {
 	err := goluhn.Validate(o.Onumber)
-	if err != nil {
-		return false
-	}
+	return err == nil
 
-	return true
 }

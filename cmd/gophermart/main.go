@@ -34,11 +34,11 @@ func main() {
 
 	// Graceful shotdown
 	go func(ctx context.Context) {
-		select {
-		case <-ctx.Done():
-			zap.S().Infoln("Graceful shutdown...")
-			os.Exit(0)
-		}
+
+		<-ctx.Done()
+		zap.S().Infoln("Graceful shutdown...")
+		os.Exit(0)
+
 	}(ctx)
 
 	//start web

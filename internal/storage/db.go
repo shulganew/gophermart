@@ -88,6 +88,9 @@ func (base *RepoMarket) GetOrders(ctx context.Context, userID *uuid.UUID) ([]mod
 		`
 
 	rows, err := base.master.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
 
 	orders := []model.Order{}
 	for rows.Next() {
@@ -173,7 +176,9 @@ func (base *RepoMarket) LoadPocessing(ctx context.Context) ([]model.Order, error
 	`
 
 	rows, err := base.master.Query(ctx, query)
-
+	if err != nil {
+		return nil, err
+	}
 	orders := []model.Order{}
 	for rows.Next() {
 		var order model.Order
