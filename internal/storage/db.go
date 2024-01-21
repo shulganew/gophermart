@@ -143,11 +143,11 @@ func (base *RepoMarket) GetOrders(ctx context.Context, userID *uuid.UUID) ([]mod
 		FROM orders 
 		INNER JOIN users ON orders.user_id = users.user_id
 		INNER JOIN bonuses ON orders.onumber = bonuses.onumber
-		WHERE isPreorder = FALSE
+		WHERE isPreorder = FALSE AND orders.user_id = $1
 		ORDER BY orders.uploaded DESC
 		`
 
-	rows, err := base.master.Query(ctx, query)
+	rows, err := base.master.Query(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -255,6 +255,7 @@ func (base *RepoMarket) LoadPocessing(ctx context.Context) ([]model.Order, error
 }
 
 func (base *RepoMarket) UpdateStatus(ctx context.Context, order *model.Order, accrual *decimal.Decimal) (err error) {
+	
 	_, err = base.master.Exec(ctx, "UPDATE orders SET status = $1 WHERE onumber = $2", order.Status.String(), order.Onumber)
 	if err != nil {
 		zap.S().Errorln("UPDATE order Status error: ", err)

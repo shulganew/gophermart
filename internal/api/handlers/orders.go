@@ -110,8 +110,8 @@ func (u *HandlerOrder) SetOrder(res http.ResponseWriter, req *http.Request) {
 		}
 
 	}
-	u.observer.AddOreder(order)
-	u.observer.ObservAccrual(req.Context())
+	//u.observer.AddOreder(order)
+	//u.observer.ObservAccrual(req.Context())
 	zap.S().Infoln("New order added!!", order.Onumber)
 	// 202 - New order
 	res.WriteHeader(http.StatusAccepted)
@@ -169,6 +169,8 @@ func (u *HandlerOrder) GetOrders(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "Error during Marshal answer Orders", http.StatusInternalServerError)
 		return
 	}
+
+	zap.S().Infoln("Get Orders: ", string(jsonOrders))
 
 	//set content type
 	res.Header().Add("Content-Type", "application/json")
