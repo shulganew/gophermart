@@ -88,6 +88,29 @@ curl -v -H "Content-Type: application/json" -X POST http://localhost:8080/api/or
 		-m 7 - Get user's withdrawals
 ```
 
+## Mock generate 
+
+```bash
+go install github.com/golang/mock/mockgen@v1.6.0
+go get github.com/golang/mock/gomock
+
+```
+
+```bash
+mockgen -source=internal/services/market.go \
+    -destination=internal/service/mocks/market_mock.gen.go \
+    -package=mocks
+```
+```bash
+mockgen -source=internal/services/register.go \
+    -destination=internal/service/mocks/register_mock.gen.go \
+    -package=mocks
+```
+```bash
+mockgen -source=internal/services/observer.go \
+    -destination=internal/service/mocks/observer_mock.gen.go \
+    -package=mocks
+```
 
 
 # Работа с шаблоном проекта
