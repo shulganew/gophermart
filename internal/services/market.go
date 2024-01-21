@@ -25,6 +25,8 @@ type MarketPlaceholder interface {
 	GetAccruals(ctx context.Context, userID *uuid.UUID) (accrual *decimal.Decimal, err error)
 	GetWithdrawns(ctx context.Context, userID *uuid.UUID) (withdrawn *decimal.Decimal, err error)
 	Withdrawals(ctx context.Context, userID *uuid.UUID) ([]model.Withdrawals, error)
+	IsPreOrder(ctx context.Context, userID *uuid.UUID, order string) (isPreOrder bool, err error)
+	MovePreOrder(ctx context.Context, order *model.Order) (err error)
 }
 
 func NewMarket(stor MarketPlaceholder) *Market {
@@ -54,6 +56,14 @@ func (m *Market) GetOrders(ctx context.Context, userID *uuid.UUID) (orders []mod
 		return nil, err
 	}
 	return orders, nil
+}
+
+func (m *Market) IsPreOrder(ctx context.Context, userID *uuid.UUID, order string) (isPreOrder bool, err error) {
+	return m.stor.IsPreOrder(ctx, userID, order)
+}
+
+func (m *Market) MovePreOrder(ctx context.Context, order *model.Order) (err error) {
+	return m.stor.MovePreOrder(ctx, order)
 }
 
 func (m *Market) IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {

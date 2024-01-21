@@ -15,10 +15,10 @@ import (
 )
 
 // Check Acceral service every X sec
-const CheckAccrual = 3
+const CheckAccrual = 1
 
 // Check Oraders in DB every X sec
-const UploadData = 1
+const UploadData = 3
 
 type AccrualResponce struct {
 	Order   string  `json:"order"`

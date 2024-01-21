@@ -226,6 +226,37 @@ func (base *RepoMarket) IsExistForOtherUsers(ctx context.Context, userID *uuid.U
 	return true, nil
 }
 
+func (base *RepoMarket) IsPreOrder(ctx context.Context, userID *uuid.UUID, order string) (isPreOrder bool, err error) {
+	query := `
+	SELECT count(orders.onumber)
+	FROM orders INNER JOIN users ON orders.user_id = users.user_id 
+	WHERE users.user_id = $1 AND orders.onumber = $2 AND isPreorder = TRUE
+	`
+	row := base.master.QueryRow(ctx, query, userID, order)
+	var n int
+	err = row.Scan(&n)
+
+	return n == 1, err
+}
+
+func (base *RepoMarket) MovePreOrder(ctx context.Context, order *model.Order) (err error) {
+
+	_, err = base.master.Exec(ctx, "UPDATE orders SET status = $1, isPreorder = $2 WHERE onumber = $3", order.Status.String(), order.IsPreOrder, order.Onumber)
+	if err != nil {
+		zap.S().Errorln("UPDATE preoreder error: ", err)
+		return err
+	}
+
+	_, err = base.master.Exec(ctx, "UPDATE bonuses SET bonus_accrual = $1 WHERE onumber = $2", order.Bonus.Accrual, order.Onumber)
+	if err != nil {
+		zap.S().Errorln("UPDATE preoreder's bonus error: ", err)
+		return err
+	}
+
+	return
+
+}
+
 // Load all orders with not finished preparation status.
 func (base *RepoMarket) LoadPocessing(ctx context.Context) ([]model.Order, error) {
 
@@ -255,7 +286,7 @@ func (base *RepoMarket) LoadPocessing(ctx context.Context) ([]model.Order, error
 }
 
 func (base *RepoMarket) UpdateStatus(ctx context.Context, order *model.Order, accrual *decimal.Decimal) (err error) {
-	
+
 	_, err = base.master.Exec(ctx, "UPDATE orders SET status = $1 WHERE onumber = $2", order.Status.String(), order.Onumber)
 	if err != nil {
 		zap.S().Errorln("UPDATE order Status error: ", err)
