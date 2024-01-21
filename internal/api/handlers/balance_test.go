@@ -93,6 +93,7 @@ func TestBalance(t *testing.T) {
 				Return(tt.withdrawn, nil)
 
 			userID, exist, err := register.NewUser(ctx, user)
+			assert.NoError(t, err)
 			assert.False(t, exist)
 
 			//add chi context

@@ -92,6 +92,7 @@ func TestGetOrders(t *testing.T) {
 				Return(tt.orders, nil)
 
 			userID, exist, err := register.NewUser(ctx, user)
+			assert.NoError(t, err)
 			assert.False(t, exist)
 
 			//add chi context
