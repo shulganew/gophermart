@@ -1,17 +1,4 @@
-
 #Migrations
-
-.PHONY: db-init
-db-init:
-	docker run --rm \
-    	-v $(realpath ./db/migrations):/migrations \
-    	migrate/migrate:v4.16.2 \
-        	create \
-        	-dir /migrations \
-        	-ext .sql \
-        	-seq -digits 3 \
-        	init
-
 
 .PHONY: pg
 pg: 
@@ -28,9 +15,6 @@ pg:
 pg-stop:
 	docker stop marketdb_v1
 
-.PHONY: clean-data
-clean-data:
-	sudo rm -rf ./db/data/
 
 .PHONY: pg-up
 pg-up:
