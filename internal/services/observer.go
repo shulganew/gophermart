@@ -75,6 +75,7 @@ func (o *Observer) ObservAccrual(ctx context.Context) {
 		status, accrual, err := o.getOrderStatus(&order)
 		if err != nil {
 			zap.S().Errorln("Get order status prepare error: ", err)
+			continue
 		}
 
 		if accrual == nil {
@@ -82,6 +83,7 @@ func (o *Observer) ObservAccrual(ctx context.Context) {
 		}
 
 		zap.S().Infoln("Get answer from Accrual system: status: ", status, " Accural: ", accrual)
+
 		order.Status = *status
 		zap.S().Infoln("Order ", order.Onumber, "Status:", order.Status)
 		//if status PROCESSED or INVALID - update db and remove from orders

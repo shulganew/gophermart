@@ -57,8 +57,9 @@ func (r *Register) NewUser(ctx context.Context, user model.User) (userID *uuid.U
 		// If URL exist in DataBase
 		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
 			zap.S().Infoln("User exist: ", user)
-			return user.UUID, true, err
+			return user.UUID, true, nil
 		}
+		return user.UUID, false, err
 	}
 
 	return user.UUID, false, nil

@@ -105,8 +105,9 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 	existed, err := u.market.SetOrder(req.Context(), true, order)
 	if existed {
 		// 422
-		zap.S().Debugln("Order not luna valid: ", wd.Onumber)
-		http.Error(res, "Order alredy existed.", http.StatusUnprocessableEntity)
+		errt := "Order alredy existed."
+		zap.S().Debugln(errt, wd.Onumber)
+		http.Error(res, errt, http.StatusUnprocessableEntity)
 		return
 	}
 	if err != nil {

@@ -319,7 +319,7 @@ func (base *RepoMarket) GetAccruals(ctx context.Context, userID *uuid.UUID) (acc
 		return nil, err
 	}
 
-	// If Postgres SIM is 0, it return nil
+	// If Postgres SUM is 0, it return nil
 	if accrual == nil {
 		return &decimal.Zero, nil
 	}

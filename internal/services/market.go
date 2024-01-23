@@ -91,10 +91,20 @@ func (m *Market) CheckBalance(ctx context.Context, userID *uuid.UUID, amount *de
 	if err != nil {
 		return false, err
 	}
-	bonuses := acc.Sub(*amount)
-	if bonuses.IsNegative() {
+
+	wd, err := m.stor.GetWithdrawns(ctx, userID)
+	if err != nil {
+		return false, err
+	}
+
+	bonuses := acc.Sub(*wd)
+	rest := bonuses.Sub(*amount)
+
+	if rest.IsNegative() {
+		zap.S().Infoln("Balance is negative!")
 		return false, nil
 	}
+	zap.S().Infoln("balance Ok")
 	return true, nil
 }
 

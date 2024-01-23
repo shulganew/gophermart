@@ -50,7 +50,7 @@ make pg-stop
 ## Закуск сервиса рачета вознаграждения
 
 ```bash
-./accrual_linux_amd64 -a localhost:8090
+./accrual_linux_amd64 -a localhost:8090 -d 'postgresql://bonus:1@postgres/bonus?sslmode=disable'
 ```
 
 
@@ -83,7 +83,7 @@ curl -v -H "Content-Type: application/json" -X POST http://localhost:8080/api/or
 		-m 2 - Login user
 		-m 3 - Get users order list
 		-m 4 - Set user order
-		m 5 - Get user's balance
+		-m 5 - Get user's balance
 		-m 6 - Make withdrawn
 		-m 7 - Get user's withdrawals
 ```
