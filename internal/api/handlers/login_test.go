@@ -28,7 +28,7 @@ func TestUserLogin(t *testing.T) {
 		requestURL string
 		login      string
 		passLogin  string
-		passDb     string
+		passDB     string
 		statusCode int
 	}{
 		{
@@ -37,7 +37,7 @@ func TestUserLogin(t *testing.T) {
 			requestURL: "http://localhost:8080/api/user/login",
 			login:      "user",
 			passLogin:  "qwerty",
-			passDb:     "qwerty",
+			passDB:     "qwerty",
 			statusCode: http.StatusOK,
 		},
 		{
@@ -46,7 +46,7 @@ func TestUserLogin(t *testing.T) {
 			requestURL: "http://localhost:8080/api/user/login",
 			login:      "user",
 			passLogin:  "qwerty",
-			passDb:     "asdfg",
+			passDB:     "asdfg",
 			statusCode: http.StatusUnauthorized,
 		},
 	}
@@ -76,7 +76,7 @@ func TestUserLogin(t *testing.T) {
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
 
-			cPass, err := bcrypt.GenerateFromPassword([]byte(tt.passDb), bcrypt.DefaultCost)
+			cPass, err := bcrypt.GenerateFromPassword([]byte(tt.passDB), bcrypt.DefaultCost)
 			assert.NoError(t, err)
 
 			dbUser := model.User{UUID: &uuid, Login: tt.login, Password: string(cPass)}
