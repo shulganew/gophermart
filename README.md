@@ -98,17 +98,17 @@ go get github.com/golang/mock/gomock
 
 ```bash
 mockgen -source=internal/services/market.go \
-    -destination=internal/service/mocks/market_mock.gen.go \
+    -destination=internal/services/mocks/market_mock.gen.go \
     -package=mocks
 ```
 ```bash
 mockgen -source=internal/services/register.go \
-    -destination=internal/service/mocks/register_mock.gen.go \
+    -destination=internal/services/mocks/register_mock.gen.go \
     -package=mocks
 ```
 ```bash
 mockgen -source=internal/services/observer.go \
-    -destination=internal/service/mocks/observer_mock.gen.go \
+    -destination=internal/services/mocks/observer_mock.gen.go \
     -package=mocks
 ```
 

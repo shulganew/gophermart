@@ -17,8 +17,8 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
-	"github.com/shulganew/gophermart/internal/service/mocks"
 	"github.com/shulganew/gophermart/internal/services"
+	"github.com/shulganew/gophermart/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
