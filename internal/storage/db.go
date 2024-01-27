@@ -163,7 +163,7 @@ func (base *RepoMarket) GetOrders(ctx context.Context, userID *uuid.UUID) ([]mod
 		if err != nil {
 			return nil, err
 		}
-		order.Status.SetStatus(status)
+		order.Status = model.Status(status)
 		order.Bonus = model.NewBonus(&used, &accrual)
 		orders = append(orders, order)
 	}
@@ -241,7 +241,7 @@ func (base *RepoMarket) IsPreOrder(ctx context.Context, userID *uuid.UUID, order
 
 func (base *RepoMarket) MovePreOrder(ctx context.Context, order *model.Order) (err error) {
 
-	_, err = base.master.Exec(ctx, "UPDATE orders SET status = $1, isPreorder = $2 WHERE onumber = $3", order.Status.String(), order.IsPreOrder, order.Onumber)
+	_, err = base.master.Exec(ctx, "UPDATE orders SET status = $1, isPreorder = $2 WHERE onumber = $3", order.Status, order.IsPreOrder, order.Onumber)
 	if err != nil {
 		zap.S().Errorln("UPDATE preoreder error: ", err)
 		return err
@@ -278,7 +278,7 @@ func (base *RepoMarket) LoadPocessing(ctx context.Context) ([]model.Order, error
 		if err != nil {
 			return nil, err
 		}
-		order.Status.SetStatus(status)
+		order.Status = model.Status(status)
 		orders = append(orders, order)
 	}
 
@@ -287,7 +287,7 @@ func (base *RepoMarket) LoadPocessing(ctx context.Context) ([]model.Order, error
 
 func (base *RepoMarket) UpdateStatus(ctx context.Context, order *model.Order, accrual *decimal.Decimal) (err error) {
 
-	_, err = base.master.Exec(ctx, "UPDATE orders SET status = $1 WHERE onumber = $2", order.Status.String(), order.Onumber)
+	_, err = base.master.Exec(ctx, "UPDATE orders SET status = $1 WHERE onumber = $2", order.Status, order.Onumber)
 	if err != nil {
 		zap.S().Errorln("UPDATE order Status error: ", err)
 		return err

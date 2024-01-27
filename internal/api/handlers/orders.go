@@ -14,16 +14,16 @@ import (
 )
 
 type OrderResponse struct {
-	Onumber  string  `json:"number"`
-	Status   string  `json:"status"`
-	Accrual  float64 `json:"accrual,omitempty"`
-	Uploaded string  `json:"uploaded_at"`
+	Onumber  string       `json:"number"`
+	Status   model.Status `json:"status"`
+	Accrual  float64      `json:"accrual,omitempty"`
+	Uploaded string       `json:"uploaded_at"`
 }
 
 func NewOrderResponse(order *model.Order) *OrderResponse {
 	acc := order.Bonus.Accrual.InexactFloat64()
 	time := order.Uploaded.Format(time.RFC3339)
-	return &OrderResponse{Onumber: order.Onumber, Status: order.Status.String(), Accrual: acc, Uploaded: time}
+	return &OrderResponse{Onumber: order.Onumber, Status: order.Status, Accrual: acc, Uploaded: time}
 }
 
 type HandlerOrder struct {

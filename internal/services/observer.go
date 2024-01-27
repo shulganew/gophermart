@@ -87,7 +87,7 @@ func (o *Observer) ObservAccrual(ctx context.Context) {
 		order.Status = *status
 		zap.S().Infoln("Order ", order.Onumber, "Status:", order.Status)
 		//if status PROCESSED or INVALID - update db and remove from orders
-		if *status == 2 || *status == 3 {
+		if *status == model.PROCESSED || *status == model.INVALID {
 			err = o.stor.UpdateStatus(ctx, &order, accrual)
 			if err != nil {
 				zap.S().Errorln("Get error during deleted poccessed order", err)
@@ -116,7 +116,7 @@ func (o *Observer) LoadData(ctx context.Context) {
 			o.orders[order.Onumber] = order
 
 			// Set order status to PROCESSING in database
-			order.Status = model.Status(1)
+			order.Status = model.Status(model.PROCESSING)
 			o.stor.UpdateStatus(ctx, &order, &decimal.Zero)
 		}
 	}
@@ -146,13 +146,13 @@ func (o *Observer) getOrderStatus(order *model.Order) (status *model.Status, acc
 
 	// Set status INVALID if no content 204
 	if res.StatusCode == http.StatusNoContent {
-		invalid := model.Status(2)
+		invalid := model.Status(model.INVALID)
 		return &invalid, nil, nil
 	}
 
 	// Set status PROCESSING if no busy 429
 	if res.StatusCode == http.StatusNoContent {
-		invalid := model.Status(1)
+		invalid := model.Status(model.PROCESSING)
 		return &invalid, nil, nil
 	}
 
@@ -164,8 +164,7 @@ func (o *Observer) getOrderStatus(order *model.Order) (status *model.Status, acc
 	}
 	defer res.Body.Close()
 
-	st := model.Status(0)
-	st.SetStatus(accResp.Status)
+	st := model.NEW
 
 	accrual := decimal.NewFromFloat(accResp.Accrual)
 

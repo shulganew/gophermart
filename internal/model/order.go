@@ -19,7 +19,7 @@ type Order struct {
 
 func NewOrder(userID *uuid.UUID, onumber string, preoreder bool, used *decimal.Decimal, accrual *decimal.Decimal) *Order {
 
-	return &Order{UserID: userID, Onumber: onumber, IsPreOrder: preoreder, Uploaded: time.Now(), Status: Status(0), Bonus: NewBonus(used, accrual)}
+	return &Order{UserID: userID, Onumber: onumber, IsPreOrder: preoreder, Uploaded: time.Now(), Status: Status(NEW), Bonus: NewBonus(used, accrual)}
 }
 
 // Check Luna namber
