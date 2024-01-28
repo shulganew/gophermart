@@ -4,38 +4,57 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgerrcode"
-	pgxdecimal "github.com/jackc/pgx-shopspring-decimal"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+	"github.com/pressly/goose/v3"
 	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/model"
+
 	"go.uber.org/zap"
 )
 
-type RepoMarket struct {
-	master *pgx.Conn
+type Repo struct {
+	master *sqlx.DB
 }
 
-func NewRepo(ctx context.Context, master *pgx.Conn) (*RepoMarket, error) {
-	db := RepoMarket{master: master}
+func NewRepo(ctx context.Context, master *sqlx.DB) (*Repo, error) {
+	db := Repo{master: master}
 	err := db.Start(ctx)
 	return &db, err
 }
 
 // Init Database
-func InitDB(ctx context.Context, dsn string) (db *pgx.Conn, err error) {
+func InitDB(ctx context.Context, dsn string, migrationdns string) (db *sqlx.DB, err error) {
 
-	db, err = pgx.Connect(ctx, dsn)
+	initdb, err := goose.OpenDBWithDriver("postgres", migrationdns)
+	if err != nil {
+		log.Fatalf("goose: failed to open DB: %v\n", err)
+	}
+
+	defer func() {
+		if err := initdb.Close(); err != nil {
+			log.Fatalf("goose: failed to close DB: %v\n", err)
+		}
+	}()
+
+	//Init database migrations
+
+	if err := goose.UpContext(ctx, initdb, "migrations"); err != nil { //
+		panic(err)
+	} else {
+		zap.S().Infoln("Migrations update...")
+	}
+
+	db, err = sqlx.Connect("postgres", dsn)
 	if err != nil {
 		return nil, err
 	}
-
-	// Register Numeric and decimal support
-	pgxdecimal.Register(db.TypeMap())
 
 	// Create tables for Market if not exist
 
@@ -47,7 +66,7 @@ func InitDB(ctx context.Context, dsn string) (db *pgx.Conn, err error) {
 		END IF;
 	END$$
 	`
-	_, err = db.Exec(ctx, query)
+	_, err = db.ExecContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("error create processing enum:  %w", err)
 	}
@@ -61,7 +80,7 @@ func InitDB(ctx context.Context, dsn string) (db *pgx.Conn, err error) {
 		);
 		`
 
-	_, err = db.Exec(ctx, query)
+	_, err = db.ExecContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("error create users %w", err)
 	}
@@ -76,7 +95,7 @@ func InitDB(ctx context.Context, dsn string) (db *pgx.Conn, err error) {
 		status processing NOT NULL DEFAULT 'NEW'
 		);
 		`
-	_, err = db.Exec(ctx, query)
+	_, err = db.ExecContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("error create orders %w", err)
 	}
@@ -89,7 +108,7 @@ func InitDB(ctx context.Context, dsn string) (db *pgx.Conn, err error) {
 		bonus_accrual NUMERIC DEFAULT 0
 	);
 	`
-	_, err = db.Exec(ctx, query)
+	_, err = db.ExecContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("error create bonuses %w", err)
 	}
@@ -97,16 +116,16 @@ func InitDB(ctx context.Context, dsn string) (db *pgx.Conn, err error) {
 	return
 }
 
-func (base *RepoMarket) Start(ctx context.Context) error {
+func (base *Repo) Start(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*3)
-	err := base.master.Ping(ctx)
+	err := base.master.Ping()
 	defer cancel()
 	return err
 }
 
-func (base *RepoMarket) Register(ctx context.Context, user model.User) error {
+func (base *Repo) Register(ctx context.Context, user model.User) error {
 
-	_, err := base.master.Exec(ctx, "INSERT INTO users (user_id, login, password) VALUES ($1, $2, $3)", user.UUID, user.Login, user.Password)
+	_, err := base.master.ExecContext(ctx, "INSERT INTO users (user_id, login, password) VALUES ($1, $2, $3)", user.UUID, user.Login, user.Password)
 	if err != nil {
 
 		var pgErr *pgconn.PgError
@@ -124,9 +143,9 @@ func (base *RepoMarket) Register(ctx context.Context, user model.User) error {
 
 // Retrive User by login
 
-func (base *RepoMarket) GetByLogin(ctx context.Context, login string) (*model.User, error) {
+func (base *Repo) GetByLogin(ctx context.Context, login string) (*model.User, error) {
 
-	row := base.master.QueryRow(ctx, "SELECT user_id, password FROM users WHERE login = $1", login)
+	row := base.master.QueryRowContext(ctx, "SELECT user_id, password FROM users WHERE login = $1", login)
 	user := model.User{Login: login}
 	err := row.Scan(&user.UUID, &user.Password)
 	if err != nil {
@@ -137,7 +156,7 @@ func (base *RepoMarket) GetByLogin(ctx context.Context, login string) (*model.Us
 	return &user, nil
 }
 
-func (base *RepoMarket) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Order, error) {
+func (base *Repo) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Order, error) {
 	query := `
 	SELECT users.user_id, orders.onumber, orders.uploaded, orders.status, bonuses.bonus_used, bonuses.bonus_accrual
 		FROM orders 
@@ -147,7 +166,7 @@ func (base *RepoMarket) GetOrders(ctx context.Context, userID *uuid.UUID) ([]mod
 		ORDER BY orders.uploaded DESC
 		`
 
-	rows, err := base.master.Query(ctx, query, userID)
+	rows, err := base.master.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -171,9 +190,9 @@ func (base *RepoMarket) GetOrders(ctx context.Context, userID *uuid.UUID) ([]mod
 	return orders, nil
 
 }
-func (base *RepoMarket) SetOrder(ctx context.Context, userID *uuid.UUID, order string, isPreOrder bool, withdrawn *decimal.Decimal) error {
+func (base *Repo) SetOrder(ctx context.Context, userID *uuid.UUID, order string, isPreOrder bool, withdrawn *decimal.Decimal) error {
 
-	_, err := base.master.Exec(ctx, "INSERT INTO orders (user_id, onumber, isPreorder, uploaded) VALUES ($1, $2, $3, $4)", userID, order, isPreOrder, time.Now())
+	_, err := base.master.ExecContext(ctx, "INSERT INTO orders (user_id, onumber, isPreorder, uploaded) VALUES ($1, $2, $3, $4)", userID, order, isPreOrder, time.Now())
 	if err != nil {
 		var pgErr *pgconn.PgError
 		errors.As(err, &pgErr)
@@ -186,7 +205,7 @@ func (base *RepoMarket) SetOrder(ctx context.Context, userID *uuid.UUID, order s
 		return err
 	}
 
-	_, err = base.master.Exec(ctx, "INSERT INTO bonuses (onumber, bonus_used) VALUES ($1, $2)", order, *withdrawn)
+	_, err = base.master.ExecContext(ctx, "INSERT INTO bonuses (onumber, bonus_used) VALUES ($1, $2)", order, *withdrawn)
 	if err != nil {
 		zap.S().Errorln("Insert order error: ", err)
 		return err
@@ -195,10 +214,10 @@ func (base *RepoMarket) SetOrder(ctx context.Context, userID *uuid.UUID, order s
 	return nil
 }
 
-func (base *RepoMarket) IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
+func (base *Repo) IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
 
 	var ordersn int
-	row := base.master.QueryRow(ctx, "SELECT count(*) FROM orders WHERE user_id = $1 AND onumber = $2", userID, order)
+	row := base.master.QueryRowContext(ctx, "SELECT count(*) FROM orders WHERE user_id = $1 AND onumber = $2", userID, order)
 	err = row.Scan(&ordersn)
 	if err != nil {
 		zap.S().Errorln("Error during order search for user: ", userID, order, err)
@@ -211,9 +230,9 @@ func (base *RepoMarket) IsExistForUser(ctx context.Context, userID *uuid.UUID, o
 	return true, nil
 }
 
-func (base *RepoMarket) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
+func (base *Repo) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
 	var ordersn int
-	row := base.master.QueryRow(ctx, "SELECT count(*) FROM orders WHERE user_id != $1 AND onumber = $2", userID, order)
+	row := base.master.QueryRowContext(ctx, "SELECT count(*) FROM orders WHERE user_id != $1 AND onumber = $2", userID, order)
 	err = row.Scan(&ordersn)
 	if err != nil {
 		zap.S().Errorln("Error during order search for user: ", userID, order, err)
@@ -226,28 +245,28 @@ func (base *RepoMarket) IsExistForOtherUsers(ctx context.Context, userID *uuid.U
 	return true, nil
 }
 
-func (base *RepoMarket) IsPreOrder(ctx context.Context, userID *uuid.UUID, order string) (isPreOrder bool, err error) {
+func (base *Repo) IsPreOrder(ctx context.Context, userID *uuid.UUID, order string) (isPreOrder bool, err error) {
 	query := `
 	SELECT count(orders.onumber)
 	FROM orders INNER JOIN users ON orders.user_id = users.user_id 
 	WHERE users.user_id = $1 AND orders.onumber = $2 AND isPreorder = TRUE
 	`
-	row := base.master.QueryRow(ctx, query, userID, order)
+	row := base.master.QueryRowContext(ctx, query, userID, order)
 	var n int
 	err = row.Scan(&n)
 
 	return n == 1, err
 }
 
-func (base *RepoMarket) MovePreOrder(ctx context.Context, order *model.Order) (err error) {
+func (base *Repo) MovePreOrder(ctx context.Context, order *model.Order) (err error) {
 
-	_, err = base.master.Exec(ctx, "UPDATE orders SET status = $1, isPreorder = $2 WHERE onumber = $3", order.Status, order.IsPreOrder, order.Onumber)
+	_, err = base.master.ExecContext(ctx, "UPDATE orders SET status = $1, isPreorder = $2 WHERE onumber = $3", order.Status, order.IsPreOrder, order.Onumber)
 	if err != nil {
 		zap.S().Errorln("UPDATE preoreder error: ", err)
 		return err
 	}
 
-	_, err = base.master.Exec(ctx, "UPDATE bonuses SET bonus_accrual = $1 WHERE onumber = $2", order.Bonus.Accrual, order.Onumber)
+	_, err = base.master.ExecContext(ctx, "UPDATE bonuses SET bonus_accrual = $1 WHERE onumber = $2", order.Bonus.Accrual, order.Onumber)
 	if err != nil {
 		zap.S().Errorln("UPDATE preoreder's bonus error: ", err)
 		return err
@@ -258,7 +277,7 @@ func (base *RepoMarket) MovePreOrder(ctx context.Context, order *model.Order) (e
 }
 
 // Load all orders with not finished preparation status.
-func (base *RepoMarket) LoadPocessing(ctx context.Context) ([]model.Order, error) {
+func (base *Repo) LoadPocessing(ctx context.Context) ([]model.Order, error) {
 
 	query := `
 	SELECT users.user_id, orders.onumber, orders.uploaded, orders.status
@@ -266,7 +285,7 @@ func (base *RepoMarket) LoadPocessing(ctx context.Context) ([]model.Order, error
 	WHERE (status = 'NEW' OR status = 'REGISTERED' OR status = 'PROCESSING') AND isPreorder = FALSE
 	`
 
-	rows, err := base.master.Query(ctx, query)
+	rows, err := base.master.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -285,16 +304,16 @@ func (base *RepoMarket) LoadPocessing(ctx context.Context) ([]model.Order, error
 	return orders, nil
 }
 
-func (base *RepoMarket) UpdateStatus(ctx context.Context, order *model.Order, accrual *decimal.Decimal) (err error) {
+func (base *Repo) UpdateStatus(ctx context.Context, order *model.Order, accrual *decimal.Decimal) (err error) {
 
-	_, err = base.master.Exec(ctx, "UPDATE orders SET status = $1 WHERE onumber = $2", order.Status, order.Onumber)
+	_, err = base.master.ExecContext(ctx, "UPDATE orders SET status = $1 WHERE onumber = $2", order.Status, order.Onumber)
 	if err != nil {
 		zap.S().Errorln("UPDATE order Status error: ", err)
 		return err
 	}
 
 	if accrual != nil {
-		_, err = base.master.Exec(ctx, "UPDATE bonuses SET  bonus_accrual = $1 WHERE onumber = $2", accrual, order.Onumber)
+		_, err = base.master.ExecContext(ctx, "UPDATE bonuses SET  bonus_accrual = $1 WHERE onumber = $2", accrual, order.Onumber)
 		if err != nil {
 			zap.S().Errorln("UPDATE order Status error: ", err)
 			return err
@@ -304,7 +323,7 @@ func (base *RepoMarket) UpdateStatus(ctx context.Context, order *model.Order, ac
 	return nil
 }
 
-func (base *RepoMarket) GetAccruals(ctx context.Context, userID *uuid.UUID) (accrual *decimal.Decimal, err error) {
+func (base *Repo) GetAccruals(ctx context.Context, userID *uuid.UUID) (accrual *decimal.Decimal, err error) {
 	query := `
 	SELECT SUM(bonuses.bonus_accrual)
 		FROM orders 
@@ -312,7 +331,7 @@ func (base *RepoMarket) GetAccruals(ctx context.Context, userID *uuid.UUID) (acc
 		INNER JOIN bonuses ON orders.onumber = bonuses.onumber;
 	`
 
-	row := base.master.QueryRow(ctx, query)
+	row := base.master.QueryRowContext(ctx, query)
 
 	err = row.Scan(&accrual)
 	if err != nil {
@@ -327,7 +346,7 @@ func (base *RepoMarket) GetAccruals(ctx context.Context, userID *uuid.UUID) (acc
 	return accrual, nil
 }
 
-func (base *RepoMarket) GetWithdrawns(ctx context.Context, userID *uuid.UUID) (withdrawn *decimal.Decimal, err error) {
+func (base *Repo) GetWithdrawns(ctx context.Context, userID *uuid.UUID) (withdrawn *decimal.Decimal, err error) {
 	query := `
 	SELECT SUM(bonuses.bonus_used)
 		FROM orders 
@@ -335,7 +354,7 @@ func (base *RepoMarket) GetWithdrawns(ctx context.Context, userID *uuid.UUID) (w
 		INNER JOIN bonuses ON orders.onumber = bonuses.onumber;
 	`
 
-	row := base.master.QueryRow(ctx, query)
+	row := base.master.QueryRowContext(ctx, query)
 
 	err = row.Scan(&withdrawn)
 	if err != nil {
@@ -345,7 +364,7 @@ func (base *RepoMarket) GetWithdrawns(ctx context.Context, userID *uuid.UUID) (w
 	return withdrawn, nil
 }
 
-func (base *RepoMarket) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds []model.Withdrawals, err error) {
+func (base *Repo) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds []model.Withdrawals, err error) {
 
 	query := `
 	SELECT  orders.onumber, bonuses.bonus_used, orders.uploaded
@@ -355,7 +374,7 @@ func (base *RepoMarket) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds
 		ORDER BY orders.uploaded DESC
 		`
 
-	rows, err := base.master.Query(ctx, query)
+	rows, err := base.master.QueryContext(ctx, query)
 
 	for rows.Next() {
 		var wd model.Withdrawals

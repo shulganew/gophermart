@@ -9,6 +9,7 @@ import (
 	"github.com/shulganew/gophermart/internal/app"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/storage"
+	_ "github.com/shulganew/gophermart/migrations"
 	"go.uber.org/zap"
 )
 
@@ -21,13 +22,13 @@ func main() {
 
 	conf := config.InitConfig()
 
-	db, err := storage.InitDB(ctx, conf.DSN)
+	db, err := storage.InitDB(ctx, conf.DSN, conf.DSNMitration)
 	if err != nil {
 		db = nil
 		zap.S().Errorln("Can't connect to Database!", err)
 		panic(err)
 	}
-	defer db.Close(ctx)
+	defer db.Close()
 
 	//Init application
 	market, register, observer := app.InitApp(ctx, conf, db)

@@ -6,14 +6,14 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jmoiron/sqlx"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/services"
 	"github.com/shulganew/gophermart/internal/storage"
 	"go.uber.org/zap"
 )
 
-func InitApp(ctx context.Context, conf *config.Config, db *pgx.Conn) (*services.Market, *services.Register, *services.Observer) {
+func InitApp(ctx context.Context, conf *config.Config, db *sqlx.DB) (*services.Market, *services.Register, *services.Observer) {
 
 	// Load storage
 	stor, err := storage.NewRepo(ctx, db)

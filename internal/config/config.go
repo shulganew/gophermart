@@ -24,6 +24,8 @@ type Config struct {
 	//dsn connection string
 	DSN string
 
+	DSNMitration string
+
 	PassJWT string
 }
 
@@ -35,6 +37,7 @@ func InitConfig() *Config {
 	loyaltyAddress := flag.String("r", "localhost:8090", "Service Loyality address")
 	dsnf := flag.String("d", "", "Data Source Name for DataBase connection")
 	authJWT := flag.String("p", "JWTsecret", "JWT private key")
+	migration := flag.String("m", "postgresql://postgres:postgres@localhost/postgres?sslmode=disable", "Data Source Name for DataBase connection for migrations (postgres admin user)")
 
 	flag.Parse()
 
@@ -61,6 +64,9 @@ func InitConfig() *Config {
 	} else {
 		zap.S().Infoln("Env var RUN_ADDRESS not found, use default", config.Address)
 	}
+
+	//set config DSN for postgres admin for database creation
+	config.DSNMitration = *migration
 
 	dsn, exist := os.LookupEnv(("DATABASE_URI"))
 

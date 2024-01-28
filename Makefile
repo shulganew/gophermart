@@ -3,27 +3,17 @@
 .PHONY: pg
 pg: 
 	docker run --rm \
-		--name=marketdb_v1 \
-		-v $(abspath ./db/init/):/docker-entrypoint-initdb.d \
+		--name=marketdb_v2 \
 		-e POSTGRES_PASSWORD="postgres" \
 		-d \
 		-p 5432:5432 \
 		postgres:15.3
 
-
 .PHONY: pg-stop
 pg-stop:
-	docker stop marketdb_v1
+	docker stop marketdb_v2
 
 
-.PHONY: pg-up
-pg-up:
-	docker run --rm \
-    -v $(realpath ./db/migrations):/migrations \
-    migrate/migrate:v4.16.2 \
-        -path=/migrations \
-        -database postgres://market:1@172.17.0.2:5432/market?sslmode=disable \
-        up
 
 
 #Linter 
