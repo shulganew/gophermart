@@ -15,6 +15,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/shulganew/gophermart/internal/app"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
 	"github.com/shulganew/gophermart/internal/services"
@@ -52,6 +53,7 @@ func TestUserRegister(t *testing.T) {
 		},
 	}
 
+	app.InitLog()
 	conf := &config.Config{}
 
 	//Init application
@@ -80,7 +82,7 @@ func TestUserRegister(t *testing.T) {
 			user := model.User{UUID: &uuid, Login: tt.login, Password: string(tt.passLogin)}
 
 			_ = repoRegister.EXPECT().
-				Register(gomock.Any(), gomock.Any()).
+				AddUser(gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(tt.registerError)
 

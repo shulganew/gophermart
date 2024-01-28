@@ -37,6 +37,20 @@ func (m *MockMarketPlaceholder) EXPECT() *MockMarketPlaceholderMockRecorder {
 	return m.recorder
 }
 
+// AddOrder mocks base method.
+func (m *MockMarketPlaceholder) AddOrder(ctx context.Context, userID *uuid.UUID, order string, isPreorder bool, withdraw *decimal.Decimal) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddOrder", ctx, userID, order, isPreorder, withdraw)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddOrder indicates an expected call of AddOrder.
+func (mr *MockMarketPlaceholderMockRecorder) AddOrder(ctx, userID, order, isPreorder, withdraw interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddOrder", reflect.TypeOf((*MockMarketPlaceholder)(nil).AddOrder), ctx, userID, order, isPreorder, withdraw)
+}
+
 // GetAccruals mocks base method.
 func (m *MockMarketPlaceholder) GetAccruals(ctx context.Context, userID *uuid.UUID) (*decimal.Decimal, error) {
 	m.ctrl.T.Helper()
@@ -139,20 +153,6 @@ func (m *MockMarketPlaceholder) MovePreOrder(ctx context.Context, order *model.O
 func (mr *MockMarketPlaceholderMockRecorder) MovePreOrder(ctx, order interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MovePreOrder", reflect.TypeOf((*MockMarketPlaceholder)(nil).MovePreOrder), ctx, order)
-}
-
-// SetOrder mocks base method.
-func (m *MockMarketPlaceholder) SetOrder(ctx context.Context, userID *uuid.UUID, order string, isPreorder bool, withdraw *decimal.Decimal) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetOrder", ctx, userID, order, isPreorder, withdraw)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetOrder indicates an expected call of SetOrder.
-func (mr *MockMarketPlaceholderMockRecorder) SetOrder(ctx, userID, order, isPreorder, withdraw interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOrder", reflect.TypeOf((*MockMarketPlaceholder)(nil).SetOrder), ctx, userID, order, isPreorder, withdraw)
 }
 
 // Withdrawals mocks base method.

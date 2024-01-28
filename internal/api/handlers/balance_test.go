@@ -16,6 +16,7 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/shopspring/decimal"
+	"github.com/shulganew/gophermart/internal/app"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
 	"github.com/shulganew/gophermart/internal/services"
@@ -91,6 +92,7 @@ func TestWithdraw(t *testing.T) {
 		},
 	}
 
+	app.InitLog()
 	ctx := context.Background()
 
 	conf := &config.Config{}
@@ -119,15 +121,15 @@ func TestWithdraw(t *testing.T) {
 
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
-			user := model.User{UUID: &uuid, Login: "Test123", Password: "123"}
+			user := model.User{UUID: &uuid, Login: "Test123", Password: "123456"}
 
 			_ = repoRegister.EXPECT().
-				Register(gomock.Any(), gomock.Any()).
+				AddUser(gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(nil)
 
 			_ = repoMarket.EXPECT().
-				SetOrder(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				AddOrder(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(tt.setOrderReturn)
 
@@ -255,7 +257,7 @@ func TestBalance(t *testing.T) {
 			user := model.User{UUID: &uuid, Login: "Test123", Password: "123"}
 
 			_ = repoRegister.EXPECT().
-				Register(gomock.Any(), gomock.Any()).
+				AddUser(gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(nil)
 

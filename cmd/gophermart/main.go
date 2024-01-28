@@ -35,11 +35,9 @@ func main() {
 
 	// Graceful shotdown
 	go func(ctx context.Context) {
-
 		<-ctx.Done()
 		zap.S().Infoln("Graceful shutdown...")
 		os.Exit(0)
-
 	}(ctx)
 
 	//start web

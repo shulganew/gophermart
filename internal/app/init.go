@@ -56,6 +56,7 @@ func InitLog() zap.SugaredLogger {
 
 		panic(err)
 	}
+
 	zap.ReplaceGlobals(logger)
 	defer logger.Sync()
 

@@ -82,8 +82,9 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 	err := goluhn.Validate(wd.Onumber)
 	if err != nil {
 		// 422
-		zap.S().Debugln("Order not luna valid: ", wd.Onumber)
-		http.Error(res, "Order nuber not vaild.", http.StatusUnprocessableEntity)
+		errt := "Order not luna valid."
+		zap.S().Debugln(errt, wd.Onumber)
+		http.Error(res, errt, http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -92,7 +93,9 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 	isEnough, err := u.market.CheckBalance(req.Context(), userID, &amount)
 	if err != nil {
 		// 500
-		http.Error(res, "Error cheking bonuses balance.", http.StatusInternalServerError)
+		errt := "Error cheking bonuses balance."
+		zap.S().Errorln(errt, wd.Onumber, err)
+		http.Error(res, errt, http.StatusInternalServerError)
 		return
 	}
 	if !isEnough {
@@ -102,7 +105,7 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 	}
 
 	order := model.NewOrder(userID, wd.Onumber, true, &amount, &decimal.Zero)
-	existed, err := u.market.SetOrder(req.Context(), true, order)
+	existed, err := u.market.AddOrder(req.Context(), true, order)
 	if existed {
 		// 422
 		errt := "Order alredy existed."
@@ -137,8 +140,9 @@ func (u *HandlerBalance) GetWithdrawals(res http.ResponseWriter, req *http.Reque
 	withdrawals, err := u.market.GetWithdrawals(req.Context(), userID)
 	if err != nil {
 		// 500
-		zap.S().Error("Cat't get withdrawals", err)
-		http.Error(res, "Cat't get withdrawals", http.StatusInternalServerError)
+		errt := "Cat't get withdrawals"
+		zap.S().Error(errt, err)
+		http.Error(res, errt, http.StatusInternalServerError)
 		return
 	}
 	if len(withdrawals) == 0 {
@@ -149,7 +153,9 @@ func (u *HandlerBalance) GetWithdrawals(res http.ResponseWriter, req *http.Reque
 
 	jsonWithdraw, err := json.Marshal(withdrawals)
 	if err != nil {
-		http.Error(res, "Error during Marshal user's balance", http.StatusInternalServerError)
+		errt := "Error during Marshal user's balance"
+		zap.S().Error(errt, err)
+		http.Error(res, errt, http.StatusInternalServerError)
 	}
 
 	//set content type

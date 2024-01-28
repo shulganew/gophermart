@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
+	"github.com/shulganew/gophermart/internal/app"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
 	"github.com/shulganew/gophermart/internal/services"
@@ -41,7 +42,7 @@ func TestUserLogin(t *testing.T) {
 			statusCode: http.StatusOK,
 		},
 		{
-			name:       "Login user success",
+			name:       "Login user fail",
 			method:     http.MethodPost,
 			requestURL: "http://localhost:8080/api/user/login",
 			login:      "user",
@@ -51,6 +52,7 @@ func TestUserLogin(t *testing.T) {
 		},
 	}
 
+	app.InitLog()
 	conf := &config.Config{}
 
 	//Init application

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -14,6 +13,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
 	"github.com/shopspring/decimal"
+	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
 
 	"go.uber.org/zap"
@@ -32,32 +32,32 @@ func NewRepo(ctx context.Context, master *sqlx.DB) (*Repo, error) {
 // Init Database
 func InitDB(ctx context.Context, dsn string, migrationdns string) (db *sqlx.DB, err error) {
 
-	initdb, err := goose.OpenDBWithDriver("postgres", migrationdns)
+	//Init connection for admin user for prepare databse and make migrations
+	initdb, err := goose.OpenDBWithDriver(config.DataBaseType, migrationdns)
 	if err != nil {
-		log.Fatalf("goose: failed to open DB: %v\n", err)
+		zap.S().Fatalln("goose: failed to open DB: %v\n", err)
 	}
 
 	defer func() {
 		if err := initdb.Close(); err != nil {
-			log.Fatalf("goose: failed to close DB: %v\n", err)
+			zap.S().Fatalln("goose: failed to close DB: %v\n", err)
 		}
 	}()
 
 	//Init database migrations
-
 	if err := goose.UpContext(ctx, initdb, "migrations"); err != nil { //
-		panic(err)
+		zap.S().Fatalln("Error make databes migrations before starting Market app: ", err)
 	} else {
 		zap.S().Infoln("Migrations update...")
 	}
 
-	db, err = sqlx.Connect("postgres", dsn)
+	//Connection for Gophermart
+	db, err = sqlx.Connect(config.DataBaseType, dsn)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create tables for Market if not exist
-
 	query := `
 	DO $$
 	BEGIN
@@ -90,7 +90,7 @@ func InitDB(ctx context.Context, dsn string, migrationdns string) (db *sqlx.DB, 
 		id SERIAL, 
 		user_id UUID NOT NULL REFERENCES users(user_id),
 		onumber VARCHAR(20) NOT NULL UNIQUE,
-		isPreorder BOOLEAN NOT NULL, 
+		is_preorder BOOLEAN NOT NULL, 
 		uploaded TIMESTAMPTZ NOT NULL,
 		status processing NOT NULL DEFAULT 'NEW'
 		);
@@ -123,7 +123,7 @@ func (base *Repo) Start(ctx context.Context) error {
 	return err
 }
 
-func (base *Repo) Register(ctx context.Context, user model.User) error {
+func (base *Repo) AddUser(ctx context.Context, user model.User) error {
 
 	_, err := base.master.ExecContext(ctx, "INSERT INTO users (user_id, login, password) VALUES ($1, $2, $3)", user.UUID, user.Login, user.Password)
 	if err != nil {
@@ -135,22 +135,19 @@ func (base *Repo) Register(ctx context.Context, user model.User) error {
 			return pgErr
 		}
 
-		zap.S().Errorln("Insert user error: ", err)
-		return err
+		return fmt.Errorf("Error adding user to Storage: %w", err)
 	}
 	return nil
 }
 
 // Retrive User by login
-
 func (base *Repo) GetByLogin(ctx context.Context, login string) (*model.User, error) {
 
 	row := base.master.QueryRowContext(ctx, "SELECT user_id, password FROM users WHERE login = $1", login)
 	user := model.User{Login: login}
 	err := row.Scan(&user.UUID, &user.Password)
 	if err != nil {
-		zap.S().Errorln("User not valid: ", err)
-		return nil, err
+		return nil, fmt.Errorf("Error during get user by login from storage. User not valid: %w", err)
 	}
 
 	return &user, nil
@@ -162,7 +159,7 @@ func (base *Repo) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Ord
 		FROM orders 
 		INNER JOIN users ON orders.user_id = users.user_id
 		INNER JOIN bonuses ON orders.onumber = bonuses.onumber
-		WHERE isPreorder = FALSE AND orders.user_id = $1
+		WHERE is_preorder = FALSE AND orders.user_id = $1
 		ORDER BY orders.uploaded DESC
 		`
 
@@ -190,9 +187,9 @@ func (base *Repo) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Ord
 	return orders, nil
 
 }
-func (base *Repo) SetOrder(ctx context.Context, userID *uuid.UUID, order string, isPreOrder bool, withdrawn *decimal.Decimal) error {
+func (base *Repo) AddOrder(ctx context.Context, userID *uuid.UUID, order string, isPreOrder bool, withdrawn *decimal.Decimal) error {
 
-	_, err := base.master.ExecContext(ctx, "INSERT INTO orders (user_id, onumber, isPreorder, uploaded) VALUES ($1, $2, $3, $4)", userID, order, isPreOrder, time.Now())
+	_, err := base.master.ExecContext(ctx, "INSERT INTO orders (user_id, onumber, is_preorder, uploaded) VALUES ($1, $2, $3, $4)", userID, order, isPreOrder, time.Now())
 	if err != nil {
 		var pgErr *pgconn.PgError
 		errors.As(err, &pgErr)
@@ -200,15 +197,12 @@ func (base *Repo) SetOrder(ctx context.Context, userID *uuid.UUID, order string,
 		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
 			return pgErr
 		}
-
-		zap.S().Errorln("Insert order error: ", err)
-		return err
+		return fmt.Errorf("Error during set order to Storage, error: %w", err)
 	}
 
 	_, err = base.master.ExecContext(ctx, "INSERT INTO bonuses (onumber, bonus_used) VALUES ($1, $2)", order, *withdrawn)
 	if err != nil {
-		zap.S().Errorln("Insert order error: ", err)
-		return err
+		return fmt.Errorf("Error during add bonuses order to Storage, error: %w", err)
 	}
 
 	return nil
@@ -220,8 +214,7 @@ func (base *Repo) IsExistForUser(ctx context.Context, userID *uuid.UUID, order s
 	row := base.master.QueryRowContext(ctx, "SELECT count(*) FROM orders WHERE user_id = $1 AND onumber = $2", userID, order)
 	err = row.Scan(&ordersn)
 	if err != nil {
-		zap.S().Errorln("Error during order search for user: ", userID, order, err)
-		return true, err
+		return true, fmt.Errorf("Error during order search for user: %w", err)
 	}
 	if ordersn == 0 {
 		return false, nil
@@ -235,8 +228,7 @@ func (base *Repo) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, o
 	row := base.master.QueryRowContext(ctx, "SELECT count(*) FROM orders WHERE user_id != $1 AND onumber = $2", userID, order)
 	err = row.Scan(&ordersn)
 	if err != nil {
-		zap.S().Errorln("Error during order search for user: ", userID, order, err)
-		return true, err
+		return true, fmt.Errorf("Error during order search for user: %w", err)
 	}
 	if ordersn == 0 {
 		return false, nil
@@ -245,32 +237,40 @@ func (base *Repo) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, o
 	return true, nil
 }
 
-func (base *Repo) IsPreOrder(ctx context.Context, userID *uuid.UUID, order string) (isPreOrder bool, err error) {
+func (base *Repo) IsPreOrder(ctx context.Context, userID *uuid.UUID, order string) (bool, error) {
 	query := `
 	SELECT count(orders.onumber)
 	FROM orders INNER JOIN users ON orders.user_id = users.user_id 
-	WHERE users.user_id = $1 AND orders.onumber = $2 AND isPreorder = TRUE
+	WHERE users.user_id = $1 AND orders.onumber = $2 AND is_preorder = TRUE
 	`
 	row := base.master.QueryRowContext(ctx, query, userID, order)
 	var n int
-	err = row.Scan(&n)
+	err := row.Scan(&n)
 
 	return n == 1, err
 }
 
+// Move preorder to regular order. Add accruals for this order.
 func (base *Repo) MovePreOrder(ctx context.Context, order *model.Order) (err error) {
 
-	_, err = base.master.ExecContext(ctx, "UPDATE orders SET status = $1, isPreorder = $2 WHERE onumber = $3", order.Status, order.IsPreOrder, order.Onumber)
+	tx, err := base.master.BeginTx(ctx, nil)
 	if err != nil {
-		zap.S().Errorln("UPDATE preoreder error: ", err)
-		return err
+		return fmt.Errorf("Move order error, begin transaction error, %w", err)
 	}
 
-	_, err = base.master.ExecContext(ctx, "UPDATE bonuses SET bonus_accrual = $1 WHERE onumber = $2", order.Bonus.Accrual, order.Onumber)
+	_, err = tx.ExecContext(ctx, "UPDATE orders SET status = $1, is_preorder = $2 WHERE onumber = $3", order.Status, order.IsPreOrder, order.Onumber)
 	if err != nil {
-		zap.S().Errorln("UPDATE preoreder's bonus error: ", err)
-		return err
+		tx.Rollback()
+		return fmt.Errorf("Move order error, can't move preoreder to order, %w", err)
 	}
+
+	_, err = tx.ExecContext(ctx, "UPDATE bonuses SET bonus_accrual = $1 WHERE onumber = $2", order.Bonus.Accrual, order.Onumber)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("Move order error, can't set bonuses for this order, %w", err)
+	}
+
+	tx.Commit()
 
 	return
 
@@ -278,11 +278,10 @@ func (base *Repo) MovePreOrder(ctx context.Context, order *model.Order) (err err
 
 // Load all orders with not finished preparation status.
 func (base *Repo) LoadPocessing(ctx context.Context) ([]model.Order, error) {
-
 	query := `
 	SELECT users.user_id, orders.onumber, orders.uploaded, orders.status
 	FROM orders INNER JOIN users ON orders.user_id = users.user_id 
-	WHERE (status = 'NEW' OR status = 'REGISTERED' OR status = 'PROCESSING') AND isPreorder = FALSE
+	WHERE (status = 'NEW' OR status = 'REGISTERED' OR status = 'PROCESSING') AND is_preorder = FALSE
 	`
 
 	rows, err := base.master.QueryContext(ctx, query)
@@ -306,19 +305,26 @@ func (base *Repo) LoadPocessing(ctx context.Context) ([]model.Order, error) {
 
 func (base *Repo) UpdateStatus(ctx context.Context, order *model.Order, accrual *decimal.Decimal) (err error) {
 
-	_, err = base.master.ExecContext(ctx, "UPDATE orders SET status = $1 WHERE onumber = $2", order.Status, order.Onumber)
+	tx, err := base.master.BeginTx(ctx, nil)
 	if err != nil {
-		zap.S().Errorln("UPDATE order Status error: ", err)
-		return err
+		return fmt.Errorf("Can't update orders status, begin transaction error, %w", err)
+	}
+
+	_, err = tx.ExecContext(ctx, "UPDATE orders SET status = $1 WHERE onumber = $2", order.Status, order.Onumber)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("Can't update orders status, %w", err)
 	}
 
 	if accrual != nil {
-		_, err = base.master.ExecContext(ctx, "UPDATE bonuses SET  bonus_accrual = $1 WHERE onumber = $2", accrual, order.Onumber)
+		_, err = tx.ExecContext(ctx, "UPDATE bonuses SET bonus_accrual = $1 WHERE onumber = $2", accrual, order.Onumber)
 		if err != nil {
-			zap.S().Errorln("UPDATE order Status error: ", err)
-			return err
+			tx.Rollback()
+			return fmt.Errorf("Can't update bonuses during update status %w", err)
 		}
 	}
+
+	tx.Commit()
 
 	return nil
 }
@@ -365,7 +371,6 @@ func (base *Repo) GetWithdrawns(ctx context.Context, userID *uuid.UUID) (withdra
 }
 
 func (base *Repo) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds []model.Withdrawals, err error) {
-
 	query := `
 	SELECT  orders.onumber, bonuses.bonus_used, orders.uploaded
 		FROM orders 

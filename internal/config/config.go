@@ -12,6 +12,8 @@ import (
 // send pass to midleware
 type CtxPassKey struct{}
 
+const DataBaseType = "postgres"
+
 const TokenExp = time.Hour * 3600
 
 type Config struct {

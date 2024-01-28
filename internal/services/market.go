@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgerrcode"
@@ -19,7 +20,7 @@ type Market struct {
 
 type MarketPlaceholder interface {
 	GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Order, error)
-	SetOrder(ctx context.Context, userID *uuid.UUID, order string, isPreorder bool, withdraw *decimal.Decimal) error
+	AddOrder(ctx context.Context, userID *uuid.UUID, order string, isPreorder bool, withdraw *decimal.Decimal) error
 	IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error)
 	IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error)
 	GetAccruals(ctx context.Context, userID *uuid.UUID) (accrual *decimal.Decimal, err error)
@@ -33,17 +34,17 @@ func NewMarket(stor MarketPlaceholder) *Market {
 	return &Market{stor: stor}
 }
 
-func (m *Market) SetOrder(ctx context.Context, isPreOrder bool, order *model.Order) (existed bool, err error) {
+func (m *Market) AddOrder(ctx context.Context, isPreOrder bool, order *model.Order) (existed bool, err error) {
 	// Add order to the database.
-	err = m.stor.SetOrder(ctx, order.UserID, order.Onumber, isPreOrder, order.Bonus.Used)
+	err = m.stor.AddOrder(ctx, order.UserID, order.Onumber, isPreOrder, order.Bonus.Used)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		// If Order exist in the DataBase
 		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
-			zap.S().Infoln("Order exist: ", order.Onumber)
+			zap.S().Infoln("Error during adding oreder, alredy order alredy existed: ", order.Onumber)
 			return true, err
 		}
-		zap.S().Errorln("Set order error: ", order)
+		return false, fmt.Errorf("Error during add order: %w", err)
 	}
 
 	return false, nil
@@ -101,10 +102,8 @@ func (m *Market) CheckBalance(ctx context.Context, userID *uuid.UUID, amount *de
 	rest := bonuses.Sub(*amount)
 
 	if rest.IsNegative() {
-		zap.S().Infoln("Balance is negative!")
 		return false, nil
 	}
-	zap.S().Infoln("balance Ok")
 	return true, nil
 }
 

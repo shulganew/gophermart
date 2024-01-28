@@ -27,7 +27,7 @@ func upTables(ctx context.Context, tx *sql.Tx) error {
 		user_id UUID NOT NULL REFERENCES users(user_id),
 		onumber VARCHAR(20) NOT NULL UNIQUE,
 		uploaded TIMESTAMPTZ NOT NULL,
-		isPreorder BOOLEAN NOT NULL,
+		is_preorder BOOLEAN NOT NULL,
 		status processing NOT NULL DEFAULT 'NEW'
 		);`)
 

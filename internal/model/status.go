@@ -1,6 +1,5 @@
 package model
 
-// 0-NEW, 1-PROCESSING, 2-INVALID, 3-PROCESSED, 4-REGISTERED.
 type Status string
 
 const (

@@ -13,6 +13,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
+	"github.com/shulganew/gophermart/internal/app"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
 	"github.com/shulganew/gophermart/internal/services"
@@ -47,6 +48,7 @@ func TestGetOrders(t *testing.T) {
 		},
 	}
 
+	app.InitLog()
 	ctx := context.Background()
 
 	conf := &config.Config{}
@@ -82,7 +84,7 @@ func TestGetOrders(t *testing.T) {
 			user := model.User{UUID: &uuid, Login: "Test123", Password: "123"}
 
 			_ = repoRegister.EXPECT().
-				Register(gomock.Any(), gomock.Any()).
+				AddUser(gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(nil)
 

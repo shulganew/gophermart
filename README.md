@@ -100,13 +100,11 @@ go get github.com/golang/mock/gomock
 mockgen -source=internal/services/market.go \
     -destination=internal/services/mocks/market_mock.gen.go \
     -package=mocks
-```
-```bash
+
 mockgen -source=internal/services/register.go \
     -destination=internal/services/mocks/register_mock.gen.go \
     -package=mocks
-```
-```bash
+
 mockgen -source=internal/services/observer.go \
     -destination=internal/services/mocks/observer_mock.gen.go \
     -package=mocks

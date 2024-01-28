@@ -35,6 +35,20 @@ func (m *MockRegistrar) EXPECT() *MockRegistrarMockRecorder {
 	return m.recorder
 }
 
+// AddUser mocks base method.
+func (m *MockRegistrar) AddUser(ctx context.Context, user model.User) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddUser", ctx, user)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddUser indicates an expected call of AddUser.
+func (mr *MockRegistrarMockRecorder) AddUser(ctx, user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockRegistrar)(nil).AddUser), ctx, user)
+}
+
 // GetByLogin mocks base method.
 func (m *MockRegistrar) GetByLogin(ctx context.Context, login string) (*model.User, error) {
 	m.ctrl.T.Helper()
@@ -48,18 +62,4 @@ func (m *MockRegistrar) GetByLogin(ctx context.Context, login string) (*model.Us
 func (mr *MockRegistrarMockRecorder) GetByLogin(ctx, login interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByLogin", reflect.TypeOf((*MockRegistrar)(nil).GetByLogin), ctx, login)
-}
-
-// Register mocks base method.
-func (m *MockRegistrar) Register(ctx context.Context, user model.User) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Register", ctx, user)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Register indicates an expected call of Register.
-func (mr *MockRegistrarMockRecorder) Register(ctx, user interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockRegistrar)(nil).Register), ctx, user)
 }

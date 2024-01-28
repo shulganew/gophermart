@@ -23,7 +23,7 @@ type Register struct {
 }
 
 type Registrar interface {
-	Register(ctx context.Context, user model.User) error
+	AddUser(ctx context.Context, user model.User) error
 	GetByLogin(ctx context.Context, login string) (*model.User, error)
 }
 
@@ -51,7 +51,7 @@ func (r *Register) NewUser(ctx context.Context, user model.User) (userID *uuid.U
 	user.Password = hash
 
 	// Add user to database.
-	err = r.stor.Register(ctx, user)
+	err = r.stor.AddUser(ctx, user)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		// If URL exist in DataBase

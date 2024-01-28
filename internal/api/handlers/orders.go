@@ -72,7 +72,7 @@ func (u *HandlerOrder) SetOrder(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	isExist, err := u.market.SetOrder(req.Context(), false, order)
+	isExist, err := u.market.AddOrder(req.Context(), false, order)
 	if !isExist && err != nil {
 		// 500
 		errt := "Get error during save new order."
