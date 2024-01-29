@@ -13,55 +13,10 @@ import (
 	"github.com/shulganew/gophermart/internal/model"
 )
 
-func (base *Repo) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Order, error) {
-	query := `
-	SELECT users.user_id, orders.onumber, orders.uploaded, orders.status, bonuses.bonus_used, bonuses.bonus_accrual
-		FROM orders 
-		INNER JOIN users ON orders.user_id = users.user_id
-		INNER JOIN bonuses ON orders.onumber = bonuses.onumber
-		WHERE is_preorder = FALSE AND orders.user_id = $1
-		ORDER BY orders.uploaded DESC
-		`
+func (base *Repo) AddOrder(ctx context.Context, userID *uuid.UUID, order string, isPreOrder bool, withdrawn decimal.Decimal) error {
 
-	rows, err := base.master.QueryContext(ctx, query, userID)
+	_, err := base.master.ExecContext(ctx, "INSERT INTO orders (user_id, onumber, is_preorder, uploaded, withdrawn) VALUES ($1, $2, $3, $4, $5)", userID, order, isPreOrder, time.Now(), withdrawn)
 	if err != nil {
-		return nil, err
-	}
-
-	orders := []model.Order{}
-	for rows.Next() {
-		var order model.Order
-		var status string
-		var used decimal.Decimal
-		var accrual decimal.Decimal
-
-		err = rows.Scan(&order.UserID, &order.Onumber, &order.Uploaded, &status, &used, &accrual)
-		if err != nil {
-			return nil, err
-		}
-		order.Status = model.Status(status)
-		order.Bonus = model.NewBonus(&used, &accrual)
-		orders = append(orders, order)
-	}
-
-	err = rows.Err()
-	if err != nil {
-		return nil, err
-	}
-
-	return orders, nil
-
-}
-
-func (base *Repo) AddOrder(ctx context.Context, userID *uuid.UUID, order string, isPreOrder bool, withdrawn *decimal.Decimal) error {
-
-	tx, err := base.master.BeginTx(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("add order error, begin transaction error, %w", err)
-	}
-	_, err = tx.ExecContext(ctx, "INSERT INTO orders (user_id, onumber, is_preorder, uploaded) VALUES ($1, $2, $3, $4)", userID, order, isPreOrder, time.Now())
-	if err != nil {
-		tx.Rollback()
 		var pgErr *pq.Error
 		// if order exist in DataBase
 		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
@@ -70,113 +25,75 @@ func (base *Repo) AddOrder(ctx context.Context, userID *uuid.UUID, order string,
 		return fmt.Errorf("error during set order to Storage, error: %w", err)
 	}
 
-	_, err = tx.ExecContext(ctx, "INSERT INTO bonuses (onumber, bonus_used) VALUES ($1, $2)", order, *withdrawn)
+	return nil
+}
+
+func (base *Repo) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Order, error) {
+	query := `
+	SELECT user_id, onumber, uploaded, status, withdrawn, accrual
+		FROM orders 
+		WHERE is_preorder = FALSE AND user_id = $1
+		ORDER BY uploaded DESC
+		`
+	orders := []model.Order{}
+	err := base.master.MustBegin().SelectContext(ctx, &orders, query, userID)
 	if err != nil {
-		tx.Rollback()
-		return fmt.Errorf("error during add bonuses order to Storage, error: %w", err)
+		return nil, err
 	}
 
-	tx.Commit()
+	return orders, nil
 
-	return nil
 }
 
 func (base *Repo) IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
 
 	var ordersn int
-	row := base.master.QueryRowContext(ctx, "SELECT count(*) FROM orders WHERE user_id = $1 AND onumber = $2", userID, order)
-	err = row.Scan(&ordersn)
+	err = base.master.GetContext(ctx, &ordersn, "SELECT count(*) FROM orders WHERE user_id = $1 AND onumber = $2", userID, order)
 	if err != nil {
 		return true, fmt.Errorf("error during order search for user: %w", err)
 	}
-	if ordersn == 0 {
-		return false, nil
-	}
-
-	return true, nil
+	return ordersn != 0, nil
 }
 
 func (base *Repo) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
+
 	var ordersn int
-	row := base.master.QueryRowContext(ctx, "SELECT count(*) FROM orders WHERE user_id != $1 AND onumber = $2", userID, order)
-	err = row.Scan(&ordersn)
+	err = base.master.GetContext(ctx, &ordersn, "SELECT count(*) FROM orders WHERE user_id != $1 AND onumber = $2", userID, order)
 	if err != nil {
 		return true, fmt.Errorf("error during order search for user: %w", err)
 	}
-	if ordersn == 0 {
-		return false, nil
-	}
 
-	return true, nil
+	return ordersn != 0, nil
 }
 
-func (base *Repo) GetAccruals(ctx context.Context, userID *uuid.UUID) (accrual *decimal.Decimal, err error) {
-	query := `
-	SELECT SUM(bonuses.bonus_accrual)
-		FROM orders 
-		INNER JOIN users ON orders.user_id = users.user_id
-		INNER JOIN bonuses ON orders.onumber = bonuses.onumber;
-	`
+func (base *Repo) GetBonuses(ctx context.Context, userID *uuid.UUID) (accrual decimal.Decimal, err error) {
 
-	row := base.master.QueryRowContext(ctx, query)
-
-	err = row.Scan(&accrual)
+	err = base.master.GetContext(ctx, &accrual, "SELECT bonuses FROM users where user_id = $1", userID)
 	if err != nil {
-		return nil, err
+		return decimal.Zero, err
 	}
-
-	// If Postgres SUM is 0, it return nil
-	if accrual == nil {
-		return &decimal.Zero, nil
-	}
-
 	return accrual, nil
 }
 
-func (base *Repo) GetWithdrawns(ctx context.Context, userID *uuid.UUID) (withdrawn *decimal.Decimal, err error) {
-	query := `
-	SELECT SUM(bonuses.bonus_used)
-		FROM orders 
-		INNER JOIN users ON orders.user_id = users.user_id
-		INNER JOIN bonuses ON orders.onumber = bonuses.onumber;
-	`
+func (base *Repo) GetWithdrawals(ctx context.Context, userID *uuid.UUID) (withdrawn decimal.Decimal, err error) {
 
-	row := base.master.QueryRowContext(ctx, query)
-
-	err = row.Scan(&withdrawn)
+	err = base.master.GetContext(ctx, &withdrawn, "SELECT withdrawals FROM users where user_id = $1", userID)
 	if err != nil {
-		return nil, err
+		return decimal.Zero, err
 	}
-
 	return withdrawn, nil
 }
 
 func (base *Repo) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds []model.Withdrawals, err error) {
+
 	query := `
-	SELECT  orders.onumber, bonuses.bonus_used, orders.uploaded
+	SELECT  onumber, withdrawn, uploaded
 		FROM orders 
-		INNER JOIN users ON orders.user_id = users.user_id
-		INNER JOIN bonuses ON orders.onumber = bonuses.onumber
-		ORDER BY orders.uploaded DESC
+		WHERE user_id = $1
+		ORDER BY uploaded DESC
 		`
 
-	rows, err := base.master.QueryContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-
-	for rows.Next() {
-		var wd model.Withdrawals
-		var updloded time.Time
-		err = rows.Scan(&wd.Onumber, &wd.Withdrawn, &updloded)
-		if err != nil {
-			return nil, err
-		}
-		wd.Uploaded = updloded.Format(time.RFC3339)
-		wds = append(wds, wd)
-	}
-
-	err = rows.Err()
+	err = base.master.MustBegin().SelectContext(ctx, &wds, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -186,38 +103,31 @@ func (base *Repo) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds []mod
 
 func (base *Repo) IsPreOrder(ctx context.Context, userID *uuid.UUID, order string) (bool, error) {
 	query := `
-	SELECT count(orders.onumber)
-	FROM orders INNER JOIN users ON orders.user_id = users.user_id 
-	WHERE users.user_id = $1 AND orders.onumber = $2 AND is_preorder = TRUE
+	SELECT count(onumber)
+	FROM orders
+	WHERE user_id = $1 AND onumber = $2 AND is_preorder = TRUE
 	`
-	row := base.master.QueryRowContext(ctx, query, userID, order)
-	var n int
-	err := row.Scan(&n)
 
-	return n == 1, err
+	var is int
+	err := base.master.GetContext(ctx, &is, query, userID, order)
+	if err != nil {
+		return true, fmt.Errorf("error during is preorder checking: %w", err)
+	}
+
+	return is != 0, err
 }
 
 // Move preorder to regular order. Add accruals for this order.
 func (base *Repo) MovePreOrder(ctx context.Context, order *model.Order) (err error) {
 
-	tx, err := base.master.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("move order error, begin transaction error, %w", err)
 	}
 
-	_, err = tx.ExecContext(ctx, "UPDATE orders SET status = $1, is_preorder = $2 WHERE onumber = $3", order.Status, order.IsPreOrder, order.Onumber)
+	_, err = base.master.ExecContext(ctx, "UPDATE orders SET status = $1, is_preorder = $2 WHERE onumber = $3", order.Status, order.IsPreOrder, order.Onumber)
 	if err != nil {
-		tx.Rollback()
 		return fmt.Errorf("move order error, can't move preoreder to order, %w", err)
 	}
-
-	_, err = tx.ExecContext(ctx, "UPDATE bonuses SET bonus_accrual = $1 WHERE onumber = $2", order.Bonus.Accrual, order.Onumber)
-	if err != nil {
-		tx.Rollback()
-		return fmt.Errorf("move order error, can't set bonuses for this order, %w", err)
-	}
-
-	tx.Commit()
 
 	return
 

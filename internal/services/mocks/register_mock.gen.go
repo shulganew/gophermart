@@ -36,17 +36,17 @@ func (m *MockRegistrar) EXPECT() *MockRegistrarMockRecorder {
 }
 
 // AddUser mocks base method.
-func (m *MockRegistrar) AddUser(ctx context.Context, user model.User) error {
+func (m *MockRegistrar) AddUser(ctx context.Context, user model.User, hash string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddUser", ctx, user)
+	ret := m.ctrl.Call(m, "AddUser", ctx, user, hash)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddUser indicates an expected call of AddUser.
-func (mr *MockRegistrarMockRecorder) AddUser(ctx, user interface{}) *gomock.Call {
+func (mr *MockRegistrarMockRecorder) AddUser(ctx, user, hash interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockRegistrar)(nil).AddUser), ctx, user)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockRegistrar)(nil).AddUser), ctx, user, hash)
 }
 
 // GetByLogin mocks base method.

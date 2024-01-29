@@ -9,9 +9,41 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
 	"github.com/shulganew/gophermart/internal/config"
-
 	"go.uber.org/zap"
 )
+
+const CreateENUM = `
+DO $$
+BEGIN
+	IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'processing') THEN
+		CREATE TYPE processing AS ENUM ('NEW', 'PROCESSING', 'INVALID', 'PROCESSED', 'REGISTERED');
+	END IF;
+END$$
+`
+
+const CreateUser = `
+CREATE TABLE IF NOT EXISTS users (
+	id SERIAL, 
+	user_id UUID NOT NULL UNIQUE, 
+	login TEXT NOT NULL UNIQUE, 
+	password_hash TEXT NOT NULL,
+	withdrawals NUMERIC DEFAULT 0,
+	bonuses NUMERIC DEFAULT 0
+	);
+	`
+
+const CreateOrders = `
+	CREATE TABLE IF NOT EXISTS orders (
+		id SERIAL, 
+		user_id UUID NOT NULL REFERENCES users(user_id),
+		onumber VARCHAR(20) NOT NULL UNIQUE,
+		is_preorder BOOLEAN NOT NULL, 
+		uploaded TIMESTAMPTZ NOT NULL,
+		status processing NOT NULL DEFAULT 'NEW',
+		withdrawn NUMERIC DEFAULT 0,
+		accrual NUMERIC DEFAULT 0
+		);
+		`
 
 type Repo struct {
 	master *sqlx.DB
@@ -55,59 +87,19 @@ func InitDB(ctx context.Context, conf *config.Config) (db *sqlx.DB, err error) {
 	}
 
 	// Create tables for Market if not exist
-	query := `
-	DO $$
-	BEGIN
-		IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'processing') THEN
-			CREATE TYPE processing AS ENUM ('NEW', 'PROCESSING', 'INVALID', 'PROCESSED', 'REGISTERED');
-		END IF;
-	END$$
-	`
-	_, err = db.ExecContext(ctx, query)
+	_, err = db.ExecContext(ctx, CreateENUM)
 	if err != nil {
 		return nil, fmt.Errorf("error create processing enum:  %w", err)
 	}
 
-	query = `
-	CREATE TABLE IF NOT EXISTS users (
-		id SERIAL, 
-		user_id UUID NOT NULL UNIQUE, 
-		login TEXT NOT NULL UNIQUE, 
-		password TEXT NOT NULL
-		);
-		`
-
-	_, err = db.ExecContext(ctx, query)
+	_, err = db.ExecContext(ctx, CreateUser)
 	if err != nil {
 		return nil, fmt.Errorf("error create users %w", err)
 	}
 
-	query = `
-	CREATE TABLE IF NOT EXISTS orders (
-		id SERIAL, 
-		user_id UUID NOT NULL REFERENCES users(user_id),
-		onumber VARCHAR(20) NOT NULL UNIQUE,
-		is_preorder BOOLEAN NOT NULL, 
-		uploaded TIMESTAMPTZ NOT NULL,
-		status processing NOT NULL DEFAULT 'NEW'
-		);
-		`
-	_, err = db.ExecContext(ctx, query)
+	_, err = db.ExecContext(ctx, CreateOrders)
 	if err != nil {
 		return nil, fmt.Errorf("error create orders %w", err)
-	}
-
-	query = `
-	CREATE TABLE IF NOT EXISTS bonuses (
-		id SERIAL, 
-		onumber VARCHAR(20) NOT NULL REFERENCES orders(onumber) UNIQUE,
-		bonus_used NUMERIC DEFAULT 0,
-		bonus_accrual NUMERIC DEFAULT 0
-	);
-	`
-	_, err = db.ExecContext(ctx, query)
-	if err != nil {
-		return nil, fmt.Errorf("error create bonuses %w", err)
 	}
 
 	return

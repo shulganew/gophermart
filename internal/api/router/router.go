@@ -36,7 +36,7 @@ func RouteMarket(conf *config.Config, market *services.Market, register *service
 		r.Route("/api/user", func(r chi.Router) {
 			r.Use(middlewares.Auth)
 			orders := handlers.NewHandlerOrder(conf, market, observer)
-			r.Post("/orders", http.HandlerFunc(orders.SetOrder))
+			r.Post("/orders", http.HandlerFunc(orders.AddOrder))
 			r.Get("/orders", http.HandlerFunc(orders.GetOrders))
 
 			balance := handlers.NewHandlerBalance(conf, market)

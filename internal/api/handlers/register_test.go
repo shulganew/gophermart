@@ -63,7 +63,6 @@ func TestUserRegister(t *testing.T) {
 	conf.PassJWT = "JWTsecret"
 
 	//init storage
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
@@ -82,7 +81,7 @@ func TestUserRegister(t *testing.T) {
 			user := model.User{UUID: &uuid, Login: tt.login, Password: string(tt.passLogin)}
 
 			_ = repoRegister.EXPECT().
-				AddUser(gomock.Any(), gomock.Any()).
+				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(tt.registerError)
 
@@ -127,7 +126,6 @@ func TestUserRegister(t *testing.T) {
 			t.Log("StatusCode test: ", tt.statusCode, " server: ", res.StatusCode)
 
 			//Unmarshal body
-
 			assert.Equal(t, tt.statusCode, res.StatusCode)
 
 		})

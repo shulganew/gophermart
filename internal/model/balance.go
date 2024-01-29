@@ -7,7 +7,7 @@ type UserBalance struct {
 	Withdrawn float64 `json:"withdrawn"`
 }
 
-func NewUserBalance(bonus *decimal.Decimal, withdrawn *decimal.Decimal) *UserBalance {
+func NewUserBalance(bonus decimal.Decimal, withdrawn decimal.Decimal) *UserBalance {
 
 	b := bonus.InexactFloat64()
 	w := withdrawn.InexactFloat64()

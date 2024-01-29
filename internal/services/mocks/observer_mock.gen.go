@@ -51,16 +51,30 @@ func (mr *MockObserverUpdaterMockRecorder) LoadPocessing(ctx interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadPocessing", reflect.TypeOf((*MockObserverUpdater)(nil).LoadPocessing), ctx)
 }
 
-// UpdateStatus mocks base method.
-func (m *MockObserverUpdater) UpdateStatus(ctx context.Context, order *model.Order, accrual *decimal.Decimal) error {
+// SetAccrual mocks base method.
+func (m *MockObserverUpdater) SetAccrual(ctx context.Context, order string, accrual decimal.Decimal) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateStatus", ctx, order, accrual)
+	ret := m.ctrl.Call(m, "SetAccrual", ctx, order, accrual)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetAccrual indicates an expected call of SetAccrual.
+func (mr *MockObserverUpdaterMockRecorder) SetAccrual(ctx, order, accrual interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccrual", reflect.TypeOf((*MockObserverUpdater)(nil).SetAccrual), ctx, order, accrual)
+}
+
+// UpdateStatus mocks base method.
+func (m *MockObserverUpdater) UpdateStatus(ctx context.Context, order string, status model.Status) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, order, status)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateStatus indicates an expected call of UpdateStatus.
-func (mr *MockObserverUpdaterMockRecorder) UpdateStatus(ctx, order, accrual interface{}) *gomock.Call {
+func (mr *MockObserverUpdaterMockRecorder) UpdateStatus(ctx, order, status interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockObserverUpdater)(nil).UpdateStatus), ctx, order, accrual)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockObserverUpdater)(nil).UpdateStatus), ctx, order, status)
 }

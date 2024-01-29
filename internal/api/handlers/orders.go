@@ -21,7 +21,7 @@ type OrderResponse struct {
 }
 
 func NewOrderResponse(order *model.Order) *OrderResponse {
-	acc := order.Bonus.Accrual.InexactFloat64()
+	acc := order.Accrual.InexactFloat64()
 	time := order.Uploaded.Format(time.RFC3339)
 	return &OrderResponse{Onumber: order.Onumber, Status: order.Status, Accrual: acc, Uploaded: time}
 }
@@ -37,7 +37,7 @@ func NewHandlerOrder(conf *config.Config, market *services.Market, observer *ser
 	return &HandlerOrder{market: market, conf: conf, observer: observer}
 }
 
-func (u *HandlerOrder) SetOrder(res http.ResponseWriter, req *http.Request) {
+func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 
 	//get UserID from cxt values
 	ctxConfig := req.Context().Value(config.CtxConfig{}).(config.CtxConfig)
@@ -61,7 +61,7 @@ func (u *HandlerOrder) SetOrder(res http.ResponseWriter, req *http.Request) {
 	onumber := string(body)
 	zap.S().Infoln("Set Order for user: ", userID, " Order: ", onumber)
 	// Create order
-	order := model.NewOrder(userID, onumber, false, &decimal.Zero, &decimal.Zero)
+	order := model.NewOrder(userID, onumber, false, decimal.Zero, decimal.Zero)
 
 	isValid := order.IsValid()
 	if !isValid {
@@ -101,6 +101,8 @@ func (u *HandlerOrder) SetOrder(res http.ResponseWriter, req *http.Request) {
 				http.Error(res, errt, http.StatusInternalServerError)
 				return
 			}
+
+
 		}
 
 		// Is Existed for this user.

@@ -37,7 +37,8 @@ type Observer struct {
 
 type ObserverUpdater interface {
 	LoadPocessing(ctx context.Context) ([]model.Order, error)
-	UpdateStatus(ctx context.Context, order *model.Order, accrual *decimal.Decimal) error
+	UpdateStatus(ctx context.Context, order string, status model.Status) (err error)
+	SetAccrual(ctx context.Context, order string, accrual decimal.Decimal) (err error)
 }
 
 func NewObserver(stor ObserverUpdater, conf *config.Config) *Observer {
@@ -78,19 +79,20 @@ func (o *Observer) ObservAccrual(ctx context.Context) {
 			continue
 		}
 
-		if accrual == nil {
-			accrual = &decimal.Zero
-		}
+		zap.S().Infoln("Get answer from Accrual system: status: ", *status, " Accural: ", *accrual)
+		zap.S().Infoln("Order ", order.Onumber, "Status:", status)
 
-		zap.S().Infoln("Get answer from Accrual system: status: ", *status, " Accural: ", accrual)
-
-		order.Status = *status
-		zap.S().Infoln("Order ", order.Onumber, "Status:", order.Status)
 		//if status PROCESSED or INVALID - update db and remove from orders
 		if *status == model.PROCESSED || *status == model.INVALID {
-			err = o.stor.UpdateStatus(ctx, &order, accrual)
+			err = o.stor.UpdateStatus(ctx, order.Onumber, *status)
 			if err != nil {
 				zap.S().Errorln("Get error during deleted poccessed order", err)
+			}
+			if accrual != nil && accrual != &decimal.Zero {
+				err = o.stor.SetAccrual(ctx, order.Onumber, *accrual)
+				if err != nil {
+					zap.S().Errorln("Get error during deleted poccessed order", err)
+				}
 			}
 			delete(o.orders, order.Onumber)
 
@@ -117,7 +119,7 @@ func (o *Observer) LoadData(ctx context.Context) {
 
 			// Set order status to PROCESSING in database
 			order.Status = model.Status(model.PROCESSING)
-			o.stor.UpdateStatus(ctx, &order, &decimal.Zero)
+			o.stor.UpdateStatus(ctx, order.Onumber, order.Status)
 		}
 	}
 	o.mu.Unlock()
@@ -163,8 +165,6 @@ func (o *Observer) getOrderStatus(order *model.Order) (status *model.Status, acc
 		return nil, nil, err
 	}
 	defer res.Body.Close()
-
-
 	st := model.Status(accResp.Status)
 	accrual := decimal.NewFromFloat(accResp.Accrual)
 

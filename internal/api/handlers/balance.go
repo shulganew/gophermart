@@ -36,13 +36,15 @@ func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) 
 	acc, withdrawn, err := u.market.GetBalance(req.Context(), userID)
 	if err != nil {
 		// 500
-		http.Error(res, "Cat't get orders", http.StatusInternalServerError)
+		errt := "Cat't get orders."
+		zap.S().Errorln(errt, err)
+		http.Error(res, errt, http.StatusInternalServerError)
 		return
 	}
 
-	balance := acc.Sub(*withdrawn)
+	balance := acc.Sub(withdrawn)
 
-	userBalance := model.NewUserBalance(&balance, withdrawn)
+	userBalance := model.NewUserBalance(balance, withdrawn)
 
 	jsonBalance, err := json.Marshal(userBalance)
 	if err != nil {
@@ -90,7 +92,7 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 
 	amount := decimal.NewFromFloat(wd.Withdrawn)
 
-	isEnough, err := u.market.CheckBalance(req.Context(), userID, &amount)
+	isEnough, err := u.market.CheckBalance(req.Context(), userID, amount)
 	if err != nil {
 		// 500
 		errt := "Error cheking bonuses balance."
@@ -104,7 +106,7 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	order := model.NewOrder(userID, wd.Onumber, true, &amount, &decimal.Zero)
+	order := model.NewOrder(userID, wd.Onumber, true, amount, decimal.Zero)
 	existed, err := u.market.AddOrder(req.Context(), true, order)
 	if existed {
 		// 422

@@ -70,7 +70,6 @@ func TestGetOrders(t *testing.T) {
 			defer ctrl.Finish()
 
 			//crete mock storege
-
 			repoRegister := mocks.NewMockRegistrar(ctrl)
 			repoMarket := mocks.NewMockMarketPlaceholder(ctrl)
 			repoObserver := mocks.NewMockObserverUpdater(ctrl)
@@ -84,7 +83,7 @@ func TestGetOrders(t *testing.T) {
 			user := model.User{UUID: &uuid, Login: "Test123", Password: "123"}
 
 			_ = repoRegister.EXPECT().
-				AddUser(gomock.Any(), gomock.Any()).
+				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(nil)
 
@@ -152,6 +151,6 @@ func getOrders() []model.Order {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	return []model.Order{*model.NewOrder(&userID, goluhn.Generate(10), false, &[]decimal.Decimal{decimal.NewFromFloat(20)}[0], &[]decimal.Decimal{decimal.NewFromFloat(200)}[0]),
-		*model.NewOrder(&userID, goluhn.Generate(10), false, &[]decimal.Decimal{decimal.NewFromFloat(5)}[0], &[]decimal.Decimal{decimal.NewFromFloat(100)}[0])}
+	return []model.Order{*model.NewOrder(&userID, goluhn.Generate(10), false, decimal.NewFromFloat(20), decimal.NewFromFloat(200)),
+		*model.NewOrder(&userID, goluhn.Generate(10), false, decimal.NewFromFloat(5), decimal.NewFromFloat(100))}
 }

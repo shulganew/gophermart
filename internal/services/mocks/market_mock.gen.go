@@ -38,7 +38,7 @@ func (m *MockMarketPlaceholder) EXPECT() *MockMarketPlaceholderMockRecorder {
 }
 
 // AddOrder mocks base method.
-func (m *MockMarketPlaceholder) AddOrder(ctx context.Context, userID *uuid.UUID, order string, isPreorder bool, withdraw *decimal.Decimal) error {
+func (m *MockMarketPlaceholder) AddOrder(ctx context.Context, userID *uuid.UUID, order string, isPreorder bool, withdraw decimal.Decimal) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddOrder", ctx, userID, order, isPreorder, withdraw)
 	ret0, _ := ret[0].(error)
@@ -51,19 +51,19 @@ func (mr *MockMarketPlaceholderMockRecorder) AddOrder(ctx, userID, order, isPreo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddOrder", reflect.TypeOf((*MockMarketPlaceholder)(nil).AddOrder), ctx, userID, order, isPreorder, withdraw)
 }
 
-// GetAccruals mocks base method.
-func (m *MockMarketPlaceholder) GetAccruals(ctx context.Context, userID *uuid.UUID) (*decimal.Decimal, error) {
+// GetBonuses mocks base method.
+func (m *MockMarketPlaceholder) GetBonuses(ctx context.Context, userID *uuid.UUID) (decimal.Decimal, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAccruals", ctx, userID)
-	ret0, _ := ret[0].(*decimal.Decimal)
+	ret := m.ctrl.Call(m, "GetBonuses", ctx, userID)
+	ret0, _ := ret[0].(decimal.Decimal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetAccruals indicates an expected call of GetAccruals.
-func (mr *MockMarketPlaceholderMockRecorder) GetAccruals(ctx, userID interface{}) *gomock.Call {
+// GetBonuses indicates an expected call of GetBonuses.
+func (mr *MockMarketPlaceholderMockRecorder) GetBonuses(ctx, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccruals", reflect.TypeOf((*MockMarketPlaceholder)(nil).GetAccruals), ctx, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBonuses", reflect.TypeOf((*MockMarketPlaceholder)(nil).GetBonuses), ctx, userID)
 }
 
 // GetOrders mocks base method.
@@ -81,19 +81,19 @@ func (mr *MockMarketPlaceholderMockRecorder) GetOrders(ctx, userID interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrders", reflect.TypeOf((*MockMarketPlaceholder)(nil).GetOrders), ctx, userID)
 }
 
-// GetWithdrawns mocks base method.
-func (m *MockMarketPlaceholder) GetWithdrawns(ctx context.Context, userID *uuid.UUID) (*decimal.Decimal, error) {
+// GetWithdrawals mocks base method.
+func (m *MockMarketPlaceholder) GetWithdrawals(ctx context.Context, userID *uuid.UUID) (decimal.Decimal, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetWithdrawns", ctx, userID)
-	ret0, _ := ret[0].(*decimal.Decimal)
+	ret := m.ctrl.Call(m, "GetWithdrawals", ctx, userID)
+	ret0, _ := ret[0].(decimal.Decimal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetWithdrawns indicates an expected call of GetWithdrawns.
-func (mr *MockMarketPlaceholderMockRecorder) GetWithdrawns(ctx, userID interface{}) *gomock.Call {
+// GetWithdrawals indicates an expected call of GetWithdrawals.
+func (mr *MockMarketPlaceholderMockRecorder) GetWithdrawals(ctx, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWithdrawns", reflect.TypeOf((*MockMarketPlaceholder)(nil).GetWithdrawns), ctx, userID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWithdrawals", reflect.TypeOf((*MockMarketPlaceholder)(nil).GetWithdrawals), ctx, userID)
 }
 
 // IsExistForOtherUsers mocks base method.
@@ -153,6 +153,20 @@ func (m *MockMarketPlaceholder) MovePreOrder(ctx context.Context, order *model.O
 func (mr *MockMarketPlaceholderMockRecorder) MovePreOrder(ctx, order interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MovePreOrder", reflect.TypeOf((*MockMarketPlaceholder)(nil).MovePreOrder), ctx, order)
+}
+
+// SetAccrual mocks base method.
+func (m *MockMarketPlaceholder) SetAccrual(ctx context.Context, order string, accrual decimal.Decimal) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetAccrual", ctx, order, accrual)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetAccrual indicates an expected call of SetAccrual.
+func (mr *MockMarketPlaceholderMockRecorder) SetAccrual(ctx, order, accrual interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccrual", reflect.TypeOf((*MockMarketPlaceholder)(nil).SetAccrual), ctx, order, accrual)
 }
 
 // Withdrawals mocks base method.

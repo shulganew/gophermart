@@ -33,13 +33,13 @@ func TestWithdraw(t *testing.T) {
 		requestURL string
 
 		//all accruals
-		acc *decimal.Decimal
+		acc decimal.Decimal
 
 		//all withdrawals
-		withdrawn *decimal.Decimal
+		withdrawn decimal.Decimal
 
 		//amount of withdrawn
-		amount         *decimal.Decimal
+		amount         decimal.Decimal
 		Order          string
 		statusCode     int
 		setOrderReturn error
@@ -49,9 +49,9 @@ func TestWithdraw(t *testing.T) {
 			method:         http.MethodPost,
 			Order:          "0265410804",
 			requestURL:     "http://localhost:8080/api/user/balance/withdraw",
-			acc:            &[]decimal.Decimal{decimal.NewFromFloat(12.2)}[0],
-			withdrawn:      &[]decimal.Decimal{decimal.NewFromFloat(6.2)}[0],
-			amount:         &[]decimal.Decimal{decimal.NewFromFloat(1.0)}[0],
+			acc:            decimal.NewFromFloat(12.2),
+			withdrawn:      decimal.NewFromFloat(6.2),
+			amount:         decimal.NewFromFloat(1.0),
 			statusCode:     http.StatusUnprocessableEntity,
 			setOrderReturn: nil,
 		},
@@ -60,9 +60,9 @@ func TestWithdraw(t *testing.T) {
 			method:         http.MethodPost,
 			Order:          "7020147356",
 			requestURL:     "http://localhost:8080/api/user/balance/withdraw",
-			acc:            &[]decimal.Decimal{decimal.NewFromFloat(12.2)}[0],
-			withdrawn:      &[]decimal.Decimal{decimal.NewFromFloat(6.2)}[0],
-			amount:         &[]decimal.Decimal{decimal.NewFromFloat(1.0)}[0],
+			acc:            decimal.NewFromFloat(12.2),
+			withdrawn:      decimal.NewFromFloat(6.2),
+			amount:         decimal.NewFromFloat(1.0),
 			statusCode:     http.StatusUnprocessableEntity,
 			setOrderReturn: &pgconn.PgError{Code: pgerrcode.UniqueViolation},
 		},
@@ -72,9 +72,9 @@ func TestWithdraw(t *testing.T) {
 			method:         http.MethodPost,
 			Order:          "7020147356",
 			requestURL:     "http://localhost:8080/api/user/balance/withdraw",
-			acc:            &[]decimal.Decimal{decimal.NewFromFloat(6.2)}[0],
-			withdrawn:      &[]decimal.Decimal{decimal.NewFromFloat(62.2)}[0],
-			amount:         &[]decimal.Decimal{decimal.NewFromFloat(100.0)}[0],
+			acc:            decimal.NewFromFloat(6.2),
+			withdrawn:      decimal.NewFromFloat(62.2),
+			amount:         decimal.NewFromFloat(100.0),
 			statusCode:     http.StatusPaymentRequired,
 			setOrderReturn: nil,
 		},
@@ -84,9 +84,9 @@ func TestWithdraw(t *testing.T) {
 			method:         http.MethodPost,
 			Order:          "7020147356",
 			requestURL:     "http://localhost:8080/api/user/balance/withdraw",
-			acc:            &[]decimal.Decimal{decimal.NewFromFloat(12.2)}[0],
-			withdrawn:      &[]decimal.Decimal{decimal.NewFromFloat(6.2)}[0],
-			amount:         &[]decimal.Decimal{decimal.NewFromFloat(1.0)}[0],
+			acc:            decimal.NewFromFloat(12.2),
+			withdrawn:      decimal.NewFromFloat(6.2),
+			amount:         decimal.NewFromFloat(1.0),
 			statusCode:     http.StatusOK,
 			setOrderReturn: nil,
 		},
@@ -124,7 +124,7 @@ func TestWithdraw(t *testing.T) {
 			user := model.User{UUID: &uuid, Login: "Test123", Password: "123456"}
 
 			_ = repoRegister.EXPECT().
-				AddUser(gomock.Any(), gomock.Any()).
+				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(nil)
 
@@ -134,12 +134,12 @@ func TestWithdraw(t *testing.T) {
 				Return(tt.setOrderReturn)
 
 			_ = repoMarket.EXPECT().
-				GetAccruals(gomock.Any(), gomock.Any()).
+				GetBonuses(gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(tt.acc, nil)
 
 			_ = repoMarket.EXPECT().
-				GetWithdrawns(gomock.Any(), gomock.Any()).
+				GetWithdrawals(gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(tt.withdrawn, nil)
 
@@ -202,24 +202,24 @@ func TestBalance(t *testing.T) {
 	tests := []struct {
 		name       string
 		requestURL string
-		acc        *decimal.Decimal
-		withdrawn  *decimal.Decimal
+		acc        decimal.Decimal
+		withdrawn  decimal.Decimal
 		statusCode int
 		//want
 	}{
 		{
 			name:       "Get Banans",
 			requestURL: "http://localhost:8080/api/user/balance",
-			acc:        &[]decimal.Decimal{decimal.NewFromFloat(12.2)}[0],
-			withdrawn:  &[]decimal.Decimal{decimal.NewFromFloat(6.2)}[0],
+			acc:        decimal.NewFromFloat(12.2),
+			withdrawn:  decimal.NewFromFloat(6.2),
 			statusCode: http.StatusOK,
 		},
 
 		{
 			name:       "Get balance 2",
 			requestURL: "http://localhost:8080/api/user/balance",
-			acc:        &[]decimal.Decimal{decimal.NewFromFloat(33.2)}[0],
-			withdrawn:  &[]decimal.Decimal{decimal.NewFromFloat(22.2)}[0],
+			acc:        decimal.NewFromFloat(33.2),
+			withdrawn:  decimal.NewFromFloat(22.2),
 			statusCode: http.StatusOK,
 		},
 	}
@@ -257,17 +257,17 @@ func TestBalance(t *testing.T) {
 			user := model.User{UUID: &uuid, Login: "Test123", Password: "123"}
 
 			_ = repoRegister.EXPECT().
-				AddUser(gomock.Any(), gomock.Any()).
+				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(nil)
 
 			_ = repoMarket.EXPECT().
-				GetAccruals(gomock.Any(), gomock.Any()).
+				GetBonuses(gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(tt.acc, nil)
 
 			_ = repoMarket.EXPECT().
-				GetWithdrawns(gomock.Any(), gomock.Any()).
+				GetWithdrawals(gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(tt.withdrawn, nil)
 
@@ -313,8 +313,8 @@ func TestBalance(t *testing.T) {
 			b := decimal.NewFromFloat(balance.Bonus)
 			w := decimal.NewFromFloat(balance.Withdrawn)
 
-			bt := *tt.acc
-			wt := *tt.withdrawn
+			bt := tt.acc
+			wt := tt.withdrawn
 
 			assert.Equal(t, b.Equal(bt.Sub(w)), true)
 			assert.Equal(t, w.Equal(wt), true)

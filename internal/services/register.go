@@ -10,7 +10,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/lib/pq"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
 	"go.uber.org/zap"
@@ -23,7 +23,7 @@ type Register struct {
 }
 
 type Registrar interface {
-	AddUser(ctx context.Context, user model.User) error
+	AddUser(ctx context.Context, user model.User, hash string) error
 	GetByLogin(ctx context.Context, login string) (*model.User, error)
 }
 
@@ -48,12 +48,11 @@ func (r *Register) NewUser(ctx context.Context, user model.User) (userID *uuid.U
 		zap.S().Errorln("Error creating hash from password")
 		return nil, true, err
 	}
-	user.Password = hash
 
 	// Add user to database.
-	err = r.stor.AddUser(ctx, user)
+	err = r.stor.AddUser(ctx, user, hash)
 	if err != nil {
-		var pgErr *pgconn.PgError
+		var pgErr *pq.Error
 		// If URL exist in DataBase
 		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
 			zap.S().Infoln("User exist: ", user)
@@ -72,12 +71,12 @@ func (r *Register) IsValid(ctx context.Context, untrusted *model.User) (userID *
 	user, err := r.stor.GetByLogin(ctx, untrusted.Login)
 	zap.S().Infoln("User form db: ", user)
 	if err != nil {
-		zap.S().Errorln("User not found by login")
+		zap.S().Errorln("User not found by login", err)
 		return nil, false
 	}
 
 	// Check pass is correct
-	err = r.CheckPassword(untrusted.Password, user.Password)
+	err = r.CheckPassword(untrusted.Password, user.PassHash)
 	if err != nil {
 		zap.S().Errorln("Pass not valid: ", err)
 		return nil, false

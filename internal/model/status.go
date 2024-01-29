@@ -9,3 +9,7 @@ const (
 	PROCESSED  Status = "PROCESSED"
 	REGISTERED Status = "REGISTERED"
 )
+
+func (s *Status) String() string {
+	return string(*s)
+}
