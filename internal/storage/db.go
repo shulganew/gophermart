@@ -39,11 +39,11 @@ func InitDB(ctx context.Context, dsn string, migrationdns string) (db *sqlx.DB, 
 	}()
 
 	//Init database migrations
-	if err := goose.UpContext(ctx, initdb, "migrations"); err != nil { //
-		zap.S().Fatalln("Error make databes migrations before starting Market app: ", err)
-	} else {
-		zap.S().Infoln("Migrations update...")
-	}
+	// if err := goose.UpContext(ctx, initdb, "migrations"); err != nil { //
+	// 	zap.S().Fatalln("Error make databes migrations before starting Market app: ", err)
+	// } else {
+	// 	zap.S().Infoln("Migrations update...")
+	// }
 
 	//Connection for Gophermart
 	db, err = sqlx.Connect(config.DataBaseType, dsn)
