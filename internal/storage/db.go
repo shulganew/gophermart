@@ -24,29 +24,32 @@ func NewRepo(ctx context.Context, master *sqlx.DB) (*Repo, error) {
 }
 
 // Init Database
-func InitDB(ctx context.Context, dsn string, migrationdns string) (db *sqlx.DB, err error) {
+func InitDB(ctx context.Context, conf *config.Config) (db *sqlx.DB, err error) {
 
-	//Init connection for admin user for prepare databse and make migrations
-	initdb, err := goose.OpenDBWithDriver(config.DataBaseType, migrationdns)
-	if err != nil {
-		zap.S().Fatalln("goose: failed to open DB: %v\n", err)
-	}
-
-	defer func() {
-		if err := initdb.Close(); err != nil {
-			zap.S().Fatalln("goose: failed to close DB: %v\n", err)
+	// Migrations enebles in config
+	if conf.Migrations {
+		zap.S().Infoln("Migrations is start:")
+		//Init connection for admin user for prepare databse and make migrations
+		initdb, err := goose.OpenDBWithDriver(config.DataBaseType, conf.DSNMitration)
+		if err != nil {
+			zap.S().Fatalln("goose: failed to open DB: %v\n", err)
 		}
-	}()
 
-	//Init database migrations
-	// if err := goose.UpContext(ctx, initdb, "migrations"); err != nil { //
-	// 	zap.S().Fatalln("Error make databes migrations before starting Market app: ", err)
-	// } else {
-	// 	zap.S().Infoln("Migrations update...")
-	// }
+		defer func() {
+			if err := initdb.Close(); err != nil {
+				zap.S().Fatalln("goose: failed to close DB: %v\n", err)
+			}
+		}()
 
+		//Init database migrations
+		if err := goose.UpContext(ctx, initdb, "migrations"); err != nil { //
+			zap.S().Fatalln("Error make databes migrations before starting Market app: ", err)
+		} else {
+			zap.S().Infoln("Migrations update...")
+		}
+	}
 	//Connection for Gophermart
-	db, err = sqlx.Connect(config.DataBaseType, dsn)
+	db, err = sqlx.Connect(config.DataBaseType, conf.DSN)
 	if err != nil {
 		return nil, err
 	}

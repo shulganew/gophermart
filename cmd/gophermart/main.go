@@ -22,7 +22,7 @@ func main() {
 
 	conf := config.InitConfig()
 
-	db, err := storage.InitDB(ctx, conf.DSN, conf.DSNMitration)
+	db, err := storage.InitDB(ctx, conf)
 	if err != nil {
 		db = nil
 		zap.S().Errorln("Can't connect to Database!", err)
