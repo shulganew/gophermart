@@ -8,20 +8,10 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/lib/pq"
 	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/model"
 )
-
-// GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Order, error)
-// AddOrder(ctx context.Context, userID *uuid.UUID, order string, isPreorder bool, withdraw *decimal.Decimal) error
-// IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error)
-// IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error)
-// GetAccruals(ctx context.Context, userID *uuid.UUID) (accrual *decimal.Decimal, err error)
-// GetWithdrawns(ctx context.Context, userID *uuid.UUID) (withdrawn *decimal.Decimal, err error)
-// Withdrawals(ctx context.Context, userID *uuid.UUID) ([]model.Withdrawals, error)
-// IsPreOrder(ctx context.Context, userID *uuid.UUID, order string) (isPreOrder bool, err error)
-// MovePreOrder(ctx context.Context, order *model.Order) (err error)
 
 func (base *Repo) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Order, error) {
 	query := `
@@ -54,6 +44,11 @@ func (base *Repo) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Ord
 		orders = append(orders, order)
 	}
 
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
 	return orders, nil
 
 }
@@ -62,18 +57,17 @@ func (base *Repo) AddOrder(ctx context.Context, userID *uuid.UUID, order string,
 
 	_, err := base.master.ExecContext(ctx, "INSERT INTO orders (user_id, onumber, is_preorder, uploaded) VALUES ($1, $2, $3, $4)", userID, order, isPreOrder, time.Now())
 	if err != nil {
-		var pgErr *pgconn.PgError
-		errors.As(err, &pgErr)
+		var pgErr *pq.Error
 		// if order exist in DataBase
 		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
 			return pgErr
 		}
-		return fmt.Errorf("Error during set order to Storage, error: %w", err)
+		return fmt.Errorf("error during set order to Storage, error: %w", err)
 	}
 
 	_, err = base.master.ExecContext(ctx, "INSERT INTO bonuses (onumber, bonus_used) VALUES ($1, $2)", order, *withdrawn)
 	if err != nil {
-		return fmt.Errorf("Error during add bonuses order to Storage, error: %w", err)
+		return fmt.Errorf("error during add bonuses order to Storage, error: %w", err)
 	}
 
 	return nil
@@ -85,7 +79,7 @@ func (base *Repo) IsExistForUser(ctx context.Context, userID *uuid.UUID, order s
 	row := base.master.QueryRowContext(ctx, "SELECT count(*) FROM orders WHERE user_id = $1 AND onumber = $2", userID, order)
 	err = row.Scan(&ordersn)
 	if err != nil {
-		return true, fmt.Errorf("Error during order search for user: %w", err)
+		return true, fmt.Errorf("error during order search for user: %w", err)
 	}
 	if ordersn == 0 {
 		return false, nil
@@ -99,7 +93,7 @@ func (base *Repo) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, o
 	row := base.master.QueryRowContext(ctx, "SELECT count(*) FROM orders WHERE user_id != $1 AND onumber = $2", userID, order)
 	err = row.Scan(&ordersn)
 	if err != nil {
-		return true, fmt.Errorf("Error during order search for user: %w", err)
+		return true, fmt.Errorf("error during order search for user: %w", err)
 	}
 	if ordersn == 0 {
 		return false, nil
@@ -159,6 +153,9 @@ func (base *Repo) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds []mod
 		`
 
 	rows, err := base.master.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
 
 	for rows.Next() {
 		var wd model.Withdrawals
@@ -169,6 +166,11 @@ func (base *Repo) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds []mod
 		}
 		wd.Uploaded = updloded.Format(time.RFC3339)
 		wds = append(wds, wd)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
 	}
 
 	return
@@ -192,19 +194,19 @@ func (base *Repo) MovePreOrder(ctx context.Context, order *model.Order) (err err
 
 	tx, err := base.master.BeginTx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("Move order error, begin transaction error, %w", err)
+		return fmt.Errorf("move order error, begin transaction error, %w", err)
 	}
 
 	_, err = tx.ExecContext(ctx, "UPDATE orders SET status = $1, is_preorder = $2 WHERE onumber = $3", order.Status, order.IsPreOrder, order.Onumber)
 	if err != nil {
 		tx.Rollback()
-		return fmt.Errorf("Move order error, can't move preoreder to order, %w", err)
+		return fmt.Errorf("move order error, can't move preoreder to order, %w", err)
 	}
 
 	_, err = tx.ExecContext(ctx, "UPDATE bonuses SET bonus_accrual = $1 WHERE onumber = $2", order.Bonus.Accrual, order.Onumber)
 	if err != nil {
 		tx.Rollback()
-		return fmt.Errorf("Move order error, can't set bonuses for this order, %w", err)
+		return fmt.Errorf("move order error, can't set bonuses for this order, %w", err)
 	}
 
 	tx.Commit()

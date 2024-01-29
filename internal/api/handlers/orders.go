@@ -76,7 +76,7 @@ func (u *HandlerOrder) SetOrder(res http.ResponseWriter, req *http.Request) {
 	if !isExist && err != nil {
 		// 500
 		errt := "Get error during save new order."
-		zap.S().Error(errt, onumber)
+		zap.S().Error(errt, onumber, err)
 		http.Error(res, errt, http.StatusInternalServerError)
 		return
 	}
@@ -154,8 +154,9 @@ func (u *HandlerOrder) GetOrders(res http.ResponseWriter, req *http.Request) {
 
 	// Check from middleware is user authorized 401
 	if !ctxConfig.IsRegistered() {
-		zap.S().Infoln("JWT not found. ")
-		http.Error(res, "JWT not found.", http.StatusUnauthorized)
+		errt := "JWT not found."
+		zap.S().Infoln(errt)
+		http.Error(res, errt, http.StatusUnauthorized)
 		return
 	}
 
@@ -171,15 +172,17 @@ func (u *HandlerOrder) GetOrders(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		// 500
-		zap.S().Errorln("Cat't get orders: ", err)
-		http.Error(res, "Cat't get orders", http.StatusInternalServerError)
+		errt := "Cat't get orders:"
+		zap.S().Errorln(errt, err)
+		http.Error(res, errt, http.StatusInternalServerError)
 		return
 	}
 
 	if len(orders) == 0 {
 		// 204
-		zap.S().Infoln("No content: ")
-		http.Error(res, "No content", http.StatusNoContent)
+		errt := "No content"
+		zap.S().Debugln(errt)
+		http.Error(res, errt, http.StatusNoContent)
 		return
 	}
 
@@ -192,8 +195,9 @@ func (u *HandlerOrder) GetOrders(res http.ResponseWriter, req *http.Request) {
 
 	jsonOrders, err := json.Marshal(rOrders)
 	if err != nil {
-		zap.S().Errorln("Error during Marshal answer Orders: ", err)
-		http.Error(res, "Error during Marshal answer Orders", http.StatusInternalServerError)
+		errt := "Error during Marshal answer Orders"
+		zap.S().Errorln(errt, err)
+		http.Error(res, errt, http.StatusInternalServerError)
 		return
 	}
 

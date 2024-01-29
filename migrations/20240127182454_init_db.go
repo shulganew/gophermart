@@ -9,10 +9,10 @@ import (
 
 func init() {
 
-	goose.AddMigrationNoTxContext(upInitDb, downInitDb)
+	goose.AddMigrationNoTxContext(upInitDB, downInitDB)
 }
 
-func upInitDb(ctx context.Context, db *sql.DB) error {
+func upInitDB(ctx context.Context, db *sql.DB) error {
 
 	s := make([]string, 0)
 	s = append(s, "CREATE USER market WITH ENCRYPTED PASSWORD '1'")
@@ -34,7 +34,7 @@ func upInitDb(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func downInitDb(ctx context.Context, db *sql.DB) error {
+func downInitDB(ctx context.Context, db *sql.DB) error {
 	_, err := db.ExecContext(ctx, "DROP DATABASE market")
 	if err != nil {
 		return err

@@ -112,7 +112,7 @@ func InitDB(ctx context.Context, dsn string, migrationdns string) (db *sqlx.DB, 
 
 func (base *Repo) Start(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*3)
-	err := base.master.Ping()
+	err := base.master.PingContext(ctx)
 	defer cancel()
 	return err
 }

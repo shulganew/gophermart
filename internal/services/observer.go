@@ -82,7 +82,7 @@ func (o *Observer) ObservAccrual(ctx context.Context) {
 			accrual = &decimal.Zero
 		}
 
-		zap.S().Infoln("Get answer from Accrual system: status: ", status, " Accural: ", accrual)
+		zap.S().Infoln("Get answer from Accrual system: status: ", *status, " Accural: ", accrual)
 
 		order.Status = *status
 		zap.S().Infoln("Order ", order.Onumber, "Status:", order.Status)
@@ -164,8 +164,8 @@ func (o *Observer) getOrderStatus(order *model.Order) (status *model.Status, acc
 	}
 	defer res.Body.Close()
 
-	st := model.NEW
 
+	st := model.Status(accResp.Status)
 	accrual := decimal.NewFromFloat(accResp.Accrual)
 
 	return &st, &accrual, nil

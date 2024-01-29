@@ -7,10 +7,9 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/lib/pq"
 	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/model"
-	"go.uber.org/zap"
 )
 
 // User registration service
@@ -38,13 +37,12 @@ func (m *Market) AddOrder(ctx context.Context, isPreOrder bool, order *model.Ord
 	// Add order to the database.
 	err = m.stor.AddOrder(ctx, order.UserID, order.Onumber, isPreOrder, order.Bonus.Used)
 	if err != nil {
-		var pgErr *pgconn.PgError
+		var pgErr *pq.Error
 		// If Order exist in the DataBase
 		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
-			zap.S().Infoln("Error during adding oreder, alredy order alredy existed: ", order.Onumber)
 			return true, err
 		}
-		return false, fmt.Errorf("Error during add order: %w", err)
+		return false, fmt.Errorf("error during add order: %w", err)
 	}
 
 	return false, nil

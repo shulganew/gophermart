@@ -32,6 +32,11 @@ func (base *Repo) LoadPocessing(ctx context.Context) ([]model.Order, error) {
 		orders = append(orders, order)
 	}
 
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
 	return orders, nil
 }
 
@@ -39,20 +44,20 @@ func (base *Repo) UpdateStatus(ctx context.Context, order *model.Order, accrual 
 
 	tx, err := base.master.BeginTx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("Can't update orders status, begin transaction error, %w", err)
+		return fmt.Errorf("can't update orders status, begin transaction error, %w", err)
 	}
 
 	_, err = tx.ExecContext(ctx, "UPDATE orders SET status = $1 WHERE onumber = $2", order.Status, order.Onumber)
 	if err != nil {
 		tx.Rollback()
-		return fmt.Errorf("Can't update orders status, %w", err)
+		return fmt.Errorf("can't update orders status, %w", err)
 	}
 
 	if accrual != nil {
 		_, err = tx.ExecContext(ctx, "UPDATE bonuses SET bonus_accrual = $1 WHERE onumber = $2", accrual, order.Onumber)
 		if err != nil {
 			tx.Rollback()
-			return fmt.Errorf("Can't update bonuses during update status %w", err)
+			return fmt.Errorf("can't update bonuses during update status %w", err)
 		}
 	}
 

@@ -22,7 +22,7 @@ func (base *Repo) AddUser(ctx context.Context, user model.User) error {
 			return pgErr
 		}
 
-		return fmt.Errorf("Error adding user to Storage: %w", err)
+		return fmt.Errorf("error adding user to Storage: %w", err)
 	}
 	return nil
 }
@@ -34,7 +34,7 @@ func (base *Repo) GetByLogin(ctx context.Context, login string) (*model.User, er
 	user := model.User{Login: login}
 	err := row.Scan(&user.UUID, &user.Password)
 	if err != nil {
-		return nil, fmt.Errorf("Error during get user by login from storage. User not valid: %w", err)
+		return nil, fmt.Errorf("error during get user by login from storage. User not valid: %w", err)
 	}
 
 	return &user, nil
