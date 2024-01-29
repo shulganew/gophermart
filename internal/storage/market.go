@@ -55,8 +55,13 @@ func (base *Repo) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Ord
 
 func (base *Repo) AddOrder(ctx context.Context, userID *uuid.UUID, order string, isPreOrder bool, withdrawn *decimal.Decimal) error {
 
-	_, err := base.master.ExecContext(ctx, "INSERT INTO orders (user_id, onumber, is_preorder, uploaded) VALUES ($1, $2, $3, $4)", userID, order, isPreOrder, time.Now())
+	tx, err := base.master.BeginTx(ctx, nil)
 	if err != nil {
+		return fmt.Errorf("add order error, begin transaction error, %w", err)
+	}
+	_, err = tx.ExecContext(ctx, "INSERT INTO orders (user_id, onumber, is_preorder, uploaded) VALUES ($1, $2, $3, $4)", userID, order, isPreOrder, time.Now())
+	if err != nil {
+		tx.Rollback()
 		var pgErr *pq.Error
 		// if order exist in DataBase
 		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
@@ -65,10 +70,13 @@ func (base *Repo) AddOrder(ctx context.Context, userID *uuid.UUID, order string,
 		return fmt.Errorf("error during set order to Storage, error: %w", err)
 	}
 
-	_, err = base.master.ExecContext(ctx, "INSERT INTO bonuses (onumber, bonus_used) VALUES ($1, $2)", order, *withdrawn)
+	_, err = tx.ExecContext(ctx, "INSERT INTO bonuses (onumber, bonus_used) VALUES ($1, $2)", order, *withdrawn)
 	if err != nil {
+		tx.Rollback()
 		return fmt.Errorf("error during add bonuses order to Storage, error: %w", err)
 	}
+
+	tx.Commit()
 
 	return nil
 }
