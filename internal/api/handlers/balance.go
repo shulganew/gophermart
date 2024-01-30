@@ -33,10 +33,19 @@ func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) 
 
 	userID := ctxConfig.GetUserID()
 
-	bonuses, withdrawn, err := u.market.GetBalance(req.Context(), userID)
+	bonuses, err := u.market.GetBonuses(req.Context(), userID)
 	if err != nil {
 		// 500
-		errt := "Cat't get orders."
+		errt := "Cat't get bonuses."
+		zap.S().Errorln(errt, err)
+		http.Error(res, errt, http.StatusInternalServerError)
+		return
+	}
+
+	withdrawn, err := u.market.GetWithdrawn(req.Context(), userID)
+	if err != nil {
+		// 500
+		errt := "Cat't get withdrawn."
 		zap.S().Errorln(errt, err)
 		http.Error(res, errt, http.StatusInternalServerError)
 		return

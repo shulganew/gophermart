@@ -96,6 +96,21 @@ func (mr *MockMarketPlaceholderMockRecorder) GetWithdrawals(ctx, userID interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWithdrawals", reflect.TypeOf((*MockMarketPlaceholder)(nil).GetWithdrawals), ctx, userID)
 }
 
+// GetWithdrawn mocks base method.
+func (m *MockMarketPlaceholder) GetWithdrawn(ctx context.Context, userID uuid.UUID) (decimal.Decimal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetWithdrawn", ctx, userID)
+	ret0, _ := ret[0].(decimal.Decimal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetWithdrawn indicates an expected call of GetWithdrawn.
+func (mr *MockMarketPlaceholderMockRecorder) GetWithdrawn(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWithdrawn", reflect.TypeOf((*MockMarketPlaceholder)(nil).GetWithdrawn), ctx, userID)
+}
+
 // IsExistForUser mocks base method.
 func (m *MockMarketPlaceholder) IsExistForUser(ctx context.Context, userID uuid.UUID, order string) (bool, error) {
 	m.ctrl.T.Helper()

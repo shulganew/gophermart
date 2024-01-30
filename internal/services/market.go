@@ -22,6 +22,7 @@ type MarketPlaceholder interface {
 	GetOrders(ctx context.Context, userID uuid.UUID) ([]model.Order, error)
 	IsExistForUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error)
 	GetBonuses(ctx context.Context, userID uuid.UUID) (accrual decimal.Decimal, err error)
+	GetWithdrawn(ctx context.Context, userID uuid.UUID) (accrual decimal.Decimal, err error)
 	GetWithdrawals(ctx context.Context, userID uuid.UUID) (withdrawn decimal.Decimal, err error)
 	Withdrawals(ctx context.Context, userID uuid.UUID) ([]model.Withdrawals, error)
 	IsPreOrder(ctx context.Context, userID uuid.UUID, order string) (isPreOrder bool, err error)
@@ -82,14 +83,20 @@ func (m *Market) IsExistForUser(ctx context.Context, userID uuid.UUID, order str
 	return m.stor.IsExistForUser(ctx, userID, order)
 }
 
-func (m *Market) GetBalance(ctx context.Context, userID uuid.UUID) (bonuses decimal.Decimal, withdrawn decimal.Decimal, err error) {
+func (m *Market) GetBonuses(ctx context.Context, userID uuid.UUID) (bonuses decimal.Decimal, err error) {
 	bonuses, err = m.stor.GetBonuses(ctx, userID)
 	if err != nil {
-		return decimal.Zero, decimal.Zero, fmt.Errorf("can't get user's bonuses: %w", err)
+		return decimal.Zero, fmt.Errorf("can't get user's bonuses: %w", err)
 	}
-	withdrawn, err = m.stor.GetWithdrawals(ctx, userID)
+
+	return
+}
+
+func (m *Market) GetWithdrawn(ctx context.Context, userID uuid.UUID) (withdrawn decimal.Decimal, err error) {
+
+	withdrawn, err = m.stor.GetWithdrawn(ctx, userID)
 	if err != nil {
-		return decimal.Zero, decimal.Zero, fmt.Errorf("can't get user's withdrawals: %w", err)
+		return decimal.Zero, fmt.Errorf("can't get user's withdrawals: %w", err)
 	}
 	return
 }

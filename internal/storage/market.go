@@ -131,6 +131,18 @@ func (base *Repo) GetBonuses(ctx context.Context, userID uuid.UUID) (accrual dec
 	}
 	return
 }
+func (base *Repo) GetWithdrawn(ctx context.Context, userID uuid.UUID) (wd decimal.Decimal, err error) {
+	query := `
+	SELECT withdrawals
+	FROM users 
+	WHERE user_id = $1
+	`
+	err = base.master.GetContext(ctx, &wd, query, userID)
+	if err != nil {
+		return decimal.Zero, err
+	}
+	return
+}
 
 func (base *Repo) SetAccrual(ctx context.Context, order string, accrual decimal.Decimal) (err error) {
 	query := `
@@ -144,7 +156,7 @@ func (base *Repo) SetAccrual(ctx context.Context, order string, accrual decimal.
 		return fmt.Errorf("can't update order's accrual during update status %w", err)
 	}
 
-	return 
+	return
 }
 
 func (base *Repo) AddBonuses(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) (err error) {
