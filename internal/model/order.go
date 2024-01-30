@@ -11,7 +11,7 @@ import (
 
 type Order struct {
 	UserID     *uuid.UUID      `db:"user_id"`
-	Onumber    string          `db:"onumber"`
+	OrderNr    string          `db:"onumber"`
 	IsPreOrder bool            `db:"is_preorder"`
 	Uploaded   time.Time       `db:"uploaded"`
 	Status     Status          `db:"status"`
@@ -21,12 +21,12 @@ type Order struct {
 
 func NewOrder(userID *uuid.UUID, onumber string, preoreder bool, withdrawn decimal.Decimal, accrual decimal.Decimal) *Order {
 
-	return &Order{UserID: userID, Onumber: onumber, IsPreOrder: preoreder, Uploaded: time.Now(), Status: Status(NEW), Withdrawn: withdrawn, Accrual: accrual}
+	return &Order{UserID: userID, OrderNr: onumber, IsPreOrder: preoreder, Uploaded: time.Now(), Status: Status(NEW), Withdrawn: withdrawn, Accrual: accrual}
 }
 
 // Check Luna namber
 func (o *Order) IsValid() (isValid bool) {
-	err := goluhn.Validate(o.Onumber)
+	err := goluhn.Validate(o.OrderNr)
 	return err == nil
 
 }
@@ -51,7 +51,7 @@ func (o *Order) MarshalJSON() ([]byte, error) {
 		Accrual *float64 `json:"accrual,omitempty"`
 		Uploded string   `json:"uploaded_at"`
 	}{
-		Number:  o.Onumber,
+		Number:  o.OrderNr,
 		Status:  o.Status.String(),
 		Accrual: o.getAccrual(),
 		Uploded: o.getUploded(),

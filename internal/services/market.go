@@ -37,7 +37,7 @@ func NewMarket(stor MarketPlaceholder) *Market {
 
 func (m *Market) AddOrder(ctx context.Context, isPreOrder bool, order *model.Order) (existed bool, err error) {
 	// Add order to the database.
-	err = m.stor.AddOrder(ctx, order.UserID, order.Onumber, isPreOrder, order.Withdrawn)
+	err = m.stor.AddOrder(ctx, order.UserID, order.OrderNr, isPreOrder, order.Withdrawn)
 	if err != nil {
 		var pgErr *pq.Error
 		// If Order exist in the DataBase
@@ -71,7 +71,7 @@ func (m *Market) MovePreOrder(ctx context.Context, order *model.Order) (err erro
 	}
 	// if order has accruals
 	if order.Accrual != decimal.Zero {
-		err = m.stor.SetAccrual(ctx, order.Onumber, order.Accrual)
+		err = m.stor.SetAccrual(ctx, order.OrderNr, order.Accrual)
 		if err != nil {
 			return fmt.Errorf("can't set accruals to preorder: %w", err)
 		}

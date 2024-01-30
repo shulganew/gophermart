@@ -126,7 +126,7 @@ func (base *Repo) MovePreOrder(ctx context.Context, order *model.Order) (err err
 	SET status = $1, is_preorder = $2 
 	WHERE onumber = $3
 	`
-	_, err = base.master.ExecContext(ctx, query, order.Status, order.IsPreOrder, order.Onumber)
+	_, err = base.master.ExecContext(ctx, query, order.Status, order.IsPreOrder, order.OrderNr)
 	if err != nil {
 		return fmt.Errorf("move order error, can't move preoreder to order, %w", err)
 	}

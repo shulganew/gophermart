@@ -22,10 +22,10 @@ type OrderResponse struct {
 type HandlerOrder struct {
 	market   *services.Market
 	conf     *config.Config
-	observer *services.Observer
+	observer *services.Fetcher
 }
 
-func NewHandlerOrder(conf *config.Config, market *services.Market, observer *services.Observer) *HandlerOrder {
+func NewHandlerOrder(conf *config.Config, market *services.Market, observer *services.Fetcher) *HandlerOrder {
 
 	return &HandlerOrder{market: market, conf: conf, observer: observer}
 }
@@ -133,7 +133,7 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 
 	}
 
-	zap.S().Infoln("New order added: ", order.Onumber)
+	zap.S().Infoln("New order added: ", order.OrderNr)
 	// 202 - New order
 	res.WriteHeader(http.StatusAccepted)
 

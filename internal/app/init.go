@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func InitApp(ctx context.Context, conf *config.Config, db *sqlx.DB) (*services.Market, *services.Register, *services.Observer) {
+func InitApp(ctx context.Context, conf *config.Config, db *sqlx.DB) (*services.Market, *services.Register, *services.Fetcher) {
 
 	// Load storage
 	stor, err := storage.NewRepo(ctx, db)
@@ -26,10 +26,10 @@ func InitApp(ctx context.Context, conf *config.Config, db *sqlx.DB) (*services.M
 
 	register := services.NewRegister(stor)
 
-	observer := services.NewObserver(stor, conf)
+	observer := services.NewFetcher(stor, conf)
 
 	// Run observe status of orderses in Accrual service
-	observer.Observ(ctx)
+	observer.Fetch(ctx)
 
 	zap.S().Infoln("Application init complite")
 

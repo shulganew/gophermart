@@ -76,7 +76,7 @@ func TestOrders(t *testing.T) {
 
 			register := services.NewRegister(repoRegister)
 			market := services.NewMarket(repoMarket)
-			observer := services.NewObserver(repoObserver, conf)
+			observer := services.NewFetcher(repoObserver, conf)
 
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
