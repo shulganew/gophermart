@@ -5,12 +5,12 @@ import (
 )
 
 type Withdraw struct {
-	Onumber   string  `json:"order"`
+	OrderNr   string  `json:"order"`
 	Withdrawn float64 `json:"sum"`
 }
 
 type Withdrawals struct {
-	Onumber   string  `json:"order"`
+	OrderNr   string  `json:"order" db:"order_number"`
 	Withdrawn float64 `json:"sum"`
 	Uploaded  string  `json:"processed_at"`
 }
@@ -18,5 +18,5 @@ type Withdrawals struct {
 func NewWithdrawals(order string, withdrawn *decimal.Decimal, time string) *Withdrawals {
 
 	w := withdrawn.InexactFloat64()
-	return &Withdrawals{Onumber: order, Withdrawn: w, Uploaded: time}
+	return &Withdrawals{OrderNr: order, Withdrawn: w, Uploaded: time}
 }

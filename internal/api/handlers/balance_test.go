@@ -152,7 +152,7 @@ func TestWithdraw(t *testing.T) {
 			assert.NoError(t, err)
 			assert.False(t, exist)
 
-			wd := model.Withdraw{Onumber: tt.Order, Withdrawn: tt.amount.InexactFloat64()}
+			wd := model.Withdraw{OrderNr: tt.Order, Withdrawn: tt.amount.InexactFloat64()}
 
 			jsonWs, err := json.Marshal(wd)
 			if err != nil {

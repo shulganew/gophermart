@@ -77,13 +77,13 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	zap.S().Debugln("Withdrawn order: ", wd.Onumber)
+	zap.S().Debugln("Withdrawn order: ", wd.OrderNr)
 	zap.S().Debugln("Withdrawn amount: ", wd.Withdrawn)
-	err := goluhn.Validate(wd.Onumber)
+	err := goluhn.Validate(wd.OrderNr)
 	if err != nil {
 		// 422
 		errt := "Order not luna valid."
-		zap.S().Debugln(errt, wd.Onumber)
+		zap.S().Debugln(errt, wd.OrderNr)
 		http.Error(res, errt, http.StatusUnprocessableEntity)
 		return
 	}
@@ -94,7 +94,7 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 	if err != nil {
 		// 500
 		errt := "Error cheking bonuses balance."
-		zap.S().Errorln(errt, wd.Onumber, err)
+		zap.S().Errorln(errt, wd.OrderNr, err)
 		http.Error(res, errt, http.StatusInternalServerError)
 		return
 	}
@@ -105,19 +105,19 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 	}
 
 	// Create preorder with withdrawal and add storage with mark preoreder bool = true
-	order := model.NewOrder(userID, wd.Onumber, true, amount, decimal.Zero)
+	order := model.NewOrder(userID, wd.OrderNr, true, amount, decimal.Zero)
 	existed, err := u.market.AddOrder(req.Context(), true, order)
 	if existed {
 		// 422
 		errt := "Order alredy existed."
-		zap.S().Debugln(errt, wd.Onumber)
+		zap.S().Debugln(errt, wd.OrderNr)
 		http.Error(res, errt, http.StatusUnprocessableEntity)
 		return
 	}
 	if err != nil {
 		// 500
 		errt := "Error during withdraw. Adding preorder error."
-		zap.S().Debugln(errt, wd.Onumber, err)
+		zap.S().Debugln(errt, wd.OrderNr, err)
 		http.Error(res, errt, http.StatusInternalServerError)
 		return
 	}
@@ -127,7 +127,7 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 	if err != nil {
 		// 500
 		errt := "Error during withdrawn."
-		zap.S().Debugln(errt, wd.Onumber, err)
+		zap.S().Debugln(errt, wd.OrderNr, err)
 		http.Error(res, "Error during withdraw. Update balbance error", http.StatusInternalServerError)
 		return
 	}

@@ -11,7 +11,7 @@ import (
 
 type Order struct {
 	UserID     *uuid.UUID      `db:"user_id"`
-	OrderNr    string          `db:"onumber"`
+	OrderNr    string          `db:"order_number"`
 	IsPreOrder bool            `db:"is_preorder"`
 	Uploaded   time.Time       `db:"uploaded"`
 	Status     Status          `db:"status"`
@@ -19,9 +19,9 @@ type Order struct {
 	Accrual    decimal.Decimal `db:"accrual"`
 }
 
-func NewOrder(userID *uuid.UUID, onumber string, preoreder bool, withdrawn decimal.Decimal, accrual decimal.Decimal) *Order {
+func NewOrder(userID *uuid.UUID, orderNr string, preoreder bool, withdrawn decimal.Decimal, accrual decimal.Decimal) *Order {
 
-	return &Order{UserID: userID, OrderNr: onumber, IsPreOrder: preoreder, Uploaded: time.Now(), Status: Status(NEW), Withdrawn: withdrawn, Accrual: accrual}
+	return &Order{UserID: userID, OrderNr: orderNr, IsPreOrder: preoreder, Uploaded: time.Now(), Status: Status(NEW), Withdrawn: withdrawn, Accrual: accrual}
 }
 
 // Check Luna namber

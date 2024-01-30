@@ -36,7 +36,7 @@ const CreateOrders = `
 	CREATE TABLE IF NOT EXISTS orders (
 		id SERIAL, 
 		user_id UUID NOT NULL REFERENCES users(user_id),
-		onumber VARCHAR(20) NOT NULL UNIQUE,
+		order_number VARCHAR(20) NOT NULL UNIQUE,
 		is_preorder BOOLEAN NOT NULL, 
 		uploaded TIMESTAMPTZ NOT NULL,
 		status processing NOT NULL DEFAULT 'NEW',

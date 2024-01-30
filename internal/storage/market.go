@@ -15,7 +15,7 @@ import (
 
 func (base *Repo) AddOrder(ctx context.Context, userID *uuid.UUID, order string, isPreOrder bool, withdrawn decimal.Decimal) error {
 	query := `
-	INSERT INTO orders (user_id, onumber, is_preorder, uploaded, withdrawn) 
+	INSERT INTO orders (user_id, order_number, is_preorder, uploaded, withdrawn) 
 	VALUES ($1, $2, $3, $4, $5)
 		`
 	_, err := base.master.ExecContext(ctx, query, userID, order, isPreOrder, time.Now(), withdrawn)
@@ -33,7 +33,7 @@ func (base *Repo) AddOrder(ctx context.Context, userID *uuid.UUID, order string,
 
 func (base *Repo) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Order, error) {
 	query := `
-	SELECT user_id, onumber, uploaded, status, withdrawn, accrual
+	SELECT user_id, order_number, uploaded, status, withdrawn, accrual
 	FROM orders 
 	WHERE is_preorder = FALSE AND user_id = $1
 	ORDER BY uploaded DESC
@@ -51,7 +51,7 @@ func (base *Repo) IsExistForUser(ctx context.Context, userID *uuid.UUID, order s
 	query := `
 	SELECT count(*) 
 	FROM orders WHERE user_id = $1 
-	AND onumber = $2
+	AND order_number = $2
 	`
 	var ordersn int
 	err = base.master.GetContext(ctx, &ordersn, query, userID, order)
@@ -65,7 +65,7 @@ func (base *Repo) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, o
 	query := `
 	SELECT count(*) 
 	FROM orders 
-	WHERE user_id != $1 AND onumber = $2
+	WHERE user_id != $1 AND order_number = $2
 	`
 	var ordersn int
 	err = base.master.GetContext(ctx, &ordersn, query, userID, order)
@@ -91,7 +91,7 @@ func (base *Repo) GetWithdrawals(ctx context.Context, userID *uuid.UUID) (withdr
 
 func (base *Repo) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds []model.Withdrawals, err error) {
 	query := `
-	SELECT  onumber, withdrawn, uploaded
+	SELECT  order_number, withdrawn, uploaded
 		FROM orders 
 		WHERE user_id = $1
 		ORDER BY uploaded DESC
@@ -106,9 +106,9 @@ func (base *Repo) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds []mod
 
 func (base *Repo) IsPreOrder(ctx context.Context, userID *uuid.UUID, order string) (bool, error) {
 	query := `
-	SELECT count(onumber)
+	SELECT count(order_number)
 	FROM orders
-	WHERE user_id = $1 AND onumber = $2 AND is_preorder = TRUE
+	WHERE user_id = $1 AND order_number = $2 AND is_preorder = TRUE
 	`
 	var is int
 	err := base.master.GetContext(ctx, &is, query, userID, order)
@@ -124,7 +124,7 @@ func (base *Repo) MovePreOrder(ctx context.Context, order *model.Order) (err err
 	query := `
 	UPDATE orders 
 	SET status = $1, is_preorder = $2 
-	WHERE onumber = $3
+	WHERE order_number = $3
 	`
 	_, err = base.master.ExecContext(ctx, query, order.Status, order.IsPreOrder, order.OrderNr)
 	if err != nil {
@@ -152,7 +152,7 @@ func (base *Repo) SetAccrual(ctx context.Context, order string, accrual decimal.
 	query := `
 	UPDATE orders 
 	SET accrual = $1 
-	WHERE onumber = $2
+	WHERE order_number = $2
 	`
 	_, err = base.master.ExecContext(ctx, query, accrual, order)
 	if err != nil {

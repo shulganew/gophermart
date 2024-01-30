@@ -51,16 +51,16 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 	}
 	defer req.Body.Close()
 
-	onumber := string(body)
-	zap.S().Infoln("Set Order for user: ", userID, " Order: ", onumber)
+	orderNr := string(body)
+	zap.S().Infoln("Set Order for user: ", userID, " Order: ", orderNr)
 	// Create order
-	order := model.NewOrder(userID, onumber, false, decimal.Zero, decimal.Zero)
+	order := model.NewOrder(userID, orderNr, false, decimal.Zero, decimal.Zero)
 
 	isValid := order.IsValid()
 	if !isValid {
 		// 422
 		errt := "Order nuber not vaild."
-		zap.S().Debugln(errt, onumber)
+		zap.S().Debugln(errt, orderNr)
 		http.Error(res, errt, http.StatusUnprocessableEntity)
 		return
 	}
@@ -69,7 +69,7 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 	if !isExist && err != nil {
 		// 500
 		errt := "Get error during save new order."
-		zap.S().Error(errt, onumber, err)
+		zap.S().Error(errt, orderNr, err)
 		http.Error(res, errt, http.StatusInternalServerError)
 		return
 	}
@@ -77,10 +77,10 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 	if isExist {
 
 		//Check if order created befower with withdraw as prepaid
-		isPreorder, err := u.market.IsPreOrder(req.Context(), userID, onumber)
+		isPreorder, err := u.market.IsPreOrder(req.Context(), userID, orderNr)
 		if err != nil {
 			errt := "Get error during preorder search."
-			zap.S().Error(errt, err, onumber)
+			zap.S().Error(errt, err, orderNr)
 			http.Error(res, errt, http.StatusInternalServerError)
 			return
 		}
@@ -90,7 +90,7 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 			err = u.market.MovePreOrder(req.Context(), order)
 			if err != nil {
 				errt := "Get error during preorder update."
-				zap.S().Debugln(errt, onumber)
+				zap.S().Debugln(errt, orderNr)
 				http.Error(res, errt, http.StatusInternalServerError)
 				return
 			}
@@ -98,10 +98,10 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 		}
 
 		// Is Existed for this user.
-		isExistUser, err := u.market.IsExistForUser(req.Context(), userID, onumber)
+		isExistUser, err := u.market.IsExistForUser(req.Context(), userID, orderNr)
 		if err != nil {
 			errt := "Get error during search duplicated order for user."
-			zap.S().Error(errt, onumber)
+			zap.S().Error(errt, orderNr)
 			http.Error(res, errt, http.StatusInternalServerError)
 			return
 		}
@@ -109,16 +109,16 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 			// 200 alredy created for user
 			errt := "Order duplicated for User."
 
-			zap.S().Debugln(errt, onumber)
+			zap.S().Debugln(errt, orderNr)
 			http.Error(res, errt, http.StatusOK)
 			return
 		}
 
 		// Is Existed for others user.
-		isExistOther, err := u.market.IsExistForOtherUsers(req.Context(), userID, onumber)
+		isExistOther, err := u.market.IsExistForOtherUsers(req.Context(), userID, orderNr)
 		if err != nil {
 			errt := "Get error during search duplicated order for others."
-			zap.S().Error(errt, onumber)
+			zap.S().Error(errt, orderNr)
 			http.Error(res, errt, http.StatusInternalServerError)
 			return
 		}
@@ -126,7 +126,7 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 		if isExistOther {
 			// 409
 			errt := "Order duplicated for Other User."
-			zap.S().Debugln(errt, onumber)
+			zap.S().Debugln(errt, orderNr)
 			http.Error(res, errt, http.StatusConflict)
 			return
 		}
@@ -137,7 +137,7 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 	// 202 - New order
 	res.WriteHeader(http.StatusAccepted)
 
-	res.Write([]byte("Set order!" + onumber))
+	res.Write([]byte("Set order!" + orderNr))
 
 }
 
