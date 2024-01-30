@@ -35,7 +35,7 @@ func (u *HandlerRegister) SetUser(res http.ResponseWriter, req *http.Request) {
 	}
 	zap.S().Infoln("New user:", user.Login)
 
-	userID, exist, err := u.register.NewUser(req.Context(), user)
+	userID, exist, err := u.register.NewUser(req.Context(), user.Login, user.Password)
 	if err != nil {
 		// If can't get UUID or hash pass 500
 		errt := "Can't get UUID or user hash"

@@ -22,7 +22,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func TestUserLogin(t *testing.T) {
+func TestUserlogin(t *testing.T) {
 	tests := []struct {
 		name       string
 		method     string

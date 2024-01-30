@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUserRegister(t *testing.T) {
+func TestUser(t *testing.T) {
 	tests := []struct {
 		name          string
 		method        string
@@ -83,7 +83,7 @@ func TestUserRegister(t *testing.T) {
 			_ = repoRegister.EXPECT().
 				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
 				AnyTimes().
-				Return(tt.registerError)
+				Return(nil, tt.registerError)
 
 			_ = repoRegister.EXPECT().
 				GetByLogin(gomock.Any(), gomock.Any()).

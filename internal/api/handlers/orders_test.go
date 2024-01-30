@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetOrders(t *testing.T) {
+func TestOrders(t *testing.T) {
 	tests := []struct {
 		name       string
 		requestURL string
@@ -85,14 +85,14 @@ func TestGetOrders(t *testing.T) {
 			_ = repoRegister.EXPECT().
 				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
 				Times(1).
-				Return(nil)
+				Return(user.UUID, nil)
 
 			_ = repoMarket.EXPECT().
 				GetOrders(gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(tt.orders, nil)
 
-			userID, exist, err := register.NewUser(ctx, user)
+			userID, exist, err := register.NewUser(ctx, user.Login, user.Password)
 			assert.NoError(t, err)
 			assert.False(t, exist)
 

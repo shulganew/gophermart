@@ -8,6 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	uuid "github.com/gofrs/uuid"
 	gomock "github.com/golang/mock/gomock"
 	model "github.com/shulganew/gophermart/internal/model"
 )
@@ -36,17 +37,18 @@ func (m *MockRegistrar) EXPECT() *MockRegistrarMockRecorder {
 }
 
 // AddUser mocks base method.
-func (m *MockRegistrar) AddUser(ctx context.Context, user model.User, hash string) error {
+func (m *MockRegistrar) AddUser(ctx context.Context, login, hash string) (*uuid.UUID, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddUser", ctx, user, hash)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "AddUser", ctx, login, hash)
+	ret0, _ := ret[0].(*uuid.UUID)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // AddUser indicates an expected call of AddUser.
-func (mr *MockRegistrarMockRecorder) AddUser(ctx, user, hash interface{}) *gomock.Call {
+func (mr *MockRegistrarMockRecorder) AddUser(ctx, login, hash interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockRegistrar)(nil).AddUser), ctx, user, hash)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockRegistrar)(nil).AddUser), ctx, login, hash)
 }
 
 // GetByLogin mocks base method.

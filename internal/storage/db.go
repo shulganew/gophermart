@@ -24,7 +24,7 @@ END$$
 const CreateUser = `
 CREATE TABLE IF NOT EXISTS users (
 	id SERIAL, 
-	user_id UUID NOT NULL UNIQUE, 
+	user_id UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(), 
 	login TEXT NOT NULL UNIQUE, 
 	password_hash TEXT NOT NULL,
 	withdrawals NUMERIC DEFAULT 0,

@@ -23,7 +23,7 @@ type Register struct {
 }
 
 type Registrar interface {
-	AddUser(ctx context.Context, user model.User, hash string) error
+	AddUser(ctx context.Context, login string, hash string) (*uuid.UUID, error)
 	GetByLogin(ctx context.Context, login string) (*model.User, error)
 }
 
@@ -32,36 +32,28 @@ func NewRegister(stor Registrar) *Register {
 }
 
 // Register new user in market
-func (r *Register) NewUser(ctx context.Context, user model.User) (userID *uuid.UUID, existed bool, err error) {
-	// Generate UUID for new user.
-	uuid, err := uuid.NewV7()
-	if err != nil {
-		zap.S().Errorln("UUID error generation")
-		return nil, true, err
-	}
-
-	user.UUID = &uuid
+func (r *Register) NewUser(ctx context.Context, login string, password string) (userID *uuid.UUID, existed bool, err error) {
 
 	// Set hash as user password.
-	hash, err := r.HashPassword(user.Password)
+	hash, err := r.HashPassword(password)
 	if err != nil {
 		zap.S().Errorln("Error creating hash from password")
 		return nil, true, err
 	}
 
 	// Add user to database.
-	err = r.stor.AddUser(ctx, user, hash)
+	userID, err = r.stor.AddUser(ctx, login, hash)
 	if err != nil {
 		var pgErr *pq.Error
 		// If URL exist in DataBase
 		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
-			zap.S().Infoln("User exist: ", user)
-			return user.UUID, true, nil
+			zap.S().Infoln("User with login alredy existed: ", login)
+			return nil, true, nil
 		}
-		return user.UUID, false, err
+		return nil, false, err
 	}
 
-	return user.UUID, false, nil
+	return userID, false, nil
 }
 
 // Validate user in market, if sucsess it return user's id.

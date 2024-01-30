@@ -126,7 +126,7 @@ func TestWithdraw(t *testing.T) {
 			_ = repoRegister.EXPECT().
 				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
 				AnyTimes().
-				Return(nil)
+				Return(user.UUID, nil)
 
 			_ = repoMarket.EXPECT().
 				AddOrder(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
@@ -148,7 +148,7 @@ func TestWithdraw(t *testing.T) {
 				AnyTimes().
 				Return(tt.withdrals, nil)
 
-			userID, exist, err := register.NewUser(ctx, user)
+			userID, exist, err := register.NewUser(ctx, user.Login, user.Password)
 			assert.NoError(t, err)
 			assert.False(t, exist)
 
@@ -264,7 +264,7 @@ func TestBalance(t *testing.T) {
 			_ = repoRegister.EXPECT().
 				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
 				Times(1).
-				Return(nil)
+				Return(user.UUID, nil)
 
 			_ = repoMarket.EXPECT().
 				GetBonuses(gomock.Any(), gomock.Any()).
@@ -276,7 +276,7 @@ func TestBalance(t *testing.T) {
 				Times(1).
 				Return(tt.withdrawn, nil)
 
-			userID, exist, err := register.NewUser(ctx, user)
+			userID, exist, err := register.NewUser(ctx, user.Login, user.Password)
 			assert.NoError(t, err)
 			assert.False(t, exist)
 
