@@ -9,8 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// send pass to midleware
-type CtxPassKey struct{}
+
 
 const DataBaseType = "postgres"
 

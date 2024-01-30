@@ -33,7 +33,7 @@ func NewHandlerOrder(conf *config.Config, market *services.Market, observer *ser
 func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 
 	//get UserID from cxt values
-	ctxConfig := req.Context().Value(config.CtxConfig{}).(config.CtxConfig)
+	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
 
 	// Check from middleware is user authorized
 	if !ctxConfig.IsRegistered() {
@@ -144,7 +144,7 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 func (u *HandlerOrder) GetOrders(res http.ResponseWriter, req *http.Request) {
 
 	//get UserID from cxt values
-	ctxConfig := req.Context().Value(config.CtxConfig{}).(config.CtxConfig)
+	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
 
 	// Check from middleware is user authorized 401
 	if !ctxConfig.IsRegistered() {

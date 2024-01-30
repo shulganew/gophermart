@@ -101,7 +101,7 @@ func TestOrders(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, tt.requestURL, nil)
 
 			// add User and isRegister true tu context
-			ctxUser := context.WithValue(req.Context(), config.CtxConfig{}, config.NewCtxConfig(userID, true))
+			ctxUser := context.WithValue(req.Context(), model.MiddlwDTO{}, model.NewMiddlwDTO(userID, true))
 
 			req = req.WithContext(context.WithValue(ctxUser, chi.RouteCtxKey, rctx))
 

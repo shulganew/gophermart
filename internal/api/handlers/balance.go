@@ -24,7 +24,7 @@ func NewHandlerBalance(conf *config.Config, market *services.Market) *HandlerBal
 
 func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) {
 	// get UserID from cxt values
-	ctxConfig := req.Context().Value(config.CtxConfig{}).(config.CtxConfig)
+	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
 
 	// Check from middleware is user authorized 401
 	if !ctxConfig.IsRegistered() {
@@ -61,7 +61,7 @@ func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) 
 
 func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request) {
 	// get UserID from cxt values
-	ctxConfig := req.Context().Value(config.CtxConfig{}).(config.CtxConfig)
+	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
 
 	// Check from middleware is user authorized 401
 	if !ctxConfig.IsRegistered() {
@@ -141,7 +141,7 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 func (u *HandlerBalance) GetWithdrawals(res http.ResponseWriter, req *http.Request) {
 
 	// get UserID from cxt values
-	ctxConfig := req.Context().Value(config.CtxConfig{}).(config.CtxConfig)
+	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
 
 	// Check from middleware is user authorized 401
 	if !ctxConfig.IsRegistered() {

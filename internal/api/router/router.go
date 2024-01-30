@@ -8,6 +8,7 @@ import (
 	"github.com/shulganew/gophermart/internal/api/handlers"
 	"github.com/shulganew/gophermart/internal/api/middlewares"
 	"github.com/shulganew/gophermart/internal/config"
+	"github.com/shulganew/gophermart/internal/model"
 	"github.com/shulganew/gophermart/internal/services"
 )
 
@@ -22,7 +23,7 @@ func RouteMarket(conf *config.Config, market *services.Market, register *service
 		r.Use(func(h http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-				ctx := context.WithValue(r.Context(), config.CtxPassKey{}, conf.PassJWT)
+				ctx := context.WithValue(r.Context(), model.CtxPassKey{}, conf.PassJWT)
 				h.ServeHTTP(w, r.WithContext(ctx))
 			})
 		})
