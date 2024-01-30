@@ -18,17 +18,17 @@ type Market struct {
 }
 
 type MarketPlaceholder interface {
-	AddOrder(ctx context.Context, userID *uuid.UUID, order string, isPreorder bool, withdraw decimal.Decimal) error
-	GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Order, error)
-	IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error)
-	IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error)
-	GetBonuses(ctx context.Context, userID *uuid.UUID) (accrual decimal.Decimal, err error)
-	GetWithdrawals(ctx context.Context, userID *uuid.UUID) (withdrawn decimal.Decimal, err error)
-	Withdrawals(ctx context.Context, userID *uuid.UUID) ([]model.Withdrawals, error)
-	IsPreOrder(ctx context.Context, userID *uuid.UUID, order string) (isPreOrder bool, err error)
+	AddOrder(ctx context.Context, userID uuid.UUID, order string, isPreorder bool, withdraw decimal.Decimal) error
+	GetOrders(ctx context.Context, userID uuid.UUID) ([]model.Order, error)
+	IsExistForUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error)
+	IsExistForOtherUsers(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error)
+	GetBonuses(ctx context.Context, userID uuid.UUID) (accrual decimal.Decimal, err error)
+	GetWithdrawals(ctx context.Context, userID uuid.UUID) (withdrawn decimal.Decimal, err error)
+	Withdrawals(ctx context.Context, userID uuid.UUID) ([]model.Withdrawals, error)
+	IsPreOrder(ctx context.Context, userID uuid.UUID, order string) (isPreOrder bool, err error)
 	MovePreOrder(ctx context.Context, order *model.Order) (err error)
 	SetAccrual(ctx context.Context, order string, accrual decimal.Decimal) (err error)
-	MakeWithdrawn(ctx context.Context, userID *uuid.UUID, amount decimal.Decimal) error
+	MakeWithdrawn(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) error
 }
 
 func NewMarket(stor MarketPlaceholder) *Market {
@@ -50,7 +50,7 @@ func (m *Market) AddOrder(ctx context.Context, isPreOrder bool, order *model.Ord
 	return false, nil
 }
 
-func (m *Market) GetOrders(ctx context.Context, userID *uuid.UUID) (orders []model.Order, err error) {
+func (m *Market) GetOrders(ctx context.Context, userID uuid.UUID) (orders []model.Order, err error) {
 
 	orders, err = m.stor.GetOrders(ctx, userID)
 	if err != nil {
@@ -59,7 +59,7 @@ func (m *Market) GetOrders(ctx context.Context, userID *uuid.UUID) (orders []mod
 	return orders, nil
 }
 
-func (m *Market) IsPreOrder(ctx context.Context, userID *uuid.UUID, order string) (isPreOrder bool, err error) {
+func (m *Market) IsPreOrder(ctx context.Context, userID uuid.UUID, order string) (isPreOrder bool, err error) {
 	return m.stor.IsPreOrder(ctx, userID, order)
 }
 
@@ -79,15 +79,15 @@ func (m *Market) MovePreOrder(ctx context.Context, order *model.Order) (err erro
 	return
 }
 
-func (m *Market) IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
+func (m *Market) IsExistForUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error) {
 	return m.stor.IsExistForUser(ctx, userID, order)
 }
 
-func (m *Market) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
+func (m *Market) IsExistForOtherUsers(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error) {
 	return m.stor.IsExistForOtherUsers(ctx, userID, order)
 }
 
-func (m *Market) GetBalance(ctx context.Context, userID *uuid.UUID) (bonuses decimal.Decimal, withdrawn decimal.Decimal, err error) {
+func (m *Market) GetBalance(ctx context.Context, userID uuid.UUID) (bonuses decimal.Decimal, withdrawn decimal.Decimal, err error) {
 	bonuses, err = m.stor.GetBonuses(ctx, userID)
 	if err != nil {
 		return decimal.Zero, decimal.Zero, fmt.Errorf("can't get user's bonuses: %w", err)
@@ -99,27 +99,27 @@ func (m *Market) GetBalance(ctx context.Context, userID *uuid.UUID) (bonuses dec
 	return
 }
 
-func (m *Market) CheckBalance(ctx context.Context, userID *uuid.UUID, amount decimal.Decimal) (isEnough bool, err error) {
+func (m *Market) CheckBalance(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) (isEnough bool, err error) {
 	bonuses, err := m.stor.GetBonuses(ctx, userID)
 	if err != nil {
 		return false, err
 	}
 
-	rest := bonuses.Sub(amount)
+	saldo := bonuses.Sub(amount)
 
-	if rest.IsNegative() {
+	if saldo.IsNegative() {
 		return false, nil
 	}
 	return true, nil
 }
 
-func (m *Market) GetWithdrawals(ctx context.Context, userID *uuid.UUID) (wds []model.Withdrawals, err error) {
+func (m *Market) GetWithdrawals(ctx context.Context, userID uuid.UUID) (wds []model.Withdrawals, err error) {
 	wds, err = m.stor.Withdrawals(ctx, userID)
 	return
 }
 
 // Move user's amount from bonuses to withdrawals
-func (m *Market) MakeWithdrawn(ctx context.Context, userID *uuid.UUID, amount decimal.Decimal) (err error) {
+func (m *Market) MakeWithdrawn(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) (err error) {
 	err = m.stor.MakeWithdrawn(ctx, userID, amount)
 	return
 }

@@ -121,12 +121,12 @@ func TestWithdraw(t *testing.T) {
 
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
-			user := model.User{UUID: &uuid, Login: "Test123", Password: "123456"}
+			user := model.User{UUID: uuid, Login: "Test123", Password: "123456"}
 
 			_ = repoRegister.EXPECT().
 				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
 				AnyTimes().
-				Return(user.UUID, nil)
+				Return(&user.UUID, nil)
 
 			_ = repoMarket.EXPECT().
 				AddOrder(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
@@ -167,7 +167,7 @@ func TestWithdraw(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, tt.requestURL, body)
 
 			// add User and isRegister true tu context
-			ctxUser := context.WithValue(req.Context(), model.MiddlwDTO{}, model.NewMiddlwDTO(userID, true))
+			ctxUser := context.WithValue(req.Context(), model.MiddlwDTO{}, model.NewMiddlwDTO(*userID, true))
 
 			req = req.WithContext(context.WithValue(ctxUser, chi.RouteCtxKey, rctx))
 
@@ -259,12 +259,12 @@ func TestBalance(t *testing.T) {
 
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
-			user := model.User{UUID: &uuid, Login: "Test123", Password: "123"}
+			user := model.User{UUID: uuid, Login: "Test123", Password: "123"}
 
 			_ = repoRegister.EXPECT().
 				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
 				Times(1).
-				Return(user.UUID, nil)
+				Return(&user.UUID, nil)
 
 			_ = repoMarket.EXPECT().
 				GetBonuses(gomock.Any(), gomock.Any()).
@@ -285,7 +285,7 @@ func TestBalance(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, tt.requestURL, nil)
 
 			// add User and isRegister true tu context
-			ctxUser := context.WithValue(req.Context(), model.MiddlwDTO{}, model.NewMiddlwDTO(userID, true))
+			ctxUser := context.WithValue(req.Context(), model.MiddlwDTO{}, model.NewMiddlwDTO(*userID, true))
 
 			req = req.WithContext(context.WithValue(ctxUser, chi.RouteCtxKey, rctx))
 

@@ -38,7 +38,7 @@ func (m *MockMarketPlaceholder) EXPECT() *MockMarketPlaceholderMockRecorder {
 }
 
 // AddOrder mocks base method.
-func (m *MockMarketPlaceholder) AddOrder(ctx context.Context, userID *uuid.UUID, order string, isPreorder bool, withdraw decimal.Decimal) error {
+func (m *MockMarketPlaceholder) AddOrder(ctx context.Context, userID uuid.UUID, order string, isPreorder bool, withdraw decimal.Decimal) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddOrder", ctx, userID, order, isPreorder, withdraw)
 	ret0, _ := ret[0].(error)
@@ -52,7 +52,7 @@ func (mr *MockMarketPlaceholderMockRecorder) AddOrder(ctx, userID, order, isPreo
 }
 
 // GetBonuses mocks base method.
-func (m *MockMarketPlaceholder) GetBonuses(ctx context.Context, userID *uuid.UUID) (decimal.Decimal, error) {
+func (m *MockMarketPlaceholder) GetBonuses(ctx context.Context, userID uuid.UUID) (decimal.Decimal, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBonuses", ctx, userID)
 	ret0, _ := ret[0].(decimal.Decimal)
@@ -67,7 +67,7 @@ func (mr *MockMarketPlaceholderMockRecorder) GetBonuses(ctx, userID interface{})
 }
 
 // GetOrders mocks base method.
-func (m *MockMarketPlaceholder) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Order, error) {
+func (m *MockMarketPlaceholder) GetOrders(ctx context.Context, userID uuid.UUID) ([]model.Order, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOrders", ctx, userID)
 	ret0, _ := ret[0].([]model.Order)
@@ -82,7 +82,7 @@ func (mr *MockMarketPlaceholderMockRecorder) GetOrders(ctx, userID interface{}) 
 }
 
 // GetWithdrawals mocks base method.
-func (m *MockMarketPlaceholder) GetWithdrawals(ctx context.Context, userID *uuid.UUID) (decimal.Decimal, error) {
+func (m *MockMarketPlaceholder) GetWithdrawals(ctx context.Context, userID uuid.UUID) (decimal.Decimal, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetWithdrawals", ctx, userID)
 	ret0, _ := ret[0].(decimal.Decimal)
@@ -97,7 +97,7 @@ func (mr *MockMarketPlaceholderMockRecorder) GetWithdrawals(ctx, userID interfac
 }
 
 // IsExistForOtherUsers mocks base method.
-func (m *MockMarketPlaceholder) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (bool, error) {
+func (m *MockMarketPlaceholder) IsExistForOtherUsers(ctx context.Context, userID uuid.UUID, order string) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsExistForOtherUsers", ctx, userID, order)
 	ret0, _ := ret[0].(bool)
@@ -112,7 +112,7 @@ func (mr *MockMarketPlaceholderMockRecorder) IsExistForOtherUsers(ctx, userID, o
 }
 
 // IsExistForUser mocks base method.
-func (m *MockMarketPlaceholder) IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (bool, error) {
+func (m *MockMarketPlaceholder) IsExistForUser(ctx context.Context, userID uuid.UUID, order string) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsExistForUser", ctx, userID, order)
 	ret0, _ := ret[0].(bool)
@@ -127,7 +127,7 @@ func (mr *MockMarketPlaceholderMockRecorder) IsExistForUser(ctx, userID, order i
 }
 
 // IsPreOrder mocks base method.
-func (m *MockMarketPlaceholder) IsPreOrder(ctx context.Context, userID *uuid.UUID, order string) (bool, error) {
+func (m *MockMarketPlaceholder) IsPreOrder(ctx context.Context, userID uuid.UUID, order string) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsPreOrder", ctx, userID, order)
 	ret0, _ := ret[0].(bool)
@@ -142,7 +142,7 @@ func (mr *MockMarketPlaceholderMockRecorder) IsPreOrder(ctx, userID, order inter
 }
 
 // MakeWithdrawn mocks base method.
-func (m *MockMarketPlaceholder) MakeWithdrawn(ctx context.Context, userID *uuid.UUID, amount decimal.Decimal) error {
+func (m *MockMarketPlaceholder) MakeWithdrawn(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MakeWithdrawn", ctx, userID, amount)
 	ret0, _ := ret[0].(error)
@@ -184,7 +184,7 @@ func (mr *MockMarketPlaceholderMockRecorder) SetAccrual(ctx, order, accrual inte
 }
 
 // Withdrawals mocks base method.
-func (m *MockMarketPlaceholder) Withdrawals(ctx context.Context, userID *uuid.UUID) ([]model.Withdrawals, error) {
+func (m *MockMarketPlaceholder) Withdrawals(ctx context.Context, userID uuid.UUID) ([]model.Withdrawals, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Withdrawals", ctx, userID)
 	ret0, _ := ret[0].([]model.Withdrawals)

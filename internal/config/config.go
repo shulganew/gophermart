@@ -9,7 +9,8 @@ import (
 	"go.uber.org/zap"
 )
 
-
+// Check Acceral service every X sec
+const CheckAccrual = 1
 
 const DataBaseType = "postgres"
 

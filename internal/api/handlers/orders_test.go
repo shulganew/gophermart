@@ -72,7 +72,7 @@ func TestOrders(t *testing.T) {
 			//crete mock storege
 			repoRegister := mocks.NewMockRegistrar(ctrl)
 			repoMarket := mocks.NewMockMarketPlaceholder(ctrl)
-			repoObserver := mocks.NewMockObserverUpdater(ctrl)
+			repoObserver := mocks.NewMockFetcherUpdater(ctrl)
 
 			register := services.NewRegister(repoRegister)
 			market := services.NewMarket(repoMarket)
@@ -80,12 +80,12 @@ func TestOrders(t *testing.T) {
 
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
-			user := model.User{UUID: &uuid, Login: "Test123", Password: "123"}
+			user := model.User{UUID: uuid, Login: "Test123", Password: "123"}
 
 			_ = repoRegister.EXPECT().
 				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
 				Times(1).
-				Return(user.UUID, nil)
+				Return(&user.UUID, nil)
 
 			_ = repoMarket.EXPECT().
 				GetOrders(gomock.Any(), gomock.Any()).
@@ -101,11 +101,11 @@ func TestOrders(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, tt.requestURL, nil)
 
 			// add User and isRegister true tu context
-			ctxUser := context.WithValue(req.Context(), model.MiddlwDTO{}, model.NewMiddlwDTO(userID, true))
+			ctxUser := context.WithValue(req.Context(), model.MiddlwDTO{}, model.NewMiddlwDTO(*userID, true))
 
 			req = req.WithContext(context.WithValue(ctxUser, chi.RouteCtxKey, rctx))
 
-			jwt, _ := services.BuildJWTString(userID, conf.PassJWT)
+			jwt, _ := services.BuildJWTString(*userID, conf.PassJWT)
 
 			req.Header.Add("Authorization", jwt)
 			req.Header.Add("Content-Type", "text/plain")
@@ -151,6 +151,6 @@ func getOrders() []model.Order {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	return []model.Order{*model.NewOrder(&userID, goluhn.Generate(10), false, decimal.NewFromFloat(20), decimal.NewFromFloat(200)),
-		*model.NewOrder(&userID, goluhn.Generate(10), false, decimal.NewFromFloat(5), decimal.NewFromFloat(100))}
+	return []model.Order{*model.NewOrder(userID, goluhn.Generate(10), false, decimal.NewFromFloat(20), decimal.NewFromFloat(200)),
+		*model.NewOrder(userID, goluhn.Generate(10), false, decimal.NewFromFloat(5), decimal.NewFromFloat(100))}
 }

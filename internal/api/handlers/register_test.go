@@ -72,18 +72,17 @@ func TestUser(t *testing.T) {
 
 			//crete mock storege
 			repoRegister := mocks.NewMockRegistrar(ctrl)
-
 			register := services.NewRegister(repoRegister)
 
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
 
-			user := model.User{UUID: &uuid, Login: tt.login, Password: string(tt.passLogin)}
+			user := model.User{UUID: uuid, Login: tt.login, Password: string(tt.passLogin)}
 
 			_ = repoRegister.EXPECT().
 				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
 				AnyTimes().
-				Return(nil, tt.registerError)
+				Return(&uuid, tt.registerError)
 
 			_ = repoRegister.EXPECT().
 				GetByLogin(gomock.Any(), gomock.Any()).

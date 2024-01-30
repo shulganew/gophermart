@@ -31,5 +31,5 @@ func (base *Repo) UpdateStatus(ctx context.Context, order string, status model.S
 		return fmt.Errorf("can't update orders status, %w", err)
 	}
 
-	return nil
+	return 
 }

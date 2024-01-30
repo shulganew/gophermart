@@ -81,14 +81,14 @@ func TestUserlogin(t *testing.T) {
 			cPass, err := bcrypt.GenerateFromPassword([]byte(tt.passDB), bcrypt.DefaultCost)
 			assert.NoError(t, err)
 
-			dbUser := model.User{UUID: &uuid, Login: tt.login, PassHash: string(cPass)}
+			dbUser := model.User{UUID: uuid, Login: tt.login, PassHash: string(cPass)}
 
 			_ = repoRegister.EXPECT().
 				GetByLogin(gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(&dbUser, nil)
 
-			loginUser := model.User{UUID: &uuid, Login: tt.login, Password: tt.passLogin}
+			loginUser := model.User{UUID: uuid, Login: tt.login, Password: tt.passLogin}
 
 			jsonWs, err := json.Marshal(loginUser)
 			if err != nil {

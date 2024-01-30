@@ -13,7 +13,7 @@ import (
 	"github.com/shulganew/gophermart/internal/model"
 )
 
-func (base *Repo) AddOrder(ctx context.Context, userID *uuid.UUID, order string, isPreOrder bool, withdrawn decimal.Decimal) error {
+func (base *Repo) AddOrder(ctx context.Context, userID uuid.UUID, order string, isPreOrder bool, withdrawn decimal.Decimal) error {
 	query := `
 	INSERT INTO orders (user_id, order_number, is_preorder, uploaded, withdrawn) 
 	VALUES ($1, $2, $3, $4, $5)
@@ -31,7 +31,7 @@ func (base *Repo) AddOrder(ctx context.Context, userID *uuid.UUID, order string,
 	return nil
 }
 
-func (base *Repo) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Order, error) {
+func (base *Repo) GetOrders(ctx context.Context, userID uuid.UUID) ([]model.Order, error) {
 	query := `
 	SELECT user_id, order_number, uploaded, status, withdrawn, accrual
 	FROM orders 
@@ -47,7 +47,7 @@ func (base *Repo) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Ord
 
 }
 
-func (base *Repo) IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
+func (base *Repo) IsExistForUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error) {
 	query := `
 	SELECT count(*) 
 	FROM orders WHERE user_id = $1 
@@ -61,7 +61,7 @@ func (base *Repo) IsExistForUser(ctx context.Context, userID *uuid.UUID, order s
 	return ordersn != 0, nil
 }
 
-func (base *Repo) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
+func (base *Repo) IsExistForOtherUsers(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error) {
 	query := `
 	SELECT count(*) 
 	FROM orders 
@@ -76,7 +76,7 @@ func (base *Repo) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, o
 	return ordersn != 0, nil
 }
 
-func (base *Repo) GetWithdrawals(ctx context.Context, userID *uuid.UUID) (withdrawn decimal.Decimal, err error) {
+func (base *Repo) GetWithdrawals(ctx context.Context, userID uuid.UUID) (withdrawn decimal.Decimal, err error) {
 	query := `
 	SELECT withdrawals 
 	FROM users 
@@ -86,10 +86,10 @@ func (base *Repo) GetWithdrawals(ctx context.Context, userID *uuid.UUID) (withdr
 	if err != nil {
 		return decimal.Zero, err
 	}
-	return withdrawn, nil
+	return
 }
 
-func (base *Repo) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds []model.Withdrawals, err error) {
+func (base *Repo) Withdrawals(ctx context.Context, userID uuid.UUID) (wds []model.Withdrawals, err error) {
 	query := `
 	SELECT  order_number, withdrawn, uploaded
 		FROM orders 
@@ -100,11 +100,10 @@ func (base *Repo) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds []mod
 	if err != nil {
 		return nil, err
 	}
-
 	return
 }
 
-func (base *Repo) IsPreOrder(ctx context.Context, userID *uuid.UUID, order string) (bool, error) {
+func (base *Repo) IsPreOrder(ctx context.Context, userID uuid.UUID, order string) (bool, error) {
 	query := `
 	SELECT count(order_number)
 	FROM orders
@@ -135,7 +134,7 @@ func (base *Repo) MovePreOrder(ctx context.Context, order *model.Order) (err err
 
 }
 
-func (base *Repo) GetBonuses(ctx context.Context, userID *uuid.UUID) (accrual decimal.Decimal, err error) {
+func (base *Repo) GetBonuses(ctx context.Context, userID uuid.UUID) (accrual decimal.Decimal, err error) {
 	query := `
 	SELECT bonuses 
 	FROM users 
@@ -145,7 +144,7 @@ func (base *Repo) GetBonuses(ctx context.Context, userID *uuid.UUID) (accrual de
 	if err != nil {
 		return decimal.Zero, err
 	}
-	return accrual, nil
+	return
 }
 
 func (base *Repo) SetAccrual(ctx context.Context, order string, accrual decimal.Decimal) (err error) {
@@ -160,10 +159,10 @@ func (base *Repo) SetAccrual(ctx context.Context, order string, accrual decimal.
 		return fmt.Errorf("can't update order's accrual during update status %w", err)
 	}
 
-	return nil
+	return 
 }
 
-func (base *Repo) AddBonuses(ctx context.Context, userID *uuid.UUID, amount decimal.Decimal) (err error) {
+func (base *Repo) AddBonuses(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) (err error) {
 	query := `
 	UPDATE users 
 	SET bonuses = bonuses + $1 
@@ -174,11 +173,11 @@ func (base *Repo) AddBonuses(ctx context.Context, userID *uuid.UUID, amount deci
 		return fmt.Errorf("can't update add to user's order accruals to bonuses %w", err)
 	}
 
-	return nil
+	return
 }
 
 // Move user's amount from bonuses to withdrawals.
-func (base *Repo) MakeWithdrawn(ctx context.Context, userID *uuid.UUID, amount decimal.Decimal) (err error) {
+func (base *Repo) MakeWithdrawn(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) (err error) {
 	queryBonusUpdate := `
 	UPDATE users 
 	SET bonuses = bonuses - $1 

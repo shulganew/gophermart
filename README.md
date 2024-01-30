@@ -105,8 +105,8 @@ mockgen -source=internal/services/register.go \
     -destination=internal/services/mocks/register_mock.gen.go \
     -package=mocks
 
-mockgen -source=internal/services/observer.go \
-    -destination=internal/services/mocks/observer_mock.gen.go \
+mockgen -source=internal/services/fetcher.go \
+    -destination=internal/services/mocks/fetcher_mock.gen.go \
     -package=mocks
 ```
 

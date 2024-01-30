@@ -41,6 +41,7 @@ func (u *HandlerRegister) SetUser(res http.ResponseWriter, req *http.Request) {
 		errt := "Can't get UUID or user hash"
 		zap.S().Errorln(errt, err)
 		http.Error(res, errt, http.StatusInternalServerError)
+		return
 	}
 	if exist {
 		// 409 - login is used
@@ -49,8 +50,9 @@ func (u *HandlerRegister) SetUser(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, errt, http.StatusConflict)
 		return
 	}
+	zap.S().Infoln("!!!!!!!!!!!!", userID)
 
-	user.UUID = userID
+	user.UUID = *userID
 
 	jwt, _ := services.BuildJWTString(user.UUID, u.conf.PassJWT)
 

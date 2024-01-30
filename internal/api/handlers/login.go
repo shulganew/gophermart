@@ -31,17 +31,17 @@ func (h *HandlerLogin) LoginUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	userID, isValid := h.register.IsValid(req.Context(), &user)
+	userID, isValid := h.register.IsValid(req.Context(), user.Login, user.Password)
 	if !isValid {
 		// Wrond user login or password 401
 		http.Error(res, "Wrong login or password", http.StatusUnauthorized)
 		return
 	}
 
-	user.UUID = userID
+	user.UUID = *userID
 
 	zap.S().Debug("Login sucsess, user id is: ", userID)
-	jwt, _ := services.BuildJWTString(userID, h.conf.PassJWT)
+	jwt, _ := services.BuildJWTString(*userID, h.conf.PassJWT)
 
 	res.Header().Add("Content-Type", "text/plain")
 	res.Header().Add("Authorization", jwt)

@@ -15,9 +15,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// Check Acceral service every X sec
-const CheckAccrual = 1
-
 type AccrualResponce struct {
 	Order   string  `json:"order"`
 	Status  string  `json:"status"`
@@ -37,7 +34,7 @@ type FetcherUpdater interface {
 	LoadPocessing(ctx context.Context) ([]model.Order, error)
 	UpdateStatus(ctx context.Context, order string, status model.Status) (err error)
 	SetAccrual(ctx context.Context, order string, accrual decimal.Decimal) (err error)
-	AddBonuses(ctx context.Context, userID *uuid.UUID, amount decimal.Decimal) (err error)
+	AddBonuses(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) (err error)
 }
 
 func NewFetcher(stor FetcherUpdater, conf *config.Config) *Fetcher {
@@ -51,7 +48,7 @@ func (o *Fetcher) AddOreder(order *model.Order) {
 }
 
 func (o *Fetcher) Fetch(ctx context.Context) {
-	upload := time.NewTicker(CheckAccrual * time.Second)
+	upload := time.NewTicker(config.CheckAccrual * time.Second)
 	go func(ctx context.Context, o *Fetcher) {
 		for {
 			<-upload.C

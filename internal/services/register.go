@@ -57,24 +57,24 @@ func (r *Register) NewUser(ctx context.Context, login string, password string) (
 }
 
 // Validate user in market, if sucsess it return user's id.
-func (r *Register) IsValid(ctx context.Context, untrusted *model.User) (userID *uuid.UUID, isValid bool) {
+func (r *Register) IsValid(ctx context.Context, login string, pass string) (userID *uuid.UUID, isValid bool) {
 
 	// Get User from storage
-	user, err := r.stor.GetByLogin(ctx, untrusted.Login)
+	user, err := r.stor.GetByLogin(ctx, login)
 	zap.S().Infof("User form db: %v \n", user)
 	if err != nil {
-		zap.S().Errorln("User not found by login", err)
+		zap.S().Infoln("User not found by login. ", err)
 		return nil, false
 	}
 
 	// Check pass is correct
-	err = r.CheckPassword(untrusted.Password, user.PassHash)
+	err = r.CheckPassword(pass, user.PassHash)
 	if err != nil {
 		zap.S().Errorln("Pass not valid: ", err)
 		return nil, false
 	}
 
-	return user.UUID, true
+	return &user.UUID, true
 }
 
 // HashPassword returns the bcrypt hash of the password
@@ -94,11 +94,11 @@ func (r Register) CheckPassword(password string, hashedPassword string) error {
 // Claims for JWT token
 type Claims struct {
 	jwt.RegisteredClaims
-	UserID *uuid.UUID
+	UserID uuid.UUID
 }
 
 // Create JWT token
-func BuildJWTString(userID *uuid.UUID, pass string) (string, error) {
+func BuildJWTString(userID uuid.UUID, pass string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.TokenExp)),
@@ -115,7 +115,7 @@ func BuildJWTString(userID *uuid.UUID, pass string) (string, error) {
 }
 
 // Retrive user's UUID from JWT string
-func GetUserIDJWT(tokenString string, pass string) (userID *uuid.UUID, err error) {
+func GetUserIDJWT(tokenString string, pass string) (userID uuid.UUID, err error) {
 	claims := &Claims{}
 	_, err = jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
 		return []byte(pass), nil

@@ -17,15 +17,15 @@ func Auth(h http.Handler) http.Handler {
 
 		jwt, isSet := services.GetHeaderJWT(req.Header)
 
-		var userID *uuid.UUID
+		var userID uuid.UUID
 		var err error
 		if isSet {
 			userID, err = services.GetUserIDJWT(jwt, pass)
 			if err != nil {
 				zap.S().Infoln("Can't get user UUID form JWT.", err)
 				isSet = false
-				userID = nil
 			}
+
 		}
 
 		ctx := context.WithValue(req.Context(), model.MiddlwDTO{}, model.NewMiddlwDTO(userID, isSet))
