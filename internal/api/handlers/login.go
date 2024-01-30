@@ -11,11 +11,11 @@ import (
 )
 
 type HandlerLogin struct {
-	register *services.Register
+	register *services.Maintenance
 	conf     *config.Config
 }
 
-func NewHandlerLogin(conf *config.Config, register *services.Register) *HandlerLogin {
+func NewHandlerLogin(conf *config.Config, register *services.Maintenance) *HandlerLogin {
 
 	return &HandlerLogin{register: register, conf: conf}
 }

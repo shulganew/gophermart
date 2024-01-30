@@ -31,7 +31,7 @@ func main() {
 	defer db.Close()
 
 	//Init application
-	market, register, observer := app.InitApp(ctx, conf, db)
+	market, register, fetcher := app.InitApp(ctx, conf, db)
 
 	// Graceful shotdown
 	go func(ctx context.Context) {
@@ -41,7 +41,7 @@ func main() {
 	}(ctx)
 
 	//start web
-	if err := http.ListenAndServe(conf.Address, router.RouteMarket(conf, market, register, observer)); err != nil {
+	if err := http.ListenAndServe(conf.Address, router.RouteMarket(conf, market, register, fetcher)); err != nil {
 		panic(err)
 	}
 }

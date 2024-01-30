@@ -56,7 +56,7 @@ func TestUserlogin(t *testing.T) {
 	conf := &config.Config{}
 
 	//Init application
-	//market, register, observer := app.InitApp(ctx, conf, db)
+	//market, register, fetcher := app.InitApp(ctx, conf, db)
 	conf.Address = "localhost:8088"
 	conf.Accrual = "localhost:8090"
 	conf.PassJWT = "JWTsecret"

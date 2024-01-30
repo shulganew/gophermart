@@ -148,7 +148,7 @@ func TestWithdraw(t *testing.T) {
 				AnyTimes().
 				Return(tt.withdrals, nil)
 
-			userID, exist, err := register.NewUser(ctx, user.Login, user.Password)
+			userID, exist, err := register.CreateUser(ctx, user.Login, user.Password)
 			assert.NoError(t, err)
 			assert.False(t, exist)
 
@@ -234,7 +234,6 @@ func TestBalance(t *testing.T) {
 	conf := &config.Config{}
 
 	//Init application
-	//market, register, observer := app.InitApp(ctx, conf, db)
 	conf.Address = "localhost:8088"
 	conf.Accrual = "localhost:8090"
 	conf.PassJWT = "JWTsecret"
@@ -276,7 +275,7 @@ func TestBalance(t *testing.T) {
 				Times(1).
 				Return(tt.withdrawn, nil)
 
-			userID, exist, err := register.NewUser(ctx, user.Login, user.Password)
+			userID, exist, err := register.CreateUser(ctx, user.Login, user.Password)
 			assert.NoError(t, err)
 			assert.False(t, exist)
 

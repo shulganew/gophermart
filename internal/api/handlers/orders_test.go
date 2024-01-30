@@ -54,7 +54,6 @@ func TestOrders(t *testing.T) {
 	conf := &config.Config{}
 
 	//Init application
-	//market, register, observer := app.InitApp(ctx, conf, db)
 	conf.Address = "localhost:8088"
 	conf.Accrual = "localhost:8090"
 	conf.PassJWT = "JWTsecret"
@@ -72,11 +71,11 @@ func TestOrders(t *testing.T) {
 			//crete mock storege
 			repoRegister := mocks.NewMockRegistrar(ctrl)
 			repoMarket := mocks.NewMockMarketPlaceholder(ctrl)
-			repoObserver := mocks.NewMockFetcherUpdater(ctrl)
+			repoFetcher := mocks.NewMockFetcherUpdater(ctrl)
 
 			register := services.NewRegister(repoRegister)
 			market := services.NewMarket(repoMarket)
-			observer := services.NewFetcher(repoObserver, conf)
+			fetcher := services.NewFetcher(repoFetcher, conf)
 
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
@@ -92,7 +91,7 @@ func TestOrders(t *testing.T) {
 				Times(1).
 				Return(tt.orders, nil)
 
-			userID, exist, err := register.NewUser(ctx, user.Login, user.Password)
+			userID, exist, err := register.CreateUser(ctx, user.Login, user.Password)
 			assert.NoError(t, err)
 			assert.False(t, exist)
 
@@ -113,7 +112,7 @@ func TestOrders(t *testing.T) {
 			//create status recorder
 			resRecord := httptest.NewRecorder()
 
-			ordersHand := NewHandlerOrder(conf, market, observer)
+			ordersHand := NewHandlerOrder(conf, market, fetcher)
 			ordersHand.GetOrders(resRecord, req)
 
 			//get result
@@ -132,7 +131,7 @@ func TestOrders(t *testing.T) {
 				require.NoError(t, err)
 
 				for _, response := range responses {
-					t.Log(response.Onumber)
+					t.Log(response.OrderNr)
 					t.Log(response.Status)
 					t.Log(response.Accrual)
 					t.Log(response.Uploaded)

@@ -17,22 +17,22 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// User registration service
-type Register struct {
-	stor Registrar
+// User creation, registration, validation and autentification service
+type Maintenance struct {
+	stor Maintenancerer
 }
 
-type Registrar interface {
+type Maintenancerer interface {
 	AddUser(ctx context.Context, login string, hash string) (*uuid.UUID, error)
 	GetByLogin(ctx context.Context, login string) (*model.User, error)
 }
 
-func NewRegister(stor Registrar) *Register {
-	return &Register{stor: stor}
+func NewRegister(stor Maintenancerer) *Maintenance {
+	return &Maintenance{stor: stor}
 }
 
 // Register new user in market
-func (r *Register) NewUser(ctx context.Context, login string, password string) (userID *uuid.UUID, existed bool, err error) {
+func (r *Maintenance) CreateUser(ctx context.Context, login string, password string) (userID *uuid.UUID, existed bool, err error) {
 
 	// Set hash as user password.
 	hash, err := r.HashPassword(password)
@@ -57,7 +57,7 @@ func (r *Register) NewUser(ctx context.Context, login string, password string) (
 }
 
 // Validate user in market, if sucsess it return user's id.
-func (r *Register) IsValid(ctx context.Context, login string, pass string) (userID *uuid.UUID, isValid bool) {
+func (r *Maintenance) IsValid(ctx context.Context, login string, pass string) (userID *uuid.UUID, isValid bool) {
 
 	// Get User from storage
 	user, err := r.stor.GetByLogin(ctx, login)
@@ -78,7 +78,7 @@ func (r *Register) IsValid(ctx context.Context, login string, pass string) (user
 }
 
 // HashPassword returns the bcrypt hash of the password
-func (r Register) HashPassword(password string) (string, error) {
+func (r Maintenance) HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", fmt.Errorf("failed to hash password: %w", err)
@@ -87,7 +87,7 @@ func (r Register) HashPassword(password string) (string, error) {
 }
 
 // CheckPassword checks if the provided password is correct or not
-func (r Register) CheckPassword(password string, hashedPassword string) error {
+func (r Maintenance) CheckPassword(password string, hashedPassword string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
 

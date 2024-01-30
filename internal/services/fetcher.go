@@ -2,24 +2,16 @@ package services
 
 import (
 	"context"
-	"encoding/json"
-	"net/http"
-	"net/url"
 	"sync"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
+	"github.com/shulganew/gophermart/internal/api/client"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
 	"go.uber.org/zap"
 )
-
-type AccrualResponce struct {
-	Order   string  `json:"order"`
-	Status  string  `json:"status"`
-	Accrual float64 `json:"accrual"`
-}
 
 type Fetcher struct {
 	stor FetcherUpdater
@@ -70,11 +62,14 @@ func (o *Fetcher) FetchAccrual(ctx context.Context) {
 		o.stor.UpdateStatus(ctx, order.OrderNr, model.Status(model.PROCESSING))
 
 		//fech status and accrual from Accrual system
-		status, accrual, err := o.fetchOrderStatus(order.OrderNr)
+		accResp, err := client.FetchOrderStatus(order.OrderNr, o.conf)
 		if err != nil {
 			zap.S().Errorln("Get order status prepare error: ", err)
 			continue
 		}
+
+		status := model.Status(accResp.Status)
+		accrual := decimal.NewFromFloat(accResp.Accrual)
 
 		zap.S().Infoln("Get answer from Accrual system: ", "Order ", order, " status: ", status, " Accural: ", accrual)
 
@@ -100,49 +95,4 @@ func (o *Fetcher) FetchAccrual(ctx context.Context) {
 
 		}
 	}
-}
-
-// Get data from Accrual system
-func (o *Fetcher) fetchOrderStatus(orderNr string) (status model.Status, acc decimal.Decimal, err error) {
-
-	client := &http.Client{}
-
-	url, err := url.JoinPath(o.conf.Accrual, "api", "orders", orderNr)
-	if err != nil {
-		return "", decimal.Zero, err
-	}
-
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return "", decimal.Zero, err
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
-		return "", decimal.Zero, err
-	}
-
-	// Set status INVALID if no content 204
-	if res.StatusCode == http.StatusNoContent {
-		invalid := model.Status(model.INVALID)
-		return invalid, decimal.Zero, nil
-	}
-
-	// Set status PROCESSING if no busy 429
-	if res.StatusCode == http.StatusNoContent {
-		processing := model.Status(model.PROCESSING)
-		return processing, decimal.Zero, nil
-	}
-
-	//Load data to AccrualResponce from json
-	var accResp AccrualResponce
-	err = json.NewDecoder(res.Body).Decode(&accResp)
-	if err != nil {
-		return "", decimal.Zero, err
-	}
-	defer res.Body.Close()
-	st := model.Status(accResp.Status)
-	accrual := decimal.NewFromFloat(accResp.Accrual)
-
-	return st, accrual, nil
 }

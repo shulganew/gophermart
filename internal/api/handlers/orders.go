@@ -13,21 +13,21 @@ import (
 )
 
 type OrderResponse struct {
-	Onumber  string       `json:"number"`
+	OrderNr  string       `json:"number"`
 	Status   model.Status `json:"status"`
 	Accrual  float64      `json:"accrual,omitempty"`
 	Uploaded string       `json:"uploaded_at"`
 }
 
 type HandlerOrder struct {
-	market   *services.Market
-	conf     *config.Config
-	observer *services.Fetcher
+	market  *services.Market
+	conf    *config.Config
+	fetcher *services.Fetcher
 }
 
-func NewHandlerOrder(conf *config.Config, market *services.Market, observer *services.Fetcher) *HandlerOrder {
+func NewHandlerOrder(conf *config.Config, market *services.Market, fecher *services.Fetcher) *HandlerOrder {
 
-	return &HandlerOrder{market: market, conf: conf, observer: observer}
+	return &HandlerOrder{market: market, conf: conf, fetcher: fecher}
 }
 
 func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
@@ -114,22 +114,10 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		// Is Existed for others user.
-		isExistOther, err := u.market.IsExistForOtherUsers(req.Context(), userID, orderNr)
-		if err != nil {
-			errt := "Get error during search duplicated order for others."
-			zap.S().Error(errt, orderNr)
-			http.Error(res, errt, http.StatusInternalServerError)
-			return
-		}
-
-		if isExistOther {
-			// 409
-			errt := "Order duplicated for Other User."
-			zap.S().Debugln(errt, orderNr)
-			http.Error(res, errt, http.StatusConflict)
-			return
-		}
+		// 409
+		errt := "Order duplicated for Other User."
+		zap.S().Debugln(errt, orderNr)
+		http.Error(res, errt, http.StatusConflict)
 
 	}
 

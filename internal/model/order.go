@@ -57,3 +57,4 @@ func (o *Order) MarshalJSON() ([]byte, error) {
 		Uploded: o.getUploded(),
 	})
 }
+

@@ -21,7 +21,6 @@ type MarketPlaceholder interface {
 	AddOrder(ctx context.Context, userID uuid.UUID, order string, isPreorder bool, withdraw decimal.Decimal) error
 	GetOrders(ctx context.Context, userID uuid.UUID) ([]model.Order, error)
 	IsExistForUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error)
-	IsExistForOtherUsers(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error)
 	GetBonuses(ctx context.Context, userID uuid.UUID) (accrual decimal.Decimal, err error)
 	GetWithdrawals(ctx context.Context, userID uuid.UUID) (withdrawn decimal.Decimal, err error)
 	Withdrawals(ctx context.Context, userID uuid.UUID) ([]model.Withdrawals, error)
@@ -81,10 +80,6 @@ func (m *Market) MovePreOrder(ctx context.Context, order *model.Order) (err erro
 
 func (m *Market) IsExistForUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error) {
 	return m.stor.IsExistForUser(ctx, userID, order)
-}
-
-func (m *Market) IsExistForOtherUsers(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error) {
-	return m.stor.IsExistForOtherUsers(ctx, userID, order)
 }
 
 func (m *Market) GetBalance(ctx context.Context, userID uuid.UUID) (bonuses decimal.Decimal, withdrawn decimal.Decimal, err error) {
