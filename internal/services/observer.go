@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
@@ -39,6 +40,7 @@ type ObserverUpdater interface {
 	LoadPocessing(ctx context.Context) ([]model.Order, error)
 	UpdateStatus(ctx context.Context, order string, status model.Status) (err error)
 	SetAccrual(ctx context.Context, order string, accrual decimal.Decimal) (err error)
+	AddBonuses(ctx context.Context, userID *uuid.UUID, amount decimal.Decimal) (err error)
 }
 
 func NewObserver(stor ObserverUpdater, conf *config.Config) *Observer {
@@ -79,20 +81,26 @@ func (o *Observer) ObservAccrual(ctx context.Context) {
 			continue
 		}
 
-		zap.S().Infoln("Get answer from Accrual system: status: ", *status, " Accural: ", *accrual)
-		zap.S().Infoln("Order ", order.Onumber, "Status:", status)
+		zap.S().Infoln("Get answer from Accrual system: ", "Order ", order.Onumber, " status: ", status, " Accural: ", accrual)
 
 		//if status PROCESSED or INVALID - update db and remove from orders
-		if *status == model.PROCESSED || *status == model.INVALID {
-			err = o.stor.UpdateStatus(ctx, order.Onumber, *status)
+		if status == model.PROCESSED || status == model.INVALID {
+			err = o.stor.UpdateStatus(ctx, order.Onumber, status)
 			if err != nil {
 				zap.S().Errorln("Get error during deleted poccessed order", err)
 			}
-			if accrual != nil && accrual != &decimal.Zero {
-				err = o.stor.SetAccrual(ctx, order.Onumber, *accrual)
+			//set accruals to the order
+			if accrual != decimal.Zero {
+				err = o.stor.SetAccrual(ctx, order.Onumber, accrual)
 				if err != nil {
 					zap.S().Errorln("Get error during deleted poccessed order", err)
 				}
+			}
+
+			//add accruals to user's bonus balance
+			err = o.stor.AddBonuses(ctx, order.UserID, accrual)
+			if err != nil {
+				zap.S().Errorln("get error update user's balance", err)
 			}
 			delete(o.orders, order.Onumber)
 
@@ -127,46 +135,46 @@ func (o *Observer) LoadData(ctx context.Context) {
 }
 
 // Get data from Accrual system
-func (o *Observer) getOrderStatus(order *model.Order) (status *model.Status, acc *decimal.Decimal, err error) {
+func (o *Observer) getOrderStatus(order *model.Order) (status model.Status, acc decimal.Decimal, err error) {
 
 	client := &http.Client{}
 
 	url, err := url.JoinPath(o.conf.Accrual, "api", "orders", order.Onumber)
 	if err != nil {
-		return nil, nil, err
+		return "", decimal.Zero, err
 	}
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, nil, err
+		return "", decimal.Zero, err
 	}
 
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, nil, err
+		return "", decimal.Zero, err
 	}
 
 	// Set status INVALID if no content 204
 	if res.StatusCode == http.StatusNoContent {
 		invalid := model.Status(model.INVALID)
-		return &invalid, nil, nil
+		return invalid, decimal.Zero, nil
 	}
 
 	// Set status PROCESSING if no busy 429
 	if res.StatusCode == http.StatusNoContent {
-		invalid := model.Status(model.PROCESSING)
-		return &invalid, nil, nil
+		processing := model.Status(model.PROCESSING)
+		return processing, decimal.Zero, nil
 	}
 
 	//Load data to AccrualResponce from json
 	var accResp AccrualResponce
 	err = json.NewDecoder(res.Body).Decode(&accResp)
 	if err != nil {
-		return nil, nil, err
+		return "", decimal.Zero, err
 	}
 	defer res.Body.Close()
 	st := model.Status(accResp.Status)
 	accrual := decimal.NewFromFloat(accResp.Accrual)
 
-	return &st, &accrual, nil
+	return st, accrual, nil
 }

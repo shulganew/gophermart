@@ -40,7 +40,6 @@ func (base *Repo) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Ord
 	if err != nil {
 		return nil, err
 	}
-
 	return orders, nil
 
 }
@@ -64,15 +63,6 @@ func (base *Repo) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, o
 	}
 
 	return ordersn != 0, nil
-}
-
-func (base *Repo) GetBonuses(ctx context.Context, userID *uuid.UUID) (accrual decimal.Decimal, err error) {
-
-	err = base.master.GetContext(ctx, &accrual, "SELECT bonuses FROM users where user_id = $1", userID)
-	if err != nil {
-		return decimal.Zero, err
-	}
-	return accrual, nil
 }
 
 func (base *Repo) GetWithdrawals(ctx context.Context, userID *uuid.UUID) (withdrawn decimal.Decimal, err error) {
@@ -119,10 +109,6 @@ func (base *Repo) IsPreOrder(ctx context.Context, userID *uuid.UUID, order strin
 
 // Move preorder to regular order. Add accruals for this order.
 func (base *Repo) MovePreOrder(ctx context.Context, order *model.Order) (err error) {
-
-	if err != nil {
-		return fmt.Errorf("move order error, begin transaction error, %w", err)
-	}
 
 	_, err = base.master.ExecContext(ctx, "UPDATE orders SET status = $1, is_preorder = $2 WHERE onumber = $3", order.Status, order.IsPreOrder, order.Onumber)
 	if err != nil {

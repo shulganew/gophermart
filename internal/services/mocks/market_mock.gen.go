@@ -141,6 +141,20 @@ func (mr *MockMarketPlaceholderMockRecorder) IsPreOrder(ctx, userID, order inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsPreOrder", reflect.TypeOf((*MockMarketPlaceholder)(nil).IsPreOrder), ctx, userID, order)
 }
 
+// MakeWithdrawn mocks base method.
+func (m *MockMarketPlaceholder) MakeWithdrawn(ctx context.Context, userID *uuid.UUID, amount decimal.Decimal) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MakeWithdrawn", ctx, userID, amount)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// MakeWithdrawn indicates an expected call of MakeWithdrawn.
+func (mr *MockMarketPlaceholderMockRecorder) MakeWithdrawn(ctx, userID, amount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeWithdrawn", reflect.TypeOf((*MockMarketPlaceholder)(nil).MakeWithdrawn), ctx, userID, amount)
+}
+
 // MovePreOrder mocks base method.
 func (m *MockMarketPlaceholder) MovePreOrder(ctx context.Context, order *model.Order) error {
 	m.ctrl.T.Helper()

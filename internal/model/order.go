@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/ShiraazMoollatjie/goluhn"
@@ -28,4 +29,31 @@ func (o *Order) IsValid() (isValid bool) {
 	err := goluhn.Validate(o.Onumber)
 	return err == nil
 
+}
+
+func (o *Order) getAccrual() *float64 {
+	if o.Accrual.IsZero() {
+		return nil
+	}
+	acc := o.Accrual.InexactFloat64()
+	return &acc
+}
+
+func (o *Order) getUploded() string {
+
+	return o.Uploaded.Format(time.RFC3339)
+}
+
+func (o *Order) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Number  string   `json:"number"`
+		Status  string   `json:"status"`
+		Accrual *float64 `json:"accrual,omitempty"`
+		Uploded string   `json:"uploaded_at"`
+	}{
+		Number:  o.Onumber,
+		Status:  o.Status.String(),
+		Accrual: o.getAccrual(),
+		Uploded: o.getUploded(),
+	})
 }

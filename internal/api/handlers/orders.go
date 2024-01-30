@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/config"
@@ -18,12 +17,6 @@ type OrderResponse struct {
 	Status   model.Status `json:"status"`
 	Accrual  float64      `json:"accrual,omitempty"`
 	Uploaded string       `json:"uploaded_at"`
-}
-
-func NewOrderResponse(order *model.Order) *OrderResponse {
-	acc := order.Accrual.InexactFloat64()
-	time := order.Uploaded.Format(time.RFC3339)
-	return &OrderResponse{Onumber: order.Onumber, Status: order.Status, Accrual: acc, Uploaded: time}
 }
 
 type HandlerOrder struct {
@@ -101,7 +94,6 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 				http.Error(res, errt, http.StatusInternalServerError)
 				return
 			}
-
 
 		}
 
@@ -188,14 +180,7 @@ func (u *HandlerOrder) GetOrders(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	rOrders := make([]OrderResponse, 0)
-	for _, order := range orders {
-		rOrder := NewOrderResponse(&order)
-		rOrders = append(rOrders, *rOrder)
-
-	}
-
-	jsonOrders, err := json.Marshal(rOrders)
+	jsonOrders, err := json.Marshal(orders)
 	if err != nil {
 		errt := "Error during Marshal answer Orders"
 		zap.S().Errorln(errt, err)

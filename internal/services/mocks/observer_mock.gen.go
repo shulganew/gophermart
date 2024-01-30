@@ -8,6 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	uuid "github.com/gofrs/uuid"
 	gomock "github.com/golang/mock/gomock"
 	decimal "github.com/shopspring/decimal"
 	model "github.com/shulganew/gophermart/internal/model"
@@ -34,6 +35,20 @@ func NewMockObserverUpdater(ctrl *gomock.Controller) *MockObserverUpdater {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockObserverUpdater) EXPECT() *MockObserverUpdaterMockRecorder {
 	return m.recorder
+}
+
+// AddBonuses mocks base method.
+func (m *MockObserverUpdater) AddBonuses(ctx context.Context, userID *uuid.UUID, amount decimal.Decimal) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddBonuses", ctx, userID, amount)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddBonuses indicates an expected call of AddBonuses.
+func (mr *MockObserverUpdaterMockRecorder) AddBonuses(ctx, userID, amount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddBonuses", reflect.TypeOf((*MockObserverUpdater)(nil).AddBonuses), ctx, userID, amount)
 }
 
 // LoadPocessing mocks base method.

@@ -33,7 +33,7 @@ func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) 
 
 	userID := ctxConfig.GetUserID()
 
-	acc, withdrawn, err := u.market.GetBalance(req.Context(), userID)
+	bonuses, withdrawn, err := u.market.GetBalance(req.Context(), userID)
 	if err != nil {
 		// 500
 		errt := "Cat't get orders."
@@ -42,9 +42,7 @@ func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	balance := acc.Sub(withdrawn)
-
-	userBalance := model.NewUserBalance(balance, withdrawn)
+	userBalance := model.NewUserBalance(bonuses, withdrawn)
 
 	jsonBalance, err := json.Marshal(userBalance)
 	if err != nil {
@@ -106,6 +104,7 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 		return
 	}
 
+	// Create preorder with withdrawal and add storage with mark preoreder bool = true
 	order := model.NewOrder(userID, wd.Onumber, true, amount, decimal.Zero)
 	existed, err := u.market.AddOrder(req.Context(), true, order)
 	if existed {
@@ -117,7 +116,19 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 	}
 	if err != nil {
 		// 500
-		http.Error(res, "Error during withdraw.", http.StatusInternalServerError)
+		errt := "Error during withdraw. Adding preorder error."
+		zap.S().Debugln(errt, wd.Onumber, err)
+		http.Error(res, errt, http.StatusInternalServerError)
+		return
+	}
+
+	//Update withdrawals and bonuses balance
+	err = u.market.MakeWithdrawn(req.Context(), userID, amount)
+	if err != nil {
+		// 500
+		errt := "Error during withdrawn."
+		zap.S().Debugln(errt, wd.Onumber, err)
+		http.Error(res, "Error during withdraw. Update balbance error", http.StatusInternalServerError)
 		return
 	}
 	//set status code 200
