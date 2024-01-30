@@ -14,7 +14,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/lib/pq"
 	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/app"
 	"github.com/shulganew/gophermart/internal/config"
@@ -32,11 +32,11 @@ func TestWithdraw(t *testing.T) {
 		method     string
 		requestURL string
 
-		//all accruals
-		acc decimal.Decimal
+		//all bonuses
+		bonuses decimal.Decimal
 
 		//all withdrawals
-		withdrawn decimal.Decimal
+		withdrals decimal.Decimal
 
 		//amount of withdrawn
 		amount         decimal.Decimal
@@ -49,8 +49,8 @@ func TestWithdraw(t *testing.T) {
 			method:         http.MethodPost,
 			Order:          "0265410804",
 			requestURL:     "http://localhost:8080/api/user/balance/withdraw",
-			acc:            decimal.NewFromFloat(12.2),
-			withdrawn:      decimal.NewFromFloat(6.2),
+			bonuses:        decimal.NewFromFloat(12.2),
+			withdrals:      decimal.NewFromFloat(6.2),
 			amount:         decimal.NewFromFloat(1.0),
 			statusCode:     http.StatusUnprocessableEntity,
 			setOrderReturn: nil,
@@ -60,11 +60,11 @@ func TestWithdraw(t *testing.T) {
 			method:         http.MethodPost,
 			Order:          "7020147356",
 			requestURL:     "http://localhost:8080/api/user/balance/withdraw",
-			acc:            decimal.NewFromFloat(12.2),
-			withdrawn:      decimal.NewFromFloat(6.2),
+			bonuses:        decimal.NewFromFloat(12.2),
+			withdrals:      decimal.NewFromFloat(6.2),
 			amount:         decimal.NewFromFloat(1.0),
 			statusCode:     http.StatusUnprocessableEntity,
-			setOrderReturn: &pgconn.PgError{Code: pgerrcode.UniqueViolation},
+			setOrderReturn: &pq.Error{Code: pq.ErrorCode(pgerrcode.UniqueViolation)},
 		},
 
 		{
@@ -72,8 +72,8 @@ func TestWithdraw(t *testing.T) {
 			method:         http.MethodPost,
 			Order:          "7020147356",
 			requestURL:     "http://localhost:8080/api/user/balance/withdraw",
-			acc:            decimal.NewFromFloat(6.2),
-			withdrawn:      decimal.NewFromFloat(62.2),
+			bonuses:        decimal.NewFromFloat(6.2),
+			withdrals:      decimal.NewFromFloat(62.2),
 			amount:         decimal.NewFromFloat(100.0),
 			statusCode:     http.StatusPaymentRequired,
 			setOrderReturn: nil,
@@ -84,8 +84,8 @@ func TestWithdraw(t *testing.T) {
 			method:         http.MethodPost,
 			Order:          "7020147356",
 			requestURL:     "http://localhost:8080/api/user/balance/withdraw",
-			acc:            decimal.NewFromFloat(12.2),
-			withdrawn:      decimal.NewFromFloat(6.2),
+			bonuses:        decimal.NewFromFloat(12.2),
+			withdrals:      decimal.NewFromFloat(6.2),
 			amount:         decimal.NewFromFloat(1.0),
 			statusCode:     http.StatusOK,
 			setOrderReturn: nil,
@@ -134,14 +134,19 @@ func TestWithdraw(t *testing.T) {
 				Return(tt.setOrderReturn)
 
 			_ = repoMarket.EXPECT().
+				MakeWithdrawn(gomock.Any(), gomock.Any(), gomock.Any()).
+				AnyTimes().
+				Return(nil)
+
+			_ = repoMarket.EXPECT().
 				GetBonuses(gomock.Any(), gomock.Any()).
 				AnyTimes().
-				Return(tt.acc, nil)
+				Return(tt.bonuses, nil)
 
 			_ = repoMarket.EXPECT().
 				GetWithdrawals(gomock.Any(), gomock.Any()).
 				AnyTimes().
-				Return(tt.withdrawn, nil)
+				Return(tt.withdrals, nil)
 
 			userID, exist, err := register.NewUser(ctx, user)
 			assert.NoError(t, err)
@@ -166,7 +171,7 @@ func TestWithdraw(t *testing.T) {
 
 			req = req.WithContext(context.WithValue(ctxUser, chi.RouteCtxKey, rctx))
 
-			jwt, _ := services.BuildJWTString(&user, conf.PassJWT)
+			jwt, _ := services.BuildJWTString(user.UUID, conf.PassJWT)
 
 			req.Header.Add("Authorization", jwt)
 			req.Header.Add("Content-Type", "application/json")
@@ -202,15 +207,15 @@ func TestBalance(t *testing.T) {
 	tests := []struct {
 		name       string
 		requestURL string
-		acc        decimal.Decimal
+		bonuses    decimal.Decimal
 		withdrawn  decimal.Decimal
 		statusCode int
 		//want
 	}{
 		{
-			name:       "Get Banans",
+			name:       "Get Balans",
 			requestURL: "http://localhost:8080/api/user/balance",
-			acc:        decimal.NewFromFloat(12.2),
+			bonuses:    decimal.NewFromFloat(12.2),
 			withdrawn:  decimal.NewFromFloat(6.2),
 			statusCode: http.StatusOK,
 		},
@@ -218,7 +223,7 @@ func TestBalance(t *testing.T) {
 		{
 			name:       "Get balance 2",
 			requestURL: "http://localhost:8080/api/user/balance",
-			acc:        decimal.NewFromFloat(33.2),
+			bonuses:    decimal.NewFromFloat(33.2),
 			withdrawn:  decimal.NewFromFloat(22.2),
 			statusCode: http.StatusOK,
 		},
@@ -264,7 +269,7 @@ func TestBalance(t *testing.T) {
 			_ = repoMarket.EXPECT().
 				GetBonuses(gomock.Any(), gomock.Any()).
 				Times(1).
-				Return(tt.acc, nil)
+				Return(tt.bonuses, nil)
 
 			_ = repoMarket.EXPECT().
 				GetWithdrawals(gomock.Any(), gomock.Any()).
@@ -284,7 +289,7 @@ func TestBalance(t *testing.T) {
 
 			req = req.WithContext(context.WithValue(ctxUser, chi.RouteCtxKey, rctx))
 
-			jwt, _ := services.BuildJWTString(&user, conf.PassJWT)
+			jwt, _ := services.BuildJWTString(user.UUID, conf.PassJWT)
 
 			req.Header.Add("Authorization", jwt)
 			req.Header.Add("Content-Type", "text/plain")
@@ -313,10 +318,10 @@ func TestBalance(t *testing.T) {
 			b := decimal.NewFromFloat(balance.Bonus)
 			w := decimal.NewFromFloat(balance.Withdrawn)
 
-			bt := tt.acc
+			bt := tt.bonuses
 			wt := tt.withdrawn
 
-			assert.Equal(t, b.Equal(bt.Sub(w)), true)
+			assert.Equal(t, b.Equal(bt), true)
 			assert.Equal(t, w.Equal(wt), true)
 
 			t.Log("StatusCode test: ", tt.statusCode, " server: ", res.StatusCode)

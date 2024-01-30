@@ -69,7 +69,7 @@ func (r *Register) IsValid(ctx context.Context, untrusted *model.User) (userID *
 
 	// Get User from storage
 	user, err := r.stor.GetByLogin(ctx, untrusted.Login)
-	zap.S().Infoln("User form db: ", user)
+	zap.S().Infof("User form db: %v \n", user)
 	if err != nil {
 		zap.S().Errorln("User not found by login", err)
 		return nil, false
@@ -106,12 +106,12 @@ type Claims struct {
 }
 
 // Create JWT token
-func BuildJWTString(user *model.User, pass string) (string, error) {
+func BuildJWTString(userID *uuid.UUID, pass string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.TokenExp)),
 		},
-		UserID: user.UUID,
+		UserID: userID,
 	})
 
 	tokenString, err := token.SignedString([]byte(pass))

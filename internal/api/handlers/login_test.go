@@ -81,7 +81,7 @@ func TestUserLogin(t *testing.T) {
 			cPass, err := bcrypt.GenerateFromPassword([]byte(tt.passDB), bcrypt.DefaultCost)
 			assert.NoError(t, err)
 
-			dbUser := model.User{UUID: &uuid, Login: tt.login, Password: string(cPass)}
+			dbUser := model.User{UUID: &uuid, Login: tt.login, PassHash: string(cPass)}
 
 			_ = repoRegister.EXPECT().
 				GetByLogin(gomock.Any(), gomock.Any()).

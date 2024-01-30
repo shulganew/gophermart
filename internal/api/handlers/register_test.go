@@ -14,7 +14,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/lib/pq"
 	"github.com/shulganew/gophermart/internal/app"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
@@ -38,18 +38,18 @@ func TestUserRegister(t *testing.T) {
 			method:        http.MethodPost,
 			requestURL:    "http://localhost:8080/api/user/register",
 			login:         "user",
-			passLogin:     "qwerty",
+			passLogin:     "qwerty123456",
 			statusCode:    http.StatusOK,
 			registerError: nil,
 		},
 		{
-			name:          "Login user success",
+			name:          "Registration duplicated user",
 			method:        http.MethodPost,
 			requestURL:    "http://localhost:8080/api/user/register",
 			login:         "user",
-			passLogin:     "qwerty",
+			passLogin:     "qwerty123456",
 			statusCode:    http.StatusConflict,
-			registerError: &pgconn.PgError{Code: pgerrcode.UniqueViolation},
+			registerError: &pq.Error{Code: pq.ErrorCode(pgerrcode.UniqueViolation)},
 		},
 	}
 

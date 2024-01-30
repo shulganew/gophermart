@@ -41,7 +41,7 @@ func (h *HandlerLogin) LoginUser(res http.ResponseWriter, req *http.Request) {
 	user.UUID = userID
 
 	zap.S().Debug("Login sucsess, user id is: ", userID)
-	jwt, _ := services.BuildJWTString(&user, h.conf.PassJWT)
+	jwt, _ := services.BuildJWTString(userID, h.conf.PassJWT)
 
 	res.Header().Add("Content-Type", "text/plain")
 	res.Header().Add("Authorization", jwt)

@@ -105,7 +105,7 @@ func TestGetOrders(t *testing.T) {
 
 			req = req.WithContext(context.WithValue(ctxUser, chi.RouteCtxKey, rctx))
 
-			jwt, _ := services.BuildJWTString(&user, conf.PassJWT)
+			jwt, _ := services.BuildJWTString(userID, conf.PassJWT)
 
 			req.Header.Add("Authorization", jwt)
 			req.Header.Add("Content-Type", "text/plain")
