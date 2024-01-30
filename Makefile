@@ -7,21 +7,11 @@
 pg: 
 	docker run --rm \
 		--name=marketdb_v2 \
+		-v $(abspath ./db/init/):/docker-entrypoint-initdb.d \
 		-e POSTGRES_PASSWORD="postgres" \
 		-d \
 		-p 5432:5432 \
 		postgres:15.3
-	sleep 1
-
-	PGPASSWORD=postgres psql -v ON_ERROR_STOP=1 -h postgres -U postgres \
-		-c "CREATE USER market WITH ENCRYPTED PASSWORD '1';" \
-		-c "CREATE USER praktikum WITH ENCRYPTED PASSWORD 'praktikum';" \
-		-c "CREATE DATABASE market;"  \
-		-c "CREATE DATABASE praktikum;" \
-		-c "GRANT ALL PRIVILEGES ON DATABASE market TO market;" \
-		-c "GRANT ALL PRIVILEGES ON DATABASE praktikum TO market;" \
-		-c "ALTER DATABASE market OWNER TO market;" \
-		-c "ALTER DATABASE praktikum OWNER TO market;"
 
 
 .PHONY: pg-stop
