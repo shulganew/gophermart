@@ -12,7 +12,11 @@ import (
 )
 
 func (base *Repo) AddUser(ctx context.Context, user model.User, hash string) error {
-	_, err := base.master.ExecContext(ctx, "INSERT INTO users (user_id, login, password_hash) VALUES ($1, $2, $3)", user.UUID, user.Login, hash)
+	query := `
+	INSERT INTO users (user_id, login, password_hash) 
+	VALUES ($1, $2, $3)
+	`
+	_, err := base.master.ExecContext(ctx, query, user.UUID, user.Login, hash)
 	if err != nil {
 		var pgErr *pq.Error
 		// if URL exist in DataBase
@@ -26,9 +30,14 @@ func (base *Repo) AddUser(ctx context.Context, user model.User, hash string) err
 
 // Retrive User by login
 func (base *Repo) GetByLogin(ctx context.Context, login string) (*model.User, error) {
+	query := `
+	SELECT user_id, password_hash 
+	FROM users 
+	WHERE login = $1
+	`
 	user := model.User{Login: login}
 	zap.S().Infoln("user login: ", login)
-	err := base.master.MustBegin().GetContext(ctx, &user, "SELECT user_id, password_hash FROM users WHERE login = $1", login)
+	err := base.master.MustBegin().GetContext(ctx, &user, query, login)
 	if err != nil {
 		return nil, fmt.Errorf("error during get user by login from storage. User not valid: %w", err)
 	}

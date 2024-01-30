@@ -14,8 +14,11 @@ import (
 )
 
 func (base *Repo) AddOrder(ctx context.Context, userID *uuid.UUID, order string, isPreOrder bool, withdrawn decimal.Decimal) error {
-
-	_, err := base.master.ExecContext(ctx, "INSERT INTO orders (user_id, onumber, is_preorder, uploaded, withdrawn) VALUES ($1, $2, $3, $4, $5)", userID, order, isPreOrder, time.Now(), withdrawn)
+	query := `
+	INSERT INTO orders (user_id, onumber, is_preorder, uploaded, withdrawn) 
+	VALUES ($1, $2, $3, $4, $5)
+		`
+	_, err := base.master.ExecContext(ctx, query, userID, order, isPreOrder, time.Now(), withdrawn)
 	if err != nil {
 		var pgErr *pq.Error
 		// if order exist in DataBase
@@ -31,9 +34,9 @@ func (base *Repo) AddOrder(ctx context.Context, userID *uuid.UUID, order string,
 func (base *Repo) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Order, error) {
 	query := `
 	SELECT user_id, onumber, uploaded, status, withdrawn, accrual
-		FROM orders 
-		WHERE is_preorder = FALSE AND user_id = $1
-		ORDER BY uploaded DESC
+	FROM orders 
+	WHERE is_preorder = FALSE AND user_id = $1
+	ORDER BY uploaded DESC
 		`
 	orders := []model.Order{}
 	err := base.master.MustBegin().SelectContext(ctx, &orders, query, userID)
@@ -45,9 +48,13 @@ func (base *Repo) GetOrders(ctx context.Context, userID *uuid.UUID) ([]model.Ord
 }
 
 func (base *Repo) IsExistForUser(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
-
+	query := `
+	SELECT count(*) 
+	FROM orders WHERE user_id = $1 
+	AND onumber = $2
+	`
 	var ordersn int
-	err = base.master.GetContext(ctx, &ordersn, "SELECT count(*) FROM orders WHERE user_id = $1 AND onumber = $2", userID, order)
+	err = base.master.GetContext(ctx, &ordersn, query, userID, order)
 	if err != nil {
 		return true, fmt.Errorf("error during order search for user: %w", err)
 	}
@@ -55,9 +62,13 @@ func (base *Repo) IsExistForUser(ctx context.Context, userID *uuid.UUID, order s
 }
 
 func (base *Repo) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, order string) (isExist bool, err error) {
-
+	query := `
+	SELECT count(*) 
+	FROM orders 
+	WHERE user_id != $1 AND onumber = $2
+	`
 	var ordersn int
-	err = base.master.GetContext(ctx, &ordersn, "SELECT count(*) FROM orders WHERE user_id != $1 AND onumber = $2", userID, order)
+	err = base.master.GetContext(ctx, &ordersn, query, userID, order)
 	if err != nil {
 		return true, fmt.Errorf("error during order search for user: %w", err)
 	}
@@ -66,8 +77,12 @@ func (base *Repo) IsExistForOtherUsers(ctx context.Context, userID *uuid.UUID, o
 }
 
 func (base *Repo) GetWithdrawals(ctx context.Context, userID *uuid.UUID) (withdrawn decimal.Decimal, err error) {
-
-	err = base.master.GetContext(ctx, &withdrawn, "SELECT withdrawals FROM users where user_id = $1", userID)
+	query := `
+	SELECT withdrawals 
+	FROM users 
+	WHERE user_id = $1
+	`
+	err = base.master.GetContext(ctx, &withdrawn, query, userID)
 	if err != nil {
 		return decimal.Zero, err
 	}
@@ -75,14 +90,12 @@ func (base *Repo) GetWithdrawals(ctx context.Context, userID *uuid.UUID) (withdr
 }
 
 func (base *Repo) Withdrawals(ctx context.Context, userID *uuid.UUID) (wds []model.Withdrawals, err error) {
-
 	query := `
 	SELECT  onumber, withdrawn, uploaded
 		FROM orders 
 		WHERE user_id = $1
 		ORDER BY uploaded DESC
 		`
-
 	err = base.master.MustBegin().SelectContext(ctx, &wds, query, userID)
 	if err != nil {
 		return nil, err
@@ -97,7 +110,6 @@ func (base *Repo) IsPreOrder(ctx context.Context, userID *uuid.UUID, order strin
 	FROM orders
 	WHERE user_id = $1 AND onumber = $2 AND is_preorder = TRUE
 	`
-
 	var is int
 	err := base.master.GetContext(ctx, &is, query, userID, order)
 	if err != nil {
@@ -109,12 +121,101 @@ func (base *Repo) IsPreOrder(ctx context.Context, userID *uuid.UUID, order strin
 
 // Move preorder to regular order. Add accruals for this order.
 func (base *Repo) MovePreOrder(ctx context.Context, order *model.Order) (err error) {
-
-	_, err = base.master.ExecContext(ctx, "UPDATE orders SET status = $1, is_preorder = $2 WHERE onumber = $3", order.Status, order.IsPreOrder, order.Onumber)
+	query := `
+	UPDATE orders 
+	SET status = $1, is_preorder = $2 
+	WHERE onumber = $3
+	`
+	_, err = base.master.ExecContext(ctx, query, order.Status, order.IsPreOrder, order.Onumber)
 	if err != nil {
 		return fmt.Errorf("move order error, can't move preoreder to order, %w", err)
 	}
 
 	return
 
+}
+
+func (base *Repo) GetBonuses(ctx context.Context, userID *uuid.UUID) (accrual decimal.Decimal, err error) {
+	query := `
+	SELECT bonuses 
+	FROM users 
+	WHERE user_id = $1
+	`
+	err = base.master.GetContext(ctx, &accrual, query, userID)
+	if err != nil {
+		return decimal.Zero, err
+	}
+	return accrual, nil
+}
+
+func (base *Repo) SetAccrual(ctx context.Context, order string, accrual decimal.Decimal) (err error) {
+	query := `
+	UPDATE orders 
+	SET accrual = $1 
+	WHERE onumber = $2
+	`
+	_, err = base.master.ExecContext(ctx, query, accrual, order)
+	if err != nil {
+
+		return fmt.Errorf("can't update order's accrual during update status %w", err)
+	}
+
+	return nil
+}
+
+func (base *Repo) AddBonuses(ctx context.Context, userID *uuid.UUID, amount decimal.Decimal) (err error) {
+	query := `
+	UPDATE users 
+	SET bonuses = bonuses + $1 
+	WHERE user_id = $2
+	`
+	_, err = base.master.ExecContext(ctx, query, amount, userID)
+	if err != nil {
+		return fmt.Errorf("can't update add to user's order accruals to bonuses %w", err)
+	}
+
+	return nil
+}
+
+// Move user's amount from bonuses to withdrawals.
+func (base *Repo) MakeWithdrawn(ctx context.Context, userID *uuid.UUID, amount decimal.Decimal) (err error) {
+	queryBonusUpdate := `
+	UPDATE users 
+	SET bonuses = bonuses - $1 
+	WHERE user_id = $2
+	`
+	tx := base.master.MustBegin()
+	_, err = tx.ExecContext(ctx, queryBonusUpdate, amount, userID)
+	if err != nil {
+		return fmt.Errorf("can't make bonuse withdrawn, %w", err)
+	}
+
+	queryBonusCheck := `
+	SELECT bonuses 
+	FROM users 
+	WHERE user_id = $1
+	`
+	//check uses balance after update
+	var bonuses decimal.Decimal
+
+	//check uses balance in transaction
+	err = tx.GetContext(ctx, &bonuses, queryBonusCheck, userID)
+	if err != nil || bonuses.IsNegative() {
+		tx.Rollback()
+		return fmt.Errorf("error during user's bonuse withdrawn: %w", err)
+	}
+
+	queryWithdrawnUpdate := `
+	UPDATE users 
+	SET withdrawals = withdrawals + $1 
+	WHERE user_id = $2
+	`
+	//Update user's withdrawals
+	_, err = tx.ExecContext(ctx, queryWithdrawnUpdate, amount, userID)
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("can't add withdrawns to user, %w", err)
+	}
+	tx.Commit()
+	return
 }
