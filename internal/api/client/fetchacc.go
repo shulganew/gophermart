@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
@@ -31,7 +32,7 @@ func FetchOrderStatus(orderNr string, conf *config.Config) (*model.AccrualRespon
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, errors.New("no correct answer from accural system")
+		return nil, errors.New("no correct answer from accural system: " + strconv.Itoa(res.StatusCode))
 	}
 
 	//Load data to AccrualResponce from json

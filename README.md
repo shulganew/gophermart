@@ -83,7 +83,7 @@ curl -v -H "Content-Type: application/json" -X POST http://localhost:8080/api/or
 		-m 2 - Login user
 		-m 3 - Get users order list
 		-m 4 - Set user order
-		-m 5 - Get user's balance
+		-m 5 - Get user's balanse
 		-m 6 - Make withdrawn
 		-m 7 - Get user's withdrawals
 ```

@@ -271,7 +271,7 @@ func TestBalance(t *testing.T) {
 				Return(tt.bonuses, nil)
 
 			_ = repoMarket.EXPECT().
-				GetWithdrawals(gomock.Any(), gomock.Any()).
+				GetWithdrawn(gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(tt.withdrawn, nil)
 
