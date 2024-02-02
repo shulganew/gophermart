@@ -16,7 +16,7 @@ func (base *Repo) LoadPocessing(ctx context.Context) ([]model.Order, error) {
 		FROM orders 
 		WHERE (status = 'NEW' OR status = 'REGISTERED' OR status = 'PROCESSING') AND is_preorder = FALSE
 	`
-	err := base.master.MustBegin().SelectContext(ctx, &orders, query)
+	err := base.master.SelectContext(ctx, &orders, query)
 	if err != nil {
 		return nil, err
 	}
@@ -31,5 +31,5 @@ func (base *Repo) UpdateStatus(ctx context.Context, order string, status model.S
 		return fmt.Errorf("can't update orders status, %w", err)
 	}
 
-	return 
+	return
 }

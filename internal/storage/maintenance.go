@@ -41,7 +41,7 @@ func (base *Repo) GetByLogin(ctx context.Context, login string) (*model.User, er
 	`
 	user := model.User{Login: login}
 	zap.S().Infoln("user login: ", login)
-	err := base.master.MustBegin().GetContext(ctx, &user, query, login)
+	err := base.master.GetContext(ctx, &user, query, login)
 	if err != nil {
 		return nil, fmt.Errorf("error during get user by login from storage. User not valid: %w", err)
 	}
