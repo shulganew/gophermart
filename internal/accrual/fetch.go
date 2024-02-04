@@ -1,4 +1,4 @@
-package client
+package accrual
 
 import (
 	"encoding/json"
@@ -11,12 +11,21 @@ import (
 	"github.com/shulganew/gophermart/internal/model"
 )
 
+type AccrualClient struct {
+	conf *config.Config
+}
+
+func NewAccrualClient(conf *config.Config) *AccrualClient {
+
+	return &AccrualClient{conf: conf}
+}
+
 // Get data from Accrual system
-func FetchOrderStatus(orderNr string, conf *config.Config) (*model.AccrualResponce, error) {
+func (a AccrualClient) FetchOrderStatus(orderNr string) (*model.AccrualResponce, error) {
 
 	client := &http.Client{}
 
-	url, err := url.JoinPath(conf.Accrual, "api", "orders", orderNr)
+	url, err := url.JoinPath(a.conf.Accrual, "api", "orders", orderNr)
 	if err != nil {
 		return nil, err
 	}

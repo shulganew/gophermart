@@ -17,7 +17,7 @@ func (base *Repo) AddOrder(ctx context.Context, userID uuid.UUID, order string, 
 	query := `
 	INSERT INTO orders (user_id, order_number, is_preorder, uploaded, withdrawn) 
 	VALUES ($1, $2, $3, $4, $5)
-		`
+	`
 	_, err := base.master.ExecContext(ctx, query, userID, order, isPreOrder, time.Now(), withdrawn)
 	if err != nil {
 		var pgErr *pq.Error
@@ -37,7 +37,7 @@ func (base *Repo) GetOrders(ctx context.Context, userID uuid.UUID) ([]model.Orde
 	FROM orders 
 	WHERE is_preorder = FALSE AND user_id = $1
 	ORDER BY uploaded DESC
-		`
+	`
 	orders := []model.Order{}
 	err := base.master.MustBegin().SelectContext(ctx, &orders, query, userID)
 	if err != nil {
@@ -80,7 +80,7 @@ func (base *Repo) Withdrawals(ctx context.Context, userID uuid.UUID) (wds []mode
 		FROM orders 
 		WHERE user_id = $1
 		ORDER BY uploaded DESC
-		`
+	`
 	err = base.master.MustBegin().SelectContext(ctx, &wds, query, userID)
 	if err != nil {
 		return nil, err
@@ -213,5 +213,32 @@ func (base *Repo) MakeWithdrawn(ctx context.Context, userID uuid.UUID, amount de
 		return fmt.Errorf("can't add withdrawns to user, %w", err)
 	}
 	tx.Commit()
+	return
+}
+
+// Load all orders with not finished preparation status.
+func (base *Repo) LoadPocessing(ctx context.Context) ([]model.Order, error) {
+
+	orders := make([]model.Order, 0)
+	query := `
+	SELECT  user_id, order_number
+		FROM orders 
+		WHERE (status = 'NEW' OR status = 'REGISTERED' OR status = 'PROCESSING') AND is_preorder = FALSE
+	`
+	err := base.master.SelectContext(ctx, &orders, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
+func (base *Repo) UpdateStatus(ctx context.Context, order string, status model.Status) (err error) {
+
+	_, err = base.master.ExecContext(ctx, "UPDATE orders SET status = $1 WHERE order_number = $2", status, order)
+	if err != nil {
+		return fmt.Errorf("can't update orders status, %w", err)
+	}
+
 	return
 }

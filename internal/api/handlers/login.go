@@ -11,13 +11,13 @@ import (
 )
 
 type HandlerLogin struct {
-	register *services.Maintenance
+	usrSrt *services.UserService
 	conf     *config.Config
 }
 
-func NewHandlerLogin(conf *config.Config, register *services.Maintenance) *HandlerLogin {
+func NewHandlerLogin(conf *config.Config, userServ *services.UserService) *HandlerLogin {
 
-	return &HandlerLogin{register: register, conf: conf}
+	return &HandlerLogin{usrSrt: userServ, conf: conf}
 }
 
 // Adding new user to Market
@@ -31,7 +31,7 @@ func (h *HandlerLogin) LoginUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	userID, isValid := h.register.IsValid(req.Context(), user.Login, user.Password)
+	userID, isValid := h.usrSrt.IsValid(req.Context(), user.Login, user.Password)
 	if !isValid {
 		// Wrond user login or password 401
 		http.Error(res, "Wrong login or password", http.StatusUnauthorized)

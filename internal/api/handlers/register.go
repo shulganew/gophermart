@@ -12,13 +12,13 @@ import (
 )
 
 type HandlerRegister struct {
-	register *services.Maintenance
-	conf     *config.Config
+	userSrv *services.UserService
+	conf    *config.Config
 }
 
-func NewHandlerRegister(conf *config.Config, register *services.Maintenance) *HandlerRegister {
+func NewHandlerRegister(conf *config.Config, usrSrv *services.UserService) *HandlerRegister {
 
-	return &HandlerRegister{register: register, conf: conf}
+	return &HandlerRegister{userSrv: usrSrv, conf: conf}
 }
 
 // Adding new user to Market
@@ -35,7 +35,7 @@ func (u *HandlerRegister) SetUser(res http.ResponseWriter, req *http.Request) {
 	}
 	zap.S().Infoln("New user:", user.Login)
 
-	userID, exist, err := u.register.CreateUser(req.Context(), user.Login, user.Password)
+	userID, exist, err := u.userSrv.CreateUser(req.Context(), user.Login, user.Password)
 	if err != nil {
 		// If can't get UUID or hash pass 500
 		errt := "Can't get UUID or user hash"

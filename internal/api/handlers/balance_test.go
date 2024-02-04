@@ -113,37 +113,39 @@ func TestWithdraw(t *testing.T) {
 			defer ctrl.Finish()
 
 			//crete mock storege
-			repoRegister := mocks.NewMockRegistrar(ctrl)
-			repoMarket := mocks.NewMockMarketPlaceholder(ctrl)
+			repoUser := mocks.NewMockUserRepo(ctrl)
+			repoCalc := mocks.NewMockCalcRepo(ctrl)
+			repoOrder := mocks.NewMockOrderRepo(ctrl)
 
-			register := services.NewRegister(repoRegister)
-			market := services.NewMarket(repoMarket)
+			register := services.NewUserService(repoUser)
+			calc := services.NewCalcService(repoCalc)
+			orderServ := services.NewOrderService(repoOrder)
 
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
 			user := model.User{UUID: uuid, Login: "Test123", Password: "123456"}
 
-			_ = repoRegister.EXPECT().
+			_ = repoUser.EXPECT().
 				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(&user.UUID, nil)
 
-			_ = repoMarket.EXPECT().
+			_ = repoOrder.EXPECT().
 				AddOrder(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(tt.setOrderReturn)
 
-			_ = repoMarket.EXPECT().
+			_ = repoCalc.EXPECT().
 				MakeWithdrawn(gomock.Any(), gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(nil)
 
-			_ = repoMarket.EXPECT().
+			_ = repoCalc.EXPECT().
 				GetBonuses(gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(tt.bonuses, nil)
 
-			_ = repoMarket.EXPECT().
+			_ = repoCalc.EXPECT().
 				GetWithdrawals(gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(tt.withdrals, nil)
@@ -180,7 +182,7 @@ func TestWithdraw(t *testing.T) {
 			resRecord := httptest.NewRecorder()
 
 			//Make request
-			balanceHand := NewHandlerBalance(conf, market)
+			balanceHand := NewHandlerBalance(conf, calc, orderServ)
 			balanceHand.SetWithdraw(resRecord, req)
 
 			//get result
@@ -249,33 +251,34 @@ func TestBalance(t *testing.T) {
 			defer ctrl.Finish()
 
 			//crete mock storege
+			repoUser := mocks.NewMockUserRepo(ctrl)
+			repoCalc := mocks.NewMockCalcRepo(ctrl)
+			repoOrder := mocks.NewMockOrderRepo(ctrl)
 
-			repoRegister := mocks.NewMockRegistrar(ctrl)
-			repoMarket := mocks.NewMockMarketPlaceholder(ctrl)
-
-			register := services.NewRegister(repoRegister)
-			market := services.NewMarket(repoMarket)
+			userSrv := services.NewUserService(repoUser)
+			calcSrv := services.NewCalcService(repoCalc)
+			orderSrv := services.NewOrderService(repoOrder)
 
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
 			user := model.User{UUID: uuid, Login: "Test123", Password: "123"}
 
-			_ = repoRegister.EXPECT().
+			_ = repoUser.EXPECT().
 				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(&user.UUID, nil)
 
-			_ = repoMarket.EXPECT().
+			_ = repoCalc.EXPECT().
 				GetBonuses(gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(tt.bonuses, nil)
 
-			_ = repoMarket.EXPECT().
+			_ = repoCalc.EXPECT().
 				GetWithdrawn(gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(tt.withdrawn, nil)
 
-			userID, exist, err := register.CreateUser(ctx, user.Login, user.Password)
+			userID, exist, err := userSrv.CreateUser(ctx, user.Login, user.Password)
 			assert.NoError(t, err)
 			assert.False(t, exist)
 
@@ -297,7 +300,7 @@ func TestBalance(t *testing.T) {
 			resRecord := httptest.NewRecorder()
 
 			//Make request
-			balanceHand := NewHandlerBalance(conf, market)
+			balanceHand := NewHandlerBalance(conf, calcSrv, orderSrv)
 			balanceHand.GetBalance(resRecord, req)
 
 			//get result

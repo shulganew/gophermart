@@ -13,6 +13,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
+	"github.com/shulganew/gophermart/internal/accrual"
 	"github.com/shulganew/gophermart/internal/app"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
@@ -69,29 +70,33 @@ func TestOrders(t *testing.T) {
 			defer ctrl.Finish()
 
 			//crete mock storege
-			repoRegister := mocks.NewMockRegistrar(ctrl)
-			repoMarket := mocks.NewMockMarketPlaceholder(ctrl)
-			repoFetcher := mocks.NewMockFetcherUpdater(ctrl)
+			repoUser := mocks.NewMockUserRepo(ctrl)
+			repoCalc := mocks.NewMockCalcRepo(ctrl)
+			repoOrder := mocks.NewMockOrderRepo(ctrl)
+			repoAcc := mocks.NewMockAccrualRepo(ctrl)
 
-			register := services.NewRegister(repoRegister)
-			market := services.NewMarket(repoMarket)
-			fetcher := services.NewFetcher(repoFetcher, conf)
+			userSrv := services.NewUserService(repoUser)
+			calcSrv := services.NewCalcService(repoCalc)
+			orderSrv := services.NewOrderService(repoOrder)
+			client := accrual.NewAccrualClient(conf)
+
+			accSrv := services.NewAccrualService(repoAcc, conf, client)
 
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
 			user := model.User{UUID: uuid, Login: "Test123", Password: "123"}
 
-			_ = repoRegister.EXPECT().
+			_ = repoUser.EXPECT().
 				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(&user.UUID, nil)
 
-			_ = repoMarket.EXPECT().
+			_ = repoOrder.EXPECT().
 				GetOrders(gomock.Any(), gomock.Any()).
 				Times(1).
 				Return(tt.orders, nil)
 
-			userID, exist, err := register.CreateUser(ctx, user.Login, user.Password)
+			userID, exist, err := userSrv.CreateUser(ctx, user.Login, user.Password)
 			assert.NoError(t, err)
 			assert.False(t, exist)
 
@@ -112,7 +117,7 @@ func TestOrders(t *testing.T) {
 			//create status recorder
 			resRecord := httptest.NewRecorder()
 
-			ordersHand := NewHandlerOrder(conf, market, fetcher)
+			ordersHand := NewHandlerOrder(conf, calcSrv, accSrv, orderSrv)
 			ordersHand.GetOrders(resRecord, req)
 
 			//get result

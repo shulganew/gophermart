@@ -20,14 +20,15 @@ type OrderResponse struct {
 }
 
 type HandlerOrder struct {
-	market  *services.Market
+	calcSrv  *services.CalculationService
 	conf    *config.Config
-	fetcher *services.Fetcher
+	accSrv *services.AccrualService
+	orderSrv  *services.OrderService
 }
 
-func NewHandlerOrder(conf *config.Config, market *services.Market, fecher *services.Fetcher) *HandlerOrder {
+func NewHandlerOrder(conf *config.Config, calc *services.CalculationService, accSrv *services.AccrualService, orderSrv *services.OrderService) *HandlerOrder {
 
-	return &HandlerOrder{market: market, conf: conf, fetcher: fecher}
+	return &HandlerOrder{calcSrv: calc, conf: conf, accSrv: accSrv, orderSrv: orderSrv}
 }
 
 func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
@@ -65,7 +66,7 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	isExist, err := u.market.AddOrder(req.Context(), false, order)
+	isExist, err := u.orderSrv.AddOrder(req.Context(), false, order)
 	if !isExist && err != nil {
 		// 500
 		errt := "Get error during save new order."
@@ -77,7 +78,7 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 	if isExist {
 
 		//Check if order created befower with withdraw as prepaid
-		isPreorder, err := u.market.IsPreOrder(req.Context(), userID, orderNr)
+		isPreorder, err := u.calcSrv.IsPreOrder(req.Context(), userID, orderNr)
 		if err != nil {
 			errt := "Get error during preorder search."
 			zap.S().Error(errt, err, orderNr)
@@ -87,7 +88,7 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 
 		if isPreorder {
 			// Move prepaid preOreder to regular order.
-			err = u.market.MovePreOrder(req.Context(), order)
+			err = u.calcSrv.MovePreOrder(req.Context(), order)
 			if err != nil {
 				errt := "Get error during preorder update."
 				zap.S().Debugln(errt, orderNr)
@@ -98,7 +99,7 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 		}
 
 		// Is Existed for this user.
-		isExistUser, err := u.market.IsExistForUser(req.Context(), userID, orderNr)
+		isExistUser, err := u.orderSrv.IsExistForUser(req.Context(), userID, orderNr)
 		if err != nil {
 			errt := "Get error during search duplicated order for user."
 			zap.S().Error(errt, orderNr)
@@ -145,7 +146,7 @@ func (u *HandlerOrder) GetOrders(res http.ResponseWriter, req *http.Request) {
 	userID := ctxConfig.GetUserID()
 
 	// Load user's orders
-	orders, err := u.market.GetOrders(req.Context(), userID)
+	orders, err := u.orderSrv.GetOrders(req.Context(), userID)
 
 	zap.S().Infoln("GetOrders len", len(orders), "for user: ", userID)
 	for _, ord := range orders {

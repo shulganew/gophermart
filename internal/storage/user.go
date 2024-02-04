@@ -47,3 +47,5 @@ func (base *Repo) GetByLogin(ctx context.Context, login string) (*model.User, er
 	}
 	return &user, nil
 }
+
+

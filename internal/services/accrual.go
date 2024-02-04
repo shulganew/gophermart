@@ -2,46 +2,36 @@ package services
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
-	"github.com/shulganew/gophermart/internal/api/client"
+	"github.com/shulganew/gophermart/internal/accrual"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
 	"go.uber.org/zap"
 )
 
-type Fetcher struct {
-	stor FetcherUpdater
-	conf *config.Config
-
-	// map[order number]Order
-	orders map[string]model.Order
-	mu     sync.Mutex
+type AccrualService struct {
+	stor          AccrualRepo
+	conf          *config.Config
+	accrualClient *accrual.AccrualClient
 }
 
-type FetcherUpdater interface {
+type AccrualRepo interface {
 	LoadPocessing(ctx context.Context) ([]model.Order, error)
 	UpdateStatus(ctx context.Context, order string, status model.Status) (err error)
 	SetAccrual(ctx context.Context, order string, accrual decimal.Decimal) (err error)
 	AddBonuses(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) (err error)
 }
 
-func NewFetcher(stor FetcherUpdater, conf *config.Config) *Fetcher {
-	return &Fetcher{stor: stor, conf: conf, orders: make(map[string]model.Order, 0)}
+func NewAccrualService(accRepo AccrualRepo, conf *config.Config, ac *accrual.AccrualClient) *AccrualService {
+	return &AccrualService{stor: accRepo, conf: conf, accrualClient: ac}
 }
 
-func (o *Fetcher) AddOreder(order *model.Order) {
-	o.mu.Lock()
-	o.orders[order.OrderNr] = *order
-	o.mu.Unlock()
-}
-
-func (o *Fetcher) Fetch(ctx context.Context) {
+func (o *AccrualService) Run(ctx context.Context) {
 	upload := time.NewTicker(config.CheckAccrual * time.Second)
-	go func(ctx context.Context, o *Fetcher) {
+	go func(ctx context.Context, o *AccrualService) {
 		for {
 			<-upload.C
 			o.FetchAccrual(ctx)
@@ -51,7 +41,7 @@ func (o *Fetcher) Fetch(ctx context.Context) {
 }
 
 // Load order data from database
-func (o *Fetcher) FetchAccrual(ctx context.Context) {
+func (o *AccrualService) FetchAccrual(ctx context.Context) {
 	loadOrders, err := o.stor.LoadPocessing(ctx)
 	if err != nil {
 		zap.S().Errorln("Not all data was loaded to Fetcher... ", err)
@@ -62,7 +52,7 @@ func (o *Fetcher) FetchAccrual(ctx context.Context) {
 		o.stor.UpdateStatus(ctx, order.OrderNr, model.Status(model.PROCESSING))
 
 		//fech status and accrual from Accrual system
-		accResp, err := client.FetchOrderStatus(order.OrderNr, o.conf)
+		accResp, err := o.accrualClient.FetchOrderStatus(order.OrderNr)
 		if err != nil {
 			zap.S().Errorln("Get order status prepare error: ", err)
 			continue

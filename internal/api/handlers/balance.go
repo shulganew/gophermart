@@ -13,13 +13,14 @@ import (
 )
 
 type HandlerBalance struct {
-	market *services.Market
-	conf   *config.Config
+	calcSrv  *services.CalculationService
+	conf     *config.Config
+	orderSrv *services.OrderService
 }
 
-func NewHandlerBalance(conf *config.Config, market *services.Market) *HandlerBalance {
+func NewHandlerBalance(conf *config.Config, calc *services.CalculationService, orders *services.OrderService) *HandlerBalance {
 
-	return &HandlerBalance{market: market, conf: conf}
+	return &HandlerBalance{calcSrv: calc, conf: conf, orderSrv: orders}
 }
 
 func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) {
@@ -33,7 +34,7 @@ func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) 
 
 	userID := ctxConfig.GetUserID()
 
-	bonuses, err := u.market.GetBonuses(req.Context(), userID)
+	bonuses, err := u.calcSrv.GetBonuses(req.Context(), userID)
 	if err != nil {
 		// 500
 		errt := "Cat't get bonuses."
@@ -42,7 +43,7 @@ func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	withdrawn, err := u.market.GetWithdrawn(req.Context(), userID)
+	withdrawn, err := u.calcSrv.GetWithdrawn(req.Context(), userID)
 	if err != nil {
 		// 500
 		errt := "Cat't get withdrawn."
@@ -99,7 +100,7 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 
 	amount := decimal.NewFromFloat(wd.Withdrawn)
 
-	isEnough, err := u.market.CheckBalance(req.Context(), userID, amount)
+	isEnough, err := u.calcSrv.CheckBalance(req.Context(), userID, amount)
 	if err != nil {
 		// 500
 		errt := "Error cheking bonuses balance."
@@ -115,7 +116,7 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 
 	// Create preorder with withdrawal and add storage with mark preoreder bool = true
 	order := model.NewOrder(userID, wd.OrderNr, true, amount, decimal.Zero)
-	existed, err := u.market.AddOrder(req.Context(), true, order)
+	existed, err := u.orderSrv.AddOrder(req.Context(), true, order)
 	if existed {
 		// 422
 		errt := "Order alredy existed."
@@ -132,7 +133,7 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 	}
 
 	//Update withdrawals and bonuses balance
-	err = u.market.MakeWithdrawn(req.Context(), userID, amount)
+	err = u.calcSrv.MakeWithdrawn(req.Context(), userID, amount)
 	if err != nil {
 		// 500
 		errt := "Error during withdrawn."
@@ -159,7 +160,7 @@ func (u *HandlerBalance) GetWithdrawals(res http.ResponseWriter, req *http.Reque
 
 	userID := ctxConfig.GetUserID()
 
-	withdrawals, err := u.market.GetWithdrawals(req.Context(), userID)
+	withdrawals, err := u.calcSrv.GetWithdrawals(req.Context(), userID)
 	if err != nil {
 		// 500
 		errt := "Cat't get withdrawals"

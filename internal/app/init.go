@@ -7,13 +7,14 @@ import (
 	"syscall"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/shulganew/gophermart/internal/accrual"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/services"
 	"github.com/shulganew/gophermart/internal/storage"
 	"go.uber.org/zap"
 )
 
-func InitApp(ctx context.Context, conf *config.Config, db *sqlx.DB) (*services.Market, *services.Maintenance, *services.Fetcher) {
+func InitApp(ctx context.Context, conf *config.Config, db *sqlx.DB) (*services.CalculationService, *services.UserService, *services.AccrualService, *services.OrderService) {
 
 	// Load storage
 	stor, err := storage.NewRepo(ctx, db)
@@ -22,18 +23,18 @@ func InitApp(ctx context.Context, conf *config.Config, db *sqlx.DB) (*services.M
 
 	}
 
-	market := services.NewMarket(stor)
-
-	register := services.NewRegister(stor)
-
-	fetcher := services.NewFetcher(stor, conf)
+	calcSrv := services.NewCalcService(stor)
+	userSrv := services.NewUserService(stor)
+	client := accrual.NewAccrualClient(conf)
+	accSrv := services.NewAccrualService(stor, conf, client)
+	orderSrv := services.NewOrderService(stor)
 
 	// Run observe status of orderses in Accrual service
-	fetcher.Fetch(ctx)
+	accSrv.Run(ctx)
 
 	zap.S().Infoln("Application init complite")
 
-	return market, register, fetcher
+	return calcSrv, userSrv, accSrv, orderSrv
 
 }
 

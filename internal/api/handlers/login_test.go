@@ -71,9 +71,8 @@ func TestUserlogin(t *testing.T) {
 			defer ctrl.Finish()
 
 			//crete mock storege
-			repoRegister := mocks.NewMockRegistrar(ctrl)
-
-			register := services.NewRegister(repoRegister)
+			repoUser := mocks.NewMockUserRepo(ctrl)
+			userServ := services.NewUserService(repoUser)
 
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
@@ -83,7 +82,7 @@ func TestUserlogin(t *testing.T) {
 
 			dbUser := model.User{UUID: uuid, Login: tt.login, PassHash: string(cPass)}
 
-			_ = repoRegister.EXPECT().
+			_ = repoUser.EXPECT().
 				GetByLogin(gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(&dbUser, nil)
@@ -110,7 +109,7 @@ func TestUserlogin(t *testing.T) {
 			resRecord := httptest.NewRecorder()
 
 			//Make request
-			userLogin := NewHandlerLogin(conf, register)
+			userLogin := NewHandlerLogin(conf, userServ)
 			userLogin.LoginUser(resRecord, req)
 
 			//get result
