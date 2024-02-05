@@ -19,7 +19,7 @@ type OrderService struct {
 type OrderRepo interface {
 	AddOrder(ctx context.Context, userID uuid.UUID, order string, isPreorder bool, withdraw decimal.Decimal) error
 	GetOrders(ctx context.Context, userID uuid.UUID) ([]model.Order, error)
-	IsExistForUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error)
+	IsExistForOtherUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error)
 	IsExist(ctx context.Context, order string) (isExist bool, err error)
 }
 
@@ -51,8 +51,8 @@ func (m *OrderService) GetOrders(ctx context.Context, userID uuid.UUID) (orders 
 	return orders, nil
 }
 
-func (m *OrderService) IsExistForUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error) {
-	return m.stor.IsExistForUser(ctx, userID, order)
+func (m *OrderService) IsExistForOtherUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error) {
+	return m.stor.IsExistForOtherUser(ctx, userID, order)
 }
 
 func (m *OrderService) IsExist(ctx context.Context, order string) (isExist bool, err error) {

@@ -81,17 +81,17 @@ func (mr *MockOrderRepoMockRecorder) IsExist(ctx, order interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsExist", reflect.TypeOf((*MockOrderRepo)(nil).IsExist), ctx, order)
 }
 
-// IsExistForUser mocks base method.
-func (m *MockOrderRepo) IsExistForUser(ctx context.Context, userID uuid.UUID, order string) (bool, error) {
+// IsExistForOtherUser mocks base method.
+func (m *MockOrderRepo) IsExistForOtherUser(ctx context.Context, userID uuid.UUID, order string) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsExistForUser", ctx, userID, order)
+	ret := m.ctrl.Call(m, "IsExistForOtherUser", ctx, userID, order)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// IsExistForUser indicates an expected call of IsExistForUser.
-func (mr *MockOrderRepoMockRecorder) IsExistForUser(ctx, userID, order interface{}) *gomock.Call {
+// IsExistForOtherUser indicates an expected call of IsExistForOtherUser.
+func (mr *MockOrderRepoMockRecorder) IsExistForOtherUser(ctx, userID, order interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsExistForUser", reflect.TypeOf((*MockOrderRepo)(nil).IsExistForUser), ctx, userID, order)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsExistForOtherUser", reflect.TypeOf((*MockOrderRepo)(nil).IsExistForOtherUser), ctx, userID, order)
 }

@@ -61,10 +61,10 @@ func (base *Repo) IsExist(ctx context.Context, order string) (isExist bool, err 
 	return ordersn != 0, nil
 }
 
-func (base *Repo) IsExistForUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error) {
+func (base *Repo) IsExistForOtherUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error) {
 	query := `
 	SELECT count(*) 
-	FROM orders WHERE user_id = $1 
+	FROM orders WHERE user_id != $1 
 	AND order_number = $2
 	`
 	var ordersn int

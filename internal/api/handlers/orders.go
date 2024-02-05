@@ -26,7 +26,7 @@ func NewHandlerOrder(conf *config.Config, calc *services.CalculationService, acc
 
 func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 
-	//get UserID from cxt values
+	// Get UserID from cxt values.
 	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
 
 	// Check from middleware is user authorized
@@ -87,8 +87,25 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 
 	}
 
-	//Order already existed
-	//Check if order created befower with withdraw as prepaid
+	// Order existed for other user.
+	isExistOther, err := u.orderSrv.IsExistForOtherUser(req.Context(), userID, orderNr)
+	if err != nil {
+		errt := "Get error during search duplicated order for other user."
+		zap.S().Error(errt, orderNr)
+		http.Error(res, errt, http.StatusInternalServerError)
+		return
+	}
+	if isExistOther {
+		// 409
+		errt := "Order duplicated for Other User."
+		zap.S().Debugln(errt, orderNr)
+		http.Error(res, errt, http.StatusConflict)
+		return
+	}
+
+	// Order Existed for this user.
+	// Order already existed.
+	// Check if order created befower with withdraw as prepaid.
 	isPreorder, err := u.calcSrv.IsPreOrder(req.Context(), userID, orderNr)
 	if err != nil {
 		errt := "Get error during preorder search."
@@ -109,27 +126,11 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 
 	}
 
-	// Is Existed for this user.
-	isExistUser, err := u.orderSrv.IsExistForUser(req.Context(), userID, orderNr)
-	if err != nil {
-		errt := "Get error during search duplicated order for user."
-		zap.S().Error(errt, orderNr)
-		http.Error(res, errt, http.StatusInternalServerError)
-		return
-	}
-	if isExistUser {
-		// 200 alredy created for user
-		errt := "Order duplicated for User."
+	// 200 alredy created for user
+	errt := "Order duplicated for User."
 
-		zap.S().Debugln(errt, orderNr)
-		http.Error(res, errt, http.StatusOK)
-		return
-	}
-
-	// 409
-	errt := "Order duplicated for Other User."
 	zap.S().Debugln(errt, orderNr)
-	http.Error(res, errt, http.StatusConflict)
+	http.Error(res, errt, http.StatusOK)
 
 }
 
