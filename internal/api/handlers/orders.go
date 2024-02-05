@@ -104,7 +104,6 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// Order Existed for this user.
-	// Order already existed.
 	// Check if order created befower with withdraw as prepaid.
 	isPreorder, err := u.calcSrv.IsPreOrder(req.Context(), userID, orderNr)
 	if err != nil {
