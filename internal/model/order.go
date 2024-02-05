@@ -9,8 +9,15 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type OrderResponse struct {
+	OrderNr  string  `json:"number"`
+	Status   Status  `json:"status"`
+	Accrual  float64 `json:"accrual,omitempty"`
+	Uploaded string  `json:"uploaded_at"`
+}
+
 type Order struct {
-	UserID     uuid.UUID      `db:"user_id"`
+	UserID     uuid.UUID       `db:"user_id"`
 	OrderNr    string          `db:"order_number"`
 	IsPreOrder bool            `db:"is_preorder"`
 	Uploaded   time.Time       `db:"uploaded"`
@@ -57,4 +64,3 @@ func (o *Order) MarshalJSON() ([]byte, error) {
 		Uploded: o.getUploded(),
 	})
 }
-

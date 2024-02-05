@@ -12,18 +12,11 @@ import (
 	"go.uber.org/zap"
 )
 
-type OrderResponse struct {
-	OrderNr  string       `json:"number"`
-	Status   model.Status `json:"status"`
-	Accrual  float64      `json:"accrual,omitempty"`
-	Uploaded string       `json:"uploaded_at"`
-}
-
 type HandlerOrder struct {
 	calcSrv  *services.CalculationService
-	conf    *config.Config
-	accSrv *services.AccrualService
-	orderSrv  *services.OrderService
+	conf     *config.Config
+	accSrv   *services.AccrualService
+	orderSrv *services.OrderService
 }
 
 func NewHandlerOrder(conf *config.Config, calc *services.CalculationService, accSrv *services.AccrualService, orderSrv *services.OrderService) *HandlerOrder {

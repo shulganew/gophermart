@@ -40,7 +40,6 @@ func (o *AccrualService) Run(ctx context.Context) {
 
 }
 
-// Load order data from database
 func (o *AccrualService) FetchAccrual(ctx context.Context) {
 	loadOrders, err := o.stor.LoadPocessing(ctx)
 	if err != nil {
@@ -52,7 +51,7 @@ func (o *AccrualService) FetchAccrual(ctx context.Context) {
 		o.stor.UpdateStatus(ctx, order.OrderNr, model.Status(model.PROCESSING))
 
 		//fech status and accrual from Accrual system
-		accResp, err := o.accrualClient.FetchOrderStatus(order.OrderNr)
+		accResp, err := o.accrualClient.GetOrderStatus(order.OrderNr)
 		if err != nil {
 			zap.S().Errorln("Get order status prepare error: ", err)
 			continue

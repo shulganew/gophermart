@@ -21,7 +21,7 @@ func NewAccrualClient(conf *config.Config) *AccrualClient {
 }
 
 // Get data from Accrual system
-func (a AccrualClient) FetchOrderStatus(orderNr string) (*model.AccrualResponce, error) {
+func (a AccrualClient) GetOrderStatus(orderNr string) (*model.AccrualResponce, error) {
 
 	client := &http.Client{}
 

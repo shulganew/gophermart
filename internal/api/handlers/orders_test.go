@@ -131,7 +131,7 @@ func TestOrders(t *testing.T) {
 			//Unmarshal body
 
 			if res.StatusCode != http.StatusNoContent {
-				var responses []OrderResponse
+				var responses []model.OrderResponse
 				err = json.NewDecoder(res.Body).Decode(&responses)
 				require.NoError(t, err)
 

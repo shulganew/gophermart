@@ -91,15 +91,9 @@ func (r UserService) CheckPassword(password string, hashedPassword string) error
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
 
-// Claims for JWT token
-type Claims struct {
-	jwt.RegisteredClaims
-	UserID uuid.UUID
-}
-
 // Create JWT token
 func BuildJWTString(userID uuid.UUID, pass string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, model.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.TokenExp)),
 		},
@@ -116,7 +110,7 @@ func BuildJWTString(userID uuid.UUID, pass string) (string, error) {
 
 // Retrive user's UUID from JWT string
 func GetUserIDJWT(tokenString string, pass string) (userID uuid.UUID, err error) {
-	claims := &Claims{}
+	claims := &model.Claims{}
 	_, err = jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
 		return []byte(pass), nil
 	})
@@ -126,7 +120,7 @@ func GetUserIDJWT(tokenString string, pass string) (userID uuid.UUID, err error)
 
 // Create jwt token from string
 func GetJWT(tokenString string, pass string) (token *jwt.Token, err error) {
-	claims := &Claims{}
+	claims := &model.Claims{}
 	token, err = jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
 		return []byte(pass), nil
 	})
