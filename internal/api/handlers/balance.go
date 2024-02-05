@@ -116,7 +116,14 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 
 	// Create preorder with withdrawal and add storage with mark preoreder bool = true
 	order := model.NewOrder(userID, wd.OrderNr, true, amount, decimal.Zero)
-	existed, err := u.orderSrv.AddOrder(req.Context(), true, order)
+	existed, err := u.orderSrv.IsExist(req.Context(), order.OrderNr)
+	if err != nil {
+		// 500
+		errt := "Error during withdraw. Checking order duplication error."
+		zap.S().Debugln(errt, wd.OrderNr, err)
+		http.Error(res, errt, http.StatusInternalServerError)
+		return
+	}
 	if existed {
 		// 422
 		errt := "Order alredy existed."
@@ -124,6 +131,8 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 		http.Error(res, errt, http.StatusUnprocessableEntity)
 		return
 	}
+
+	err = u.orderSrv.AddOrder(req.Context(), true, order)
 	if err != nil {
 		// 500
 		errt := "Error during withdraw. Adding preorder error."

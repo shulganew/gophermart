@@ -20,25 +20,26 @@ type OrderRepo interface {
 	AddOrder(ctx context.Context, userID uuid.UUID, order string, isPreorder bool, withdraw decimal.Decimal) error
 	GetOrders(ctx context.Context, userID uuid.UUID) ([]model.Order, error)
 	IsExistForUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error)
+	IsExist(ctx context.Context, order string) (isExist bool, err error)
 }
 
 func NewOrderService(stor OrderRepo) *OrderService {
 	return &OrderService{stor: stor}
 }
 
-func (m *OrderService) AddOrder(ctx context.Context, isPreOrder bool, order *model.Order) (existed bool, err error) {
+func (m *OrderService) AddOrder(ctx context.Context, isPreOrder bool, order *model.Order) (err error) {
 	// Add order to the database.
 	err = m.stor.AddOrder(ctx, order.UserID, order.OrderNr, isPreOrder, order.Withdrawn)
 	if err != nil {
 		var pgErr *pq.Error
 		// If Order exist in the DataBase
 		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
-			return true, err
+			return err
 		}
-		return false, fmt.Errorf("error during add order: %w", err)
+		return fmt.Errorf("error during add order: %w", err)
 	}
 
-	return false, nil
+	return nil
 }
 
 func (m *OrderService) GetOrders(ctx context.Context, userID uuid.UUID) (orders []model.Order, err error) {
@@ -52,4 +53,8 @@ func (m *OrderService) GetOrders(ctx context.Context, userID uuid.UUID) (orders 
 
 func (m *OrderService) IsExistForUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error) {
 	return m.stor.IsExistForUser(ctx, userID, order)
+}
+
+func (m *OrderService) IsExist(ctx context.Context, order string) (isExist bool, err error) {
+	return m.stor.IsExist(ctx, order)
 }

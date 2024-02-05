@@ -66,6 +66,21 @@ func (mr *MockOrderRepoMockRecorder) GetOrders(ctx, userID interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrders", reflect.TypeOf((*MockOrderRepo)(nil).GetOrders), ctx, userID)
 }
 
+// IsExist mocks base method.
+func (m *MockOrderRepo) IsExist(ctx context.Context, order string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsExist", ctx, order)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsExist indicates an expected call of IsExist.
+func (mr *MockOrderRepoMockRecorder) IsExist(ctx, order interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsExist", reflect.TypeOf((*MockOrderRepo)(nil).IsExist), ctx, order)
+}
+
 // IsExistForUser mocks base method.
 func (m *MockOrderRepo) IsExistForUser(ctx context.Context, userID uuid.UUID, order string) (bool, error) {
 	m.ctrl.T.Helper()
