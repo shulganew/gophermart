@@ -8,7 +8,6 @@ type UserBalance struct {
 }
 
 func NewUserBalance(bonus decimal.Decimal, withdrawn decimal.Decimal) *UserBalance {
-
 	b := bonus.InexactFloat64()
 	w := withdrawn.InexactFloat64()
 	return &UserBalance{Bonus: b, Withdrawn: w}

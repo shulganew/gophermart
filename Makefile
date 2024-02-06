@@ -40,8 +40,8 @@ _golangci-lint-run: _golangci-lint-reports-mkdir
     -w /app \
     golangci/golangci-lint:v1.55.2 \
         golangci-lint run \
-            -c .golangci.yml \
-	> ./golangci-lint/report-unformatted.json
+            -c .golangci.yml 
+#	> ./golangci-lint/report-unformatted.json
 
 .PHONY: _golangci-lint-format-report
 _golangci-lint-format-report: _golangci-lint-run

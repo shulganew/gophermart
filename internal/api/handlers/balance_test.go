@@ -13,8 +13,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
-	"github.com/jackc/pgerrcode"
-	"github.com/lib/pq"
 	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/app"
 	"github.com/shulganew/gophermart/internal/config"
@@ -32,17 +30,17 @@ func TestWithdraw(t *testing.T) {
 		method     string
 		requestURL string
 
-		//all bonuses
+		// all bonuses
 		bonuses decimal.Decimal
 
-		//all withdrawals
+		// all withdrawals
 		withdrals decimal.Decimal
 
-		//amount of withdrawn
+		// amount of withdrawn
 		amount         decimal.Decimal
 		Order          string
 		statusCode     int
-		setOrderReturn error
+		orderIsExisted bool
 	}{
 		{
 			name:           "Create withdrawn - order number (422), luna check",
@@ -53,7 +51,7 @@ func TestWithdraw(t *testing.T) {
 			withdrals:      decimal.NewFromFloat(6.2),
 			amount:         decimal.NewFromFloat(1.0),
 			statusCode:     http.StatusUnprocessableEntity,
-			setOrderReturn: nil,
+			orderIsExisted: false,
 		},
 		{
 			name:           "Create withdrawn - order number (422), Not found in database",
@@ -64,7 +62,7 @@ func TestWithdraw(t *testing.T) {
 			withdrals:      decimal.NewFromFloat(6.2),
 			amount:         decimal.NewFromFloat(1.0),
 			statusCode:     http.StatusUnprocessableEntity,
-			setOrderReturn: &pq.Error{Code: pq.ErrorCode(pgerrcode.UniqueViolation)},
+			orderIsExisted: true,
 		},
 
 		{
@@ -76,7 +74,7 @@ func TestWithdraw(t *testing.T) {
 			withdrals:      decimal.NewFromFloat(62.2),
 			amount:         decimal.NewFromFloat(100.0),
 			statusCode:     http.StatusPaymentRequired,
-			setOrderReturn: nil,
+			orderIsExisted: false,
 		},
 
 		{
@@ -88,7 +86,7 @@ func TestWithdraw(t *testing.T) {
 			withdrals:      decimal.NewFromFloat(6.2),
 			amount:         decimal.NewFromFloat(1.0),
 			statusCode:     http.StatusOK,
-			setOrderReturn: nil,
+			orderIsExisted: false,
 		},
 	}
 
@@ -97,22 +95,21 @@ func TestWithdraw(t *testing.T) {
 
 	conf := &config.Config{}
 
-	//Init application
+	// Init application
 	conf.Address = "localhost:8088"
 	conf.Accrual = "localhost:8090"
 	conf.PassJWT = "JWTsecret"
 
-	//init storage
+	// init storage
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			t.Log("Test name: ", tt.name)
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			//crete mock storege
+			// crete mock storege
 			repoUser := mocks.NewMockUserRepo(ctrl)
 			repoCalc := mocks.NewMockCalcRepo(ctrl)
 			repoOrder := mocks.NewMockOrderRepo(ctrl)
@@ -133,7 +130,12 @@ func TestWithdraw(t *testing.T) {
 			_ = repoOrder.EXPECT().
 				AddOrder(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				AnyTimes().
-				Return(tt.setOrderReturn)
+				Return(nil)
+
+			_ = repoOrder.EXPECT().
+				IsExist(gomock.Any(), gomock.Any()).
+				AnyTimes().
+				Return(tt.orderIsExisted, nil)
 
 			_ = repoCalc.EXPECT().
 				MakeWithdrawn(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -164,7 +166,7 @@ func TestWithdraw(t *testing.T) {
 			body := strings.NewReader(string(jsonWs))
 			assert.NoError(t, err)
 
-			//add chi context
+			// add chi context
 			rctx := chi.NewRouteContext()
 			req := httptest.NewRequest(http.MethodPost, tt.requestURL, body)
 
@@ -178,29 +180,26 @@ func TestWithdraw(t *testing.T) {
 			req.Header.Add("Authorization", jwt)
 			req.Header.Add("Content-Type", "application/json")
 
-			//create status recorder
+			// create status recorder
 			resRecord := httptest.NewRecorder()
 
-			//Make request
+			// Make request
 			balanceHand := NewHandlerBalance(conf, calc, orderServ)
 			balanceHand.SetWithdraw(resRecord, req)
 
-			//get result
+			// get result
 			res := resRecord.Result()
 
 			b, _ := io.ReadAll(res.Body)
 
 			t.Log(string(b))
 
-			defer res.Body.Close()
+			err = res.Body.Close()
+			assert.NoError(t, err)
 
-			//check answer code
+			// check answer code
 			t.Log("StatusCode test: ", tt.statusCode, " server: ", res.StatusCode)
-
-			//Unmarshal body
-
 			assert.Equal(t, tt.statusCode, res.StatusCode)
-
 		})
 	}
 }
@@ -212,7 +211,6 @@ func TestBalance(t *testing.T) {
 		bonuses    decimal.Decimal
 		withdrawn  decimal.Decimal
 		statusCode int
-		//want
 	}{
 		{
 			name:       "Get Balans",
@@ -235,22 +233,21 @@ func TestBalance(t *testing.T) {
 
 	conf := &config.Config{}
 
-	//Init application
+	// Init application
 	conf.Address = "localhost:8088"
 	conf.Accrual = "localhost:8090"
 	conf.PassJWT = "JWTsecret"
 
-	//init storage
+	// init storage
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			t.Log("Test name: ", tt.name)
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			//crete mock storege
+			// crete mock storege
 			repoUser := mocks.NewMockUserRepo(ctrl)
 			repoCalc := mocks.NewMockCalcRepo(ctrl)
 			repoOrder := mocks.NewMockOrderRepo(ctrl)
@@ -282,7 +279,7 @@ func TestBalance(t *testing.T) {
 			assert.NoError(t, err)
 			assert.False(t, exist)
 
-			//add chi context
+			// add chi context
 			rctx := chi.NewRouteContext()
 			req := httptest.NewRequest(http.MethodGet, tt.requestURL, nil)
 
@@ -296,22 +293,24 @@ func TestBalance(t *testing.T) {
 			req.Header.Add("Authorization", jwt)
 			req.Header.Add("Content-Type", "text/plain")
 
-			//create status recorder
+			// create status recorder
 			resRecord := httptest.NewRecorder()
 
-			//Make request
+			// Make request
 			balanceHand := NewHandlerBalance(conf, calcSrv, orderSrv)
 			balanceHand.GetBalance(resRecord, req)
 
-			//get result
+			// get result
 			res := resRecord.Result()
-			defer res.Body.Close()
 
-			//check answer code
+			err = res.Body.Close()
+			assert.NoError(t, err)
+
+			// check answer code
 			t.Log("StatusCode test: ", tt.statusCode, " server: ", res.StatusCode)
 			assert.Equal(t, tt.statusCode, res.StatusCode)
 
-			//Unmarshal body
+			// Unmarshal body
 
 			var balance model.UserBalance
 			err = json.NewDecoder(res.Body).Decode(&balance)
@@ -328,7 +327,6 @@ func TestBalance(t *testing.T) {
 
 			t.Log("StatusCode test: ", tt.statusCode, " server: ", res.StatusCode)
 			assert.Equal(t, tt.statusCode, res.StatusCode)
-
 		})
 	}
 }

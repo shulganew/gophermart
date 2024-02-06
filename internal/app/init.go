@@ -15,12 +15,10 @@ import (
 )
 
 func InitApp(ctx context.Context, conf *config.Config, db *sqlx.DB) (*services.CalculationService, *services.UserService, *services.AccrualService, *services.OrderService) {
-
 	// Load storage
 	stor, err := storage.NewRepo(ctx, db)
 	if err != nil {
 		zap.S().Errorln("Error connect to DB from env: ", err)
-
 	}
 
 	calcSrv := services.NewCalcService(stor)
@@ -35,10 +33,9 @@ func InitApp(ctx context.Context, conf *config.Config, db *sqlx.DB) (*services.C
 	zap.S().Infoln("Application init complite")
 
 	return calcSrv, userSrv, accSrv, orderSrv
-
 }
 
-// Init context from graceful shutdown. Send to all function for return by syscall.SIGINT, syscall.SIGTERM
+// Init context from graceful shutdown. Send to all function for return by syscall.SIGINT, syscall.SIGTERM.
 func InitContext() (ctx context.Context, cancel context.CancelFunc) {
 	exit := make(chan os.Signal, 1)
 	ctx, cancel = context.WithCancel(context.Background())
@@ -46,7 +43,6 @@ func InitContext() (ctx context.Context, cancel context.CancelFunc) {
 	go func() {
 		<-exit
 		cancel()
-
 	}()
 	return
 }
@@ -54,15 +50,18 @@ func InitContext() (ctx context.Context, cancel context.CancelFunc) {
 func InitLog() zap.SugaredLogger {
 	logger, err := zap.NewDevelopment()
 	if err != nil {
-
 		panic(err)
 	}
 
 	zap.ReplaceGlobals(logger)
-	defer logger.Sync()
+	defer func() {
+		_ = logger.Sync()
+	}()
 
 	sugar := *logger.Sugar()
 
-	defer sugar.Sync()
+	defer func() {
+		_ = sugar.Sync()
+	}()
 	return sugar
 }

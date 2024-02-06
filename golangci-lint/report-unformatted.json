@@ -1,0 +1,399 @@
+internal/accrual/fetch.go:51:22: Error return value of `res.Body.Close` is not checked (errcheck)
+	defer res.Body.Close()
+	                    ^
+internal/api/middlewares/auth.go:15:11: Error return value is not checked (errcheck)
+		pass := req.Context().Value(model.CtxPassKey{}).(string)
+		        ^
+internal/api/middlewares/middlewgzip.go:40:18: Error return value of `gz.Close` is not checked (errcheck)
+			defer gz.Close()
+			              ^
+internal/api/middlewares/middlewgzip.go:74:17: Error return value of `gz.Close` is not checked (errcheck)
+		defer gz.Close()
+		              ^
+internal/api/handlers/balance.go:27:15: Error return value is not checked (errcheck)
+	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
+	             ^
+internal/api/handlers/balance.go:75:15: Error return value is not checked (errcheck)
+	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
+	             ^
+internal/api/handlers/balance.go:165:15: Error return value is not checked (errcheck)
+	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
+	             ^
+internal/api/handlers/balance_test.go:194:24: Error return value of `res.Body.Close` is not checked (errcheck)
+			defer res.Body.Close()
+			                    ^
+internal/api/handlers/balance_test.go:305:24: Error return value of `res.Body.Close` is not checked (errcheck)
+			defer res.Body.Close()
+			                    ^
+internal/api/handlers/login_test.go:121:24: Error return value of `res.Body.Close` is not checked (errcheck)
+			defer res.Body.Close()
+			                    ^
+internal/api/handlers/orders.go:28:15: Error return value is not checked (errcheck)
+	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
+	             ^
+internal/api/handlers/orders.go:44:22: Error return value of `req.Body.Close` is not checked (errcheck)
+	defer req.Body.Close()
+	                    ^
+internal/api/handlers/orders.go:136:15: Error return value is not checked (errcheck)
+	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
+	             ^
+internal/api/handlers/orders_test.go:124:24: Error return value of `res.Body.Close` is not checked (errcheck)
+			defer res.Body.Close()
+			                    ^
+internal/api/handlers/register_test.go:121:24: Error return value of `res.Body.Close` is not checked (errcheck)
+			defer res.Body.Close()
+			                    ^
+cmd/gophermart/main.go:30:16: Error return value of `db.Close` is not checked (errcheck)
+	defer db.Close()
+	              ^
+internal/api/handlers/balance.go:62:19: string `Content-Type` has 5 occurrences, make it a constant (goconst)
+	res.Header().Add("Content-Type", "application/json")
+	                 ^
+internal/api/handlers/balance.go:31:19: string `JWT not found.` has 5 occurrences, make it a constant (goconst)
+		http.Error(res, "JWT not found.", http.StatusUnauthorized)
+		                ^
+migrations/20240127182854_tables.go:18:2: appendCombine: can combine chain of 3 appends into one (gocritic)
+	s = append(s, tables.CreateENUM)
+	^
+internal/api/validators/validatorurl.go:13:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//Parse address
+	^
+internal/api/validators/validatorurl.go:22:3: commentFormatting: put a space between `//` and comment text (gocritic)
+		//Shema not found, use http
+		^
+internal/config/config.go:20:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//flag -a, Market address
+	^
+internal/config/config.go:26:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//dsn connection string
+	^
+internal/config/config.go:39:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//read command line argue
+	^
+internal/config/config.go:49:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//check and parse URL
+	^
+internal/config/config.go:54:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//save config
+	^
+internal/config/config.go:58:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//read OS ENVs
+	^
+internal/config/config.go:64:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//if env var does not exist  - set def value
+	^
+internal/config/config.go:72:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//set config DSN for postgres admin for database creation
+	^
+internal/config/config.go:78:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//init shotrage DB from env
+	^
+internal/config/config.go:80:2: ifElseChain: rewrite if-else to switch statement (gocritic)
+	if exist {
+	^
+internal/accrual/fetch.go:45:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//Load data to AccrualResponce from json
+	^
+internal/storage/db.go:32:3: commentFormatting: put a space between `//` and comment text (gocritic)
+		//Init connection for admin user for prepare databse and make migrations
+		^
+internal/storage/db.go:44:3: commentFormatting: put a space between `//` and comment text (gocritic)
+		//Init database migrations
+		^
+internal/storage/db.go:51:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//Connection for Gophermart
+	^
+internal/storage/order.go:205:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//check uses balance after update
+	^
+internal/storage/order.go:208:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//check uses balance in transaction
+	^
+internal/storage/order.go:222:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//Update user's withdrawals
+	^
+internal/services/accrual.go:55:3: commentFormatting: put a space between `//` and comment text (gocritic)
+		//fech status and accrual from Accrual system
+		^
+internal/services/accrual.go:67:3: commentFormatting: put a space between `//` and comment text (gocritic)
+		//if status PROCESSED or INVALID - update db and remove from orders
+		^
+internal/services/accrual.go:73:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//set accruals to the order
+			^
+internal/services/accrual.go:81:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//add accruals to user's bonus balance
+			^
+internal/api/middlewares/middlewgzip.go:30:3: commentFormatting: put a space between `//` and comment text (gocritic)
+		//check if client send compressed content in the body (gzip only)
+		^
+internal/api/middlewares/middlewgzip.go:49:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//update body with unzipped file
+			^
+internal/api/middlewares/middlewgzip.go:53:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//send to ServeHTTP without encoding
+			^
+internal/api/middlewares/middlewgzip.go:58:3: commentFormatting: put a space between `//` and comment text (gocritic)
+		//check if client support gzip
+		^
+internal/api/middlewares/middlewgzip.go:64:3: commentFormatting: put a space between `//` and comment text (gocritic)
+		//Send compressed with gzip unsver
+		^
+internal/api/router/router.go:20:3: commentFormatting: put a space between `//` and comment text (gocritic)
+		//send password for enctription to middlewares
+		^
+cmd/gophermart/main.go:32:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//Init application
+	^
+cmd/gophermart/main.go:42:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//start web
+	^
+internal/api/handlers/balance.go:61:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//set content type
+	^
+internal/api/handlers/balance.go:64:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//set status code 200
+	^
+internal/api/handlers/balance.go:145:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//Update withdrawals and bonuses balance
+	^
+internal/api/handlers/balance.go:154:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//set status code 200
+	^
+internal/api/handlers/balance.go:195:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//set content type
+	^
+internal/api/handlers/balance.go:198:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//set status code 200
+	^
+internal/api/handlers/login.go:47:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//set status code 200
+	^
+internal/api/handlers/orders.go:135:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//get UserID from cxt values
+	^
+internal/api/handlers/orders.go:182:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//set content type
+	^
+internal/api/handlers/orders.go:185:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//set status code 200
+	^
+internal/api/handlers/register.go:60:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//set status code 200
+	^
+internal/api/handlers/balance_test.go:35:3: commentFormatting: put a space between `//` and comment text (gocritic)
+		//all bonuses
+		^
+internal/api/handlers/balance_test.go:38:3: commentFormatting: put a space between `//` and comment text (gocritic)
+		//all withdrawals
+		^
+internal/api/handlers/balance_test.go:41:3: commentFormatting: put a space between `//` and comment text (gocritic)
+		//amount of withdrawn
+		^
+internal/api/handlers/balance_test.go:100:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//Init application
+	^
+internal/api/handlers/balance_test.go:105:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//init storage
+	^
+internal/api/handlers/balance_test.go:114:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//crete mock storege
+			^
+internal/api/handlers/balance_test.go:166:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//add chi context
+			^
+internal/api/handlers/balance_test.go:180:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//create status recorder
+			^
+internal/api/handlers/balance_test.go:183:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//Make request
+			^
+internal/api/handlers/balance_test.go:187:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//get result
+			^
+internal/api/handlers/balance_test.go:196:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//check answer code
+			^
+internal/api/handlers/balance_test.go:199:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//Unmarshal body
+			^
+internal/api/handlers/balance_test.go:213:3: commentFormatting: put a space between `//` and comment text (gocritic)
+		//want
+		^
+internal/api/handlers/balance_test.go:236:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//Init application
+	^
+internal/api/handlers/balance_test.go:241:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//init storage
+	^
+internal/api/handlers/balance_test.go:250:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//crete mock storege
+			^
+internal/api/handlers/balance_test.go:282:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//add chi context
+			^
+internal/api/handlers/balance_test.go:296:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//create status recorder
+			^
+internal/api/handlers/balance_test.go:299:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//Make request
+			^
+internal/api/handlers/balance_test.go:303:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//get result
+			^
+internal/api/handlers/balance_test.go:307:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//check answer code
+			^
+internal/api/handlers/balance_test.go:311:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//Unmarshal body
+			^
+internal/api/handlers/login_test.go:58:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//Init application
+	^
+internal/api/handlers/login_test.go:64:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//init storage
+	^
+internal/api/handlers/login_test.go:72:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//crete mock storege
+			^
+internal/api/handlers/login_test.go:99:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//add chi context
+			^
+internal/api/handlers/login_test.go:107:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//create status recorder
+			^
+internal/api/handlers/login_test.go:110:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//Make request
+			^
+internal/api/handlers/login_test.go:114:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//get result
+			^
+internal/api/handlers/login_test.go:123:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//check answer code
+			^
+internal/api/handlers/login_test.go:126:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//Unmarshal body
+			^
+internal/api/handlers/orders_test.go:32:3: commentFormatting: put a space between `//` and comment text (gocritic)
+		//want
+		^
+internal/api/handlers/orders_test.go:57:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//Init application
+	^
+internal/api/handlers/orders_test.go:62:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//init storage
+	^
+internal/api/handlers/orders_test.go:71:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//crete mock storege
+			^
+internal/api/handlers/orders_test.go:102:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//add chi context
+			^
+internal/api/handlers/orders_test.go:116:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//create status recorder
+			^
+internal/api/handlers/orders_test.go:122:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//get result
+			^
+internal/api/handlers/orders_test.go:126:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//check answer code
+			^
+internal/api/handlers/orders_test.go:130:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//Unmarshal body
+			^
+internal/api/handlers/register_test.go:59:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//Init application
+	^
+internal/api/handlers/register_test.go:64:2: commentFormatting: put a space between `//` and comment text (gocritic)
+	//init storage
+	^
+internal/api/handlers/register_test.go:71:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//crete mock storege
+			^
+internal/api/handlers/register_test.go:99:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//add chi context
+			^
+internal/api/handlers/register_test.go:107:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//create status recorder
+			^
+internal/api/handlers/register_test.go:110:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//Make request
+			^
+internal/api/handlers/register_test.go:114:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//get result
+			^
+internal/api/handlers/register_test.go:123:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//check answer code
+			^
+internal/api/handlers/register_test.go:126:4: commentFormatting: put a space between `//` and comment text (gocritic)
+			//Unmarshal body
+			^
+internal/model/claimes.go:8:24: Comment should end in a period (godot)
+// Claims for JWT token
+                       ^
+internal/model/ctxvalues.go:5:26: Comment should end in a period (godot)
+// send pass to midleware
+                         ^
+internal/model/ctxvalues.go:8:4: Sentence should start with a capital letter (godot)
+// send values through middleware in context
+   ^
+internal/model/order.go:33:21: Comment should end in a period (godot)
+// Check Luna namber
+                    ^
+internal/config/config.go:12:37: Comment should end in a period (godot)
+// Check Acceral service every X sec
+                                    ^
+internal/accrual/fetch.go:22:32: Comment should end in a period (godot)
+// Get data from Accrual system
+                               ^
+internal/storage/db.go:27:17: Comment should end in a period (godot)
+// Init Database
+                ^
+internal/storage/user.go:35:25: Comment should end in a period (godot)
+// Retrive User by login
+                        ^
+internal/services/calc.go:35:58: Comment should end in a period (godot)
+// Make preorder (created with withdrawals) regular order
+                                                         ^
+internal/services/calc.go:87:50: Comment should end in a period (godot)
+// Move user's amount from bonuses to withdrawals
+                                                 ^
+internal/services/user.go:20:71: Comment should end in a period (godot)
+// User creation, registration, validation and autentification service
+                                                                      ^
+internal/services/user.go:34:31: Comment should end in a period (godot)
+// Register new user in market
+                              ^
+internal/services/user.go:78:56: Comment should end in a period (godot)
+// HashPassword returns the bcrypt hash of the password
+                                                       ^
+internal/services/user.go:87:67: Comment should end in a period (godot)
+// CheckPassword checks if the provided password is correct or not
+                                                                  ^
+internal/services/user.go:92:20: Comment should end in a period (godot)
+// Create JWT token
+                   ^
+internal/services/user.go:109:39: Comment should end in a period (godot)
+// Retrive user's UUID from JWT string
+                                      ^
+internal/services/user.go:119:32: Comment should end in a period (godot)
+// Create jwt token from string
+                               ^
+internal/services/user.go:129:30: Comment should end in a period (godot)
+// Check JWT is Set to Header
+                             ^
+internal/app/init.go:38:107: Comment should end in a period (godot)
+// Init context from graceful shutdown. Send to all function for return by syscall.SIGINT, syscall.SIGTERM
+                                                                                                          ^
+internal/api/router/router.go:15:30: Comment should end in a period (godot)
+// Chi Router for application
+                             ^
+internal/api/handlers/login.go:22:29: Comment should end in a period (godot)
+// Adding new user to Market
+                            ^
+internal/api/handlers/register.go:23:29: Comment should end in a period (godot)
+// Adding new user to Market
+                            ^
+internal/services/accrual.go:52:20: Duplicate words (to) found (dupword)
+			zap.S().Errorln("Can't update status to  to PROCESSING in database", err)
+			                ^

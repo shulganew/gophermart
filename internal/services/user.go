@@ -17,7 +17,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// User creation, registration, validation and autentification service
+// User creation, registration, validation and autentification service.
 type UserService struct {
 	stor UserRepo
 }
@@ -31,9 +31,8 @@ func NewUserService(stor UserRepo) *UserService {
 	return &UserService{stor: stor}
 }
 
-// Register new user in market
+// Register new user in market.
 func (r *UserService) CreateUser(ctx context.Context, login string, password string) (userID *uuid.UUID, existed bool, err error) {
-
 	// Set hash as user password.
 	hash, err := r.HashPassword(password)
 	if err != nil {
@@ -58,7 +57,6 @@ func (r *UserService) CreateUser(ctx context.Context, login string, password str
 
 // Validate user in market, if sucsess it return user's id.
 func (r *UserService) IsValid(ctx context.Context, login string, pass string) (userID *uuid.UUID, isValid bool) {
-
 	// Get User from storage
 	user, err := r.stor.GetByLogin(ctx, login)
 	zap.S().Infof("User form db: %v \n", user)
@@ -77,7 +75,7 @@ func (r *UserService) IsValid(ctx context.Context, login string, pass string) (u
 	return &user.UUID, true
 }
 
-// HashPassword returns the bcrypt hash of the password
+// HashPassword returns the bcrypt hash of the password.
 func (r UserService) HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -86,12 +84,12 @@ func (r UserService) HashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-// CheckPassword checks if the provided password is correct or not
+// CheckPassword checks if the provided password is correct or not.
 func (r UserService) CheckPassword(password string, hashedPassword string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
 
-// Create JWT token
+// Create JWT token.
 func BuildJWTString(userID uuid.UUID, pass string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, model.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -108,7 +106,7 @@ func BuildJWTString(userID uuid.UUID, pass string) (string, error) {
 	return tokenString, nil
 }
 
-// Retrive user's UUID from JWT string
+// Retrive user's UUID from JWT string.
 func GetUserIDJWT(tokenString string, pass string) (userID uuid.UUID, err error) {
 	claims := &model.Claims{}
 	_, err = jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
@@ -118,7 +116,7 @@ func GetUserIDJWT(tokenString string, pass string) (userID uuid.UUID, err error)
 	return claims.UserID, err
 }
 
-// Create jwt token from string
+// Create jwt token from string.
 func GetJWT(tokenString string, pass string) (token *jwt.Token, err error) {
 	claims := &model.Claims{}
 	token, err = jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
@@ -128,14 +126,12 @@ func GetJWT(tokenString string, pass string) (token *jwt.Token, err error) {
 	return token, err
 }
 
-// Check JWT is Set to Header
+// Check JWT is Set to Header.
 func GetHeaderJWT(header http.Header) (jwt string, isSet bool) {
-
 	auth := header.Get("Authorization")
 	if auth == "" {
 		return "", false
 	}
 
 	return auth, true
-
 }

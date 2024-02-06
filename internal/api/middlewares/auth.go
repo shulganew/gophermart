@@ -12,9 +12,13 @@ import (
 
 func Auth(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-
-		pass := req.Context().Value(model.CtxPassKey{}).(string)
-
+		passVal := req.Context().Value(model.CtxPassKey{})
+		pass, ok := passVal.(string)
+		if !ok {
+			zap.S().Errorln("Can't git pass key from context.")
+			h.ServeHTTP(res, req)
+			return
+		}
 		jwt, isSet := services.GetHeaderJWT(req.Header)
 
 		var userID uuid.UUID
@@ -25,12 +29,8 @@ func Auth(h http.Handler) http.Handler {
 				zap.S().Infoln("Can't get user UUID form JWT.", err)
 				isSet = false
 			}
-
 		}
-
 		ctx := context.WithValue(req.Context(), model.MiddlwDTO{}, model.NewMiddlwDTO(userID, isSet))
 		h.ServeHTTP(res, req.WithContext(ctx))
-
 	})
-
 }

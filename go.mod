@@ -1,6 +1,6 @@
 module github.com/shulganew/gophermart
 
-go 1.21.5
+go 1.21.3
 
 require (
 	github.com/ShiraazMoollatjie/goluhn v0.0.0-20211017190329-0d86158c056a // indirect

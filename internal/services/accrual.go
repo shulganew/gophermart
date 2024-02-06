@@ -37,7 +37,6 @@ func (o *AccrualService) Run(ctx context.Context) {
 			o.FetchAccrual(ctx)
 		}
 	}(ctx, o)
-
 }
 
 func (o *AccrualService) FetchAccrual(ctx context.Context) {
@@ -48,8 +47,11 @@ func (o *AccrualService) FetchAccrual(ctx context.Context) {
 
 	for _, order := range loadOrders {
 		// Set order status to PROCESSING in database
-		o.stor.UpdateStatus(ctx, order.OrderNr, model.Status(model.PROCESSING))
-
+		err := o.stor.UpdateStatus(ctx, order.OrderNr, model.Status(model.PROCESSING))
+		if err != nil {
+			zap.S().Errorln("Can't update status to PROCESSING in database", err)
+			continue
+		}
 		//fech status and accrual from Accrual system
 		accResp, err := o.accrualClient.GetOrderStatus(order.OrderNr)
 		if err != nil {
@@ -81,7 +83,6 @@ func (o *AccrualService) FetchAccrual(ctx context.Context) {
 			if err != nil {
 				zap.S().Errorln("get error update user's balance", err)
 			}
-
 		}
 	}
 }

@@ -12,17 +12,14 @@ import (
 
 type HandlerLogin struct {
 	usrSrt *services.UserService
-	conf     *config.Config
+	conf   *config.Config
 }
 
 func NewHandlerLogin(conf *config.Config, userServ *services.UserService) *HandlerLogin {
-
 	return &HandlerLogin{usrSrt: userServ, conf: conf}
 }
 
-// Adding new user to Market
 func (h *HandlerLogin) LoginUser(res http.ResponseWriter, req *http.Request) {
-
 	var user model.User
 
 	if err := json.NewDecoder(req.Body).Decode(&user); err != nil {
@@ -46,9 +43,11 @@ func (h *HandlerLogin) LoginUser(res http.ResponseWriter, req *http.Request) {
 	res.Header().Add("Content-Type", "text/plain")
 	res.Header().Add("Authorization", jwt)
 
-	//set status code 200
+	// set status code 200
 	res.WriteHeader(http.StatusOK)
 
-	res.Write([]byte("User loged in."))
-
+	_, err := res.Write([]byte("User loged in."))
+	if err != nil {
+		zap.S().Errorln("Can't write to response in LoginUser  handler", err)
+	}
 }

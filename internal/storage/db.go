@@ -24,9 +24,8 @@ func NewRepo(ctx context.Context, master *sqlx.DB) (*Repo, error) {
 	return &db, err
 }
 
-// Init Database
+// Init Database.
 func InitDB(ctx context.Context, conf *config.Config) (db *sqlx.DB, err error) {
-
 	// Migrations enebles in config
 	if conf.Migrations {
 		zap.S().Infoln("Migrations is start:")

@@ -20,14 +20,19 @@ type HandlerOrder struct {
 }
 
 func NewHandlerOrder(conf *config.Config, calc *services.CalculationService, accSrv *services.AccrualService, orderSrv *services.OrderService) *HandlerOrder {
-
 	return &HandlerOrder{calcSrv: calc, conf: conf, accSrv: accSrv, orderSrv: orderSrv}
 }
 
 func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
-
 	// Get UserID from cxt values.
-	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
+	ctxConfigVal := req.Context().Value(model.MiddlwDTO{})
+	ctxConfig, ok := ctxConfigVal.(model.MiddlwDTO)
+	if !ok {
+		errt := "Cat't get MiddlwDTO from context."
+		zap.S().Errorln(errt)
+		http.Error(res, errt, http.StatusInternalServerError)
+		return
+	}
 
 	// Check from middleware is user authorized
 	if !ctxConfig.IsRegistered() {
@@ -43,7 +48,6 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "Cat't read body data", http.StatusBadRequest)
 		return
 	}
-	defer req.Body.Close()
 
 	orderNr := string(body)
 	zap.S().Infoln("Set Order for user: ", userID, " Order: ", orderNr)
@@ -82,9 +86,11 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 		// 202 - New order
 		res.WriteHeader(http.StatusAccepted)
 
-		res.Write([]byte("Set order!" + orderNr))
+		_, err := res.Write([]byte("Set order!" + orderNr))
+		if err != nil {
+			zap.S().Errorln("Can't write to response in AddOrder  handler", err)
+		}
 		return
-
 	}
 
 	// Order existed for other user.
@@ -122,7 +128,6 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 			http.Error(res, errt, http.StatusInternalServerError)
 			return
 		}
-
 	}
 
 	// 200 alredy created for user
@@ -130,13 +135,18 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 
 	zap.S().Debugln(errt, orderNr)
 	http.Error(res, errt, http.StatusOK)
-
 }
 
 func (u *HandlerOrder) GetOrders(res http.ResponseWriter, req *http.Request) {
-
-	//get UserID from cxt values
-	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
+	// get UserID from cxt values
+	ctxConfigVal := req.Context().Value(model.MiddlwDTO{})
+	ctxConfig, ok := ctxConfigVal.(model.MiddlwDTO)
+	if !ok {
+		errt := "Cat't get MiddlwDTO from context."
+		zap.S().Errorln(errt)
+		http.Error(res, errt, http.StatusInternalServerError)
+		return
+	}
 
 	// Check from middleware is user authorized 401
 	if !ctxConfig.IsRegistered() {
@@ -182,12 +192,14 @@ func (u *HandlerOrder) GetOrders(res http.ResponseWriter, req *http.Request) {
 
 	zap.S().Infoln("Get Orders: ", string(jsonOrders))
 
-	//set content type
+	// set content type
 	res.Header().Add("Content-Type", "application/json")
 
-	//set status code 200
+	// set status code 200
 	res.WriteHeader(http.StatusOK)
 
-	res.Write([]byte(jsonOrders))
-
+	_, err = res.Write([]byte(jsonOrders))
+	if err != nil {
+		zap.S().Errorln("Can't write to response in GetOrders  handler", err)
+	}
 }

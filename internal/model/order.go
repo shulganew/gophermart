@@ -27,15 +27,13 @@ type Order struct {
 }
 
 func NewOrder(userID uuid.UUID, orderNr string, preoreder bool, withdrawn decimal.Decimal, accrual decimal.Decimal) *Order {
-
 	return &Order{UserID: userID, OrderNr: orderNr, IsPreOrder: preoreder, Uploaded: time.Now(), Status: Status(NEW), Withdrawn: withdrawn, Accrual: accrual}
 }
 
-// Check Luna namber
+// Check Luna namber.
 func (o *Order) IsValid() (isValid bool) {
 	err := goluhn.Validate(o.OrderNr)
 	return err == nil
-
 }
 
 func (o *Order) getAccrual() *float64 {
@@ -47,7 +45,6 @@ func (o *Order) getAccrual() *float64 {
 }
 
 func (o *Order) getUploded() string {
-
 	return o.Uploaded.Format(time.RFC3339)
 }
 

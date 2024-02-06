@@ -54,23 +54,16 @@ func TestUserlogin(t *testing.T) {
 
 	app.InitLog()
 	conf := &config.Config{}
-
-	//Init application
-	//market, register, fetcher := app.InitApp(ctx, conf, db)
 	conf.Address = "localhost:8088"
 	conf.Accrual = "localhost:8090"
 	conf.PassJWT = "JWTsecret"
 
-	//init storage
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			t.Log("Test name: ", tt.name)
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			//crete mock storege
 			repoUser := mocks.NewMockUserRepo(ctrl)
 			userServ := services.NewUserService(repoUser)
 
@@ -97,7 +90,7 @@ func TestUserlogin(t *testing.T) {
 			body := strings.NewReader(string(jsonWs))
 			assert.NoError(t, err)
 
-			//add chi context
+			// Add chi context.
 			rctx := chi.NewRouteContext()
 			req := httptest.NewRequest(http.MethodPost, tt.requestURL, body)
 
@@ -105,29 +98,27 @@ func TestUserlogin(t *testing.T) {
 
 			req.Header.Add("Content-Type", "application/json")
 
-			//create status recorder
+			// Create status recorder.
 			resRecord := httptest.NewRecorder()
 
-			//Make request
+			// Make request.
 			userLogin := NewHandlerLogin(conf, userServ)
 			userLogin.LoginUser(resRecord, req)
 
-			//get result
+			// Get result.
 			res := resRecord.Result()
 
 			b, _ := io.ReadAll(res.Body)
 
 			t.Log(string(b))
 
-			defer res.Body.Close()
+			err = res.Body.Close()
+			assert.NoError(t, err)
 
-			//check answer code
+			// Check answer code.
 			t.Log("StatusCode test: ", tt.statusCode, " server: ", res.StatusCode)
 
-			//Unmarshal body
-
 			assert.Equal(t, tt.statusCode, res.StatusCode)
-
 		})
 	}
 }

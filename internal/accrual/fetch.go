@@ -9,6 +9,7 @@ import (
 
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
+	"go.uber.org/zap"
 )
 
 type AccrualClient struct {
@@ -16,13 +17,11 @@ type AccrualClient struct {
 }
 
 func NewAccrualClient(conf *config.Config) *AccrualClient {
-
 	return &AccrualClient{conf: conf}
 }
 
-// Get data from Accrual system
+// Get data from Accrual system.
 func (a AccrualClient) GetOrderStatus(orderNr string) (*model.AccrualResponce, error) {
-
 	client := &http.Client{}
 
 	url, err := url.JoinPath(a.conf.Accrual, "api", "orders", orderNr)
@@ -50,7 +49,10 @@ func (a AccrualClient) GetOrderStatus(orderNr string) (*model.AccrualResponce, e
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func() {
+		err := res.Body.Close()
+		zap.S().Errorln("Can't close response body: ", err)
+	}()
 
 	return &accResp, nil
 }

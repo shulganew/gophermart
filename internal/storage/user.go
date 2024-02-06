@@ -32,7 +32,7 @@ func (base *Repo) AddUser(ctx context.Context, login string, hash string) (*uuid
 	return userID, nil
 }
 
-// Retrive User by login
+// Retrive User by login.
 func (base *Repo) GetByLogin(ctx context.Context, login string) (*model.User, error) {
 	query := `
 	SELECT user_id, password_hash 

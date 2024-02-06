@@ -10,7 +10,6 @@ import (
 
 // Parse server and url address.
 func CheckURL(address string) (host string, port string) {
-
 	//Parse address
 	link, err := url.Parse(strings.TrimSpace(address))
 	if err != nil {

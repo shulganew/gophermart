@@ -12,17 +12,14 @@ import (
 	"github.com/shulganew/gophermart/internal/services"
 )
 
-// Chi Router for application
+// Chi Router for application.
 func RouteMarket(conf *config.Config, calcSrv *services.CalculationService, userSrv *services.UserService, accSrv *services.AccrualService, orderSrv *services.OrderService) (r *chi.Mux) {
-
 	r = chi.NewRouter()
 
 	r.Route("/", func(r chi.Router) {
-
-		//send password for enctription to middlewares
+		// send password for enctription to middlewares
 		r.Use(func(h http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 				ctx := context.WithValue(r.Context(), model.CtxPassKey{}, conf.PassJWT)
 				h.ServeHTTP(w, r.WithContext(ctx))
 			})
@@ -45,7 +42,6 @@ func RouteMarket(conf *config.Config, calcSrv *services.CalculationService, user
 			r.Post("/balance/withdraw", http.HandlerFunc(balance.SetWithdraw))
 			r.Get("/withdrawals", http.HandlerFunc(balance.GetWithdrawals))
 		})
-
 	})
 
 	return

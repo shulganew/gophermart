@@ -32,7 +32,7 @@ func (m *CalculationService) IsPreOrder(ctx context.Context, userID uuid.UUID, o
 	return m.stor.IsPreOrder(ctx, userID, order)
 }
 
-// Make preorder (created with withdrawals) regular order
+// Make preorder (created with withdrawals) regular order.
 func (m *CalculationService) MovePreOrder(ctx context.Context, order *model.Order) (err error) {
 	err = m.stor.MovePreOrder(ctx, order)
 	if err != nil {
@@ -58,7 +58,6 @@ func (m *CalculationService) GetBonuses(ctx context.Context, userID uuid.UUID) (
 }
 
 func (m *CalculationService) GetWithdrawn(ctx context.Context, userID uuid.UUID) (withdrawn decimal.Decimal, err error) {
-
 	withdrawn, err = m.stor.GetWithdrawn(ctx, userID)
 	if err != nil {
 		return decimal.Zero, fmt.Errorf("can't get user's withdrawals: %w", err)
@@ -85,7 +84,7 @@ func (m *CalculationService) GetWithdrawals(ctx context.Context, userID uuid.UUI
 	return
 }
 
-// Move user's amount from bonuses to withdrawals
+// Move user's amount from bonuses to withdrawals.
 func (m *CalculationService) MakeWithdrawn(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) (err error) {
 	err = m.stor.MakeWithdrawn(ctx, userID, amount)
 	return

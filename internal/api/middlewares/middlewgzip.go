@@ -11,14 +11,6 @@ import (
 	"go.uber.org/zap"
 )
 
-type gzipRequest struct {
-	Req *http.Request
-}
-
-func (r gzipRequest) newBody(body io.ReadCloser) {
-	r.Req.Body = body
-}
-
 type gzipWriter struct {
 	http.ResponseWriter
 	Writer io.Writer
@@ -30,7 +22,6 @@ func (w gzipWriter) Write(b []byte) (int, error) {
 
 func MidlewZip(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		start := time.Now()
 
 		uri := r.RequestURI
@@ -38,7 +29,6 @@ func MidlewZip(h http.Handler) http.Handler {
 
 		//check if client send compressed content in the body (gzip only)
 		if strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
-
 			var reader io.Reader
 			gz, err := gzip.NewReader(r.Body)
 			if err != nil {
@@ -47,7 +37,10 @@ func MidlewZip(h http.Handler) http.Handler {
 				return
 			}
 			reader = gz
-			defer gz.Close()
+			defer func() {
+				err := gz.Close()
+				zap.S().Errorln("Can't close *gzip.Writer", err)
+			}()
 
 			body, err := io.ReadAll(reader)
 			if err != nil {
@@ -75,10 +68,16 @@ func MidlewZip(h http.Handler) http.Handler {
 		gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
 		if err != nil {
 			zap.S().Errorln("error during gzip compression")
-			io.WriteString(w, err.Error())
+			_, err = io.WriteString(w, err.Error())
+			if err != nil {
+				zap.S().Errorln("error during gzip compression: can't write error to Response")
+			}
 			return
 		}
-		defer gz.Close()
+		defer func() {
+			err := gz.Close()
+			zap.S().Errorln("Can't close *gzip.Writer", err)
+		}()
 
 		w.Header().Set("Content-Encoding", "gzip")
 		h.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
@@ -91,5 +90,4 @@ func MidlewZip(h http.Handler) http.Handler {
 			"Duration zip json: ", duration,
 		)
 	})
-
 }

@@ -10,6 +10,5 @@ type Bonus struct {
 }
 
 func NewBonus(used *decimal.Decimal, accrual *decimal.Decimal) *Bonus {
-
 	return &Bonus{Used: used, Accrual: accrual}
 }

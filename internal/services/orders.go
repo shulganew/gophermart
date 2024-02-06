@@ -43,7 +43,6 @@ func (m *OrderService) AddOrder(ctx context.Context, isPreOrder bool, order *mod
 }
 
 func (m *OrderService) GetOrders(ctx context.Context, userID uuid.UUID) (orders []model.Order, err error) {
-
 	orders, err = m.stor.GetOrders(ctx, userID)
 	if err != nil {
 		return nil, err

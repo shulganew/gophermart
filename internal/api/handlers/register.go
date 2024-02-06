@@ -17,13 +17,11 @@ type HandlerRegister struct {
 }
 
 func NewHandlerRegister(conf *config.Config, usrSrv *services.UserService) *HandlerRegister {
-
 	return &HandlerRegister{userSrv: usrSrv, conf: conf}
 }
 
-// Adding new user to Market
+// Adding new user to Market.
 func (u *HandlerRegister) SetUser(res http.ResponseWriter, req *http.Request) {
-
 	var user model.User
 
 	if err := json.NewDecoder(req.Body).Decode(&user); err != nil {
@@ -59,9 +57,11 @@ func (u *HandlerRegister) SetUser(res http.ResponseWriter, req *http.Request) {
 
 	res.Header().Add("Authorization", jwt)
 
-	//set status code 200
+	// set status code 200
 	res.WriteHeader(http.StatusOK)
 
-	res.Write([]byte("User added."))
-
+	_, err = res.Write([]byte("User added."))
+	if err != nil {
+		zap.S().Errorln("Can't write to response in SetUser handler", err)
+	}
 }

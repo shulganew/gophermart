@@ -19,13 +19,19 @@ type HandlerBalance struct {
 }
 
 func NewHandlerBalance(conf *config.Config, calc *services.CalculationService, orders *services.OrderService) *HandlerBalance {
-
 	return &HandlerBalance{calcSrv: calc, conf: conf, orderSrv: orders}
 }
 
 func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) {
 	// get UserID from cxt values
-	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
+	ctxConfigVal := req.Context().Value(model.MiddlwDTO{})
+	ctxConfig, ok := ctxConfigVal.(model.MiddlwDTO)
+	if !ok {
+		errt := "Cat't get MiddlwDTO from context."
+		zap.S().Errorln(errt)
+		http.Error(res, errt, http.StatusInternalServerError)
+		return
+	}
 
 	// Check from middleware is user authorized 401
 	if !ctxConfig.IsRegistered() {
@@ -59,19 +65,28 @@ func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) 
 		http.Error(res, "Error during Marshal user's balance", http.StatusInternalServerError)
 	}
 
-	//set content type
+	// set content type
 	res.Header().Add("Content-Type", "application/json")
 
-	//set status code 200
+	// set status code 200
 	res.WriteHeader(http.StatusOK)
 
-	res.Write([]byte(jsonBalance))
-
+	_, err = res.Write([]byte(jsonBalance))
+	if err != nil {
+		zap.S().Errorln("Can't write to response in get balance handler", err)
+	}
 }
 
 func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request) {
 	// get UserID from cxt values
-	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
+	ctxConfigVal := req.Context().Value(model.MiddlwDTO{})
+	ctxConfig, ok := ctxConfigVal.(model.MiddlwDTO)
+	if !ok {
+		errt := "Cat't get MiddlwDTO from context."
+		zap.S().Errorln(errt)
+		http.Error(res, errt, http.StatusInternalServerError)
+		return
+	}
 
 	// Check from middleware is user authorized 401
 	if !ctxConfig.IsRegistered() {
@@ -141,7 +156,7 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	//Update withdrawals and bonuses balance
+	// Update withdrawals and bonuses balance.
 	err = u.calcSrv.MakeWithdrawn(req.Context(), userID, amount)
 	if err != nil {
 		// 500
@@ -150,17 +165,25 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 		http.Error(res, "Error during withdraw. Update balbance error", http.StatusInternalServerError)
 		return
 	}
-	//set status code 200
+	// set status code 200
 	res.WriteHeader(http.StatusOK)
 
-	res.Write([]byte("Done."))
-
+	_, err = res.Write([]byte("Done."))
+	if err != nil {
+		zap.S().Errorln("Can't write to response in SetWithdrawn  handler", err)
+	}
 }
 
 func (u *HandlerBalance) GetWithdrawals(res http.ResponseWriter, req *http.Request) {
-
 	// get UserID from cxt values
-	ctxConfig := req.Context().Value(model.MiddlwDTO{}).(model.MiddlwDTO)
+	ctxConfigVal := req.Context().Value(model.MiddlwDTO{})
+	ctxConfig, ok := ctxConfigVal.(model.MiddlwDTO)
+	if !ok {
+		errt := "Cat't get MiddlwDTO from context."
+		zap.S().Errorln(errt)
+		http.Error(res, errt, http.StatusInternalServerError)
+		return
+	}
 
 	// Check from middleware is user authorized 401
 	if !ctxConfig.IsRegistered() {
@@ -190,12 +213,14 @@ func (u *HandlerBalance) GetWithdrawals(res http.ResponseWriter, req *http.Reque
 		http.Error(res, errt, http.StatusInternalServerError)
 	}
 
-	//set content type
+	// set content type
 	res.Header().Add("Content-Type", "application/json")
 
-	//set status code 200
+	// set status code 200
 	res.WriteHeader(http.StatusOK)
 
-	res.Write([]byte(jsonWithdraw))
-
+	_, err = res.Write([]byte(jsonWithdraw))
+	if err != nil {
+		zap.S().Errorln("Can't write to response in GetWithdrawals  handler", err)
+	}
 }

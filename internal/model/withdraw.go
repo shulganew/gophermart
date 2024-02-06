@@ -16,7 +16,6 @@ type Withdrawals struct {
 }
 
 func NewWithdrawals(order string, withdrawn *decimal.Decimal, time string) *Withdrawals {
-
 	w := withdrawn.InexactFloat64()
 	return &Withdrawals{OrderNr: order, Withdrawn: w, Uploaded: time}
 }

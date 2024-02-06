@@ -44,7 +44,6 @@ func (base *Repo) GetOrders(ctx context.Context, userID uuid.UUID) ([]model.Orde
 		return nil, err
 	}
 	return orders, nil
-
 }
 
 func (base *Repo) IsExist(ctx context.Context, order string) (isExist bool, err error) {
@@ -130,7 +129,6 @@ func (base *Repo) MovePreOrder(ctx context.Context, order *model.Order) (err err
 	}
 
 	return
-
 }
 
 func (base *Repo) GetBonuses(ctx context.Context, userID uuid.UUID) (accrual decimal.Decimal, err error) {
@@ -166,7 +164,6 @@ func (base *Repo) SetAccrual(ctx context.Context, order string, accrual decimal.
 	`
 	_, err = base.master.ExecContext(ctx, query, accrual, order)
 	if err != nil {
-
 		return fmt.Errorf("can't update order's accrual during update status %w", err)
 	}
 
@@ -211,7 +208,9 @@ func (base *Repo) MakeWithdrawn(ctx context.Context, userID uuid.UUID, amount de
 	//check uses balance in transaction
 	err = tx.GetContext(ctx, &bonuses, queryBonusCheck, userID)
 	if err != nil || bonuses.IsNegative() {
-		tx.Rollback()
+		if err := tx.Rollback(); err != nil {
+			return fmt.Errorf("error during user's bonuse withdrawn, cat't rollback transaction: %w", err)
+		}
 		return fmt.Errorf("error during user's bonuse withdrawn: %w", err)
 	}
 
@@ -223,16 +222,19 @@ func (base *Repo) MakeWithdrawn(ctx context.Context, userID uuid.UUID, amount de
 	//Update user's withdrawals
 	_, err = tx.ExecContext(ctx, queryWithdrawnUpdate, amount, userID)
 	if err != nil {
-		tx.Rollback()
+		if err := tx.Rollback(); err != nil {
+			return fmt.Errorf("can't add withdrawns to user, cat't rollback transaction: %w", err)
+		}
 		return fmt.Errorf("can't add withdrawns to user, %w", err)
 	}
-	tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("cat't commit transaction during making user's withdrawn: %w", err)
+	}
 	return
 }
 
 // Load all orders with not finished preparation status.
 func (base *Repo) LoadPocessing(ctx context.Context) ([]model.Order, error) {
-
 	orders := make([]model.Order, 0)
 	query := `
 	SELECT  user_id, order_number
@@ -248,7 +250,6 @@ func (base *Repo) LoadPocessing(ctx context.Context) ([]model.Order, error) {
 }
 
 func (base *Repo) UpdateStatus(ctx context.Context, order string, status model.Status) (err error) {
-
 	_, err = base.master.ExecContext(ctx, "UPDATE orders SET status = $1 WHERE order_number = $2", status, order)
 	if err != nil {
 		return fmt.Errorf("can't update orders status, %w", err)

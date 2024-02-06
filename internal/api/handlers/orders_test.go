@@ -29,7 +29,6 @@ func TestOrders(t *testing.T) {
 		requestURL string
 		orders     []model.Order
 		statusCode int
-		//want
 	}{
 		{
 			name:       "Get 2 Orders",
@@ -54,22 +53,21 @@ func TestOrders(t *testing.T) {
 
 	conf := &config.Config{}
 
-	//Init application
+	// Init application.
 	conf.Address = "localhost:8088"
 	conf.Accrual = "localhost:8090"
 	conf.PassJWT = "JWTsecret"
 
-	//init storage
+	// Init storage.
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			t.Log("Test name: ", tt.name)
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			//crete mock storege
+			// crete mock storege
 			repoUser := mocks.NewMockUserRepo(ctrl)
 			repoCalc := mocks.NewMockCalcRepo(ctrl)
 			repoOrder := mocks.NewMockOrderRepo(ctrl)
@@ -100,7 +98,7 @@ func TestOrders(t *testing.T) {
 			assert.NoError(t, err)
 			assert.False(t, exist)
 
-			//add chi context
+			// add chi context
 			rctx := chi.NewRouteContext()
 			req := httptest.NewRequest(http.MethodGet, tt.requestURL, nil)
 
@@ -114,21 +112,21 @@ func TestOrders(t *testing.T) {
 			req.Header.Add("Authorization", jwt)
 			req.Header.Add("Content-Type", "text/plain")
 
-			//create status recorder
+			// create status recorder
 			resRecord := httptest.NewRecorder()
-
 			ordersHand := NewHandlerOrder(conf, calcSrv, accSrv, orderSrv)
 			ordersHand.GetOrders(resRecord, req)
 
-			//get result
+			// get result
 			res := resRecord.Result()
-			defer res.Body.Close()
+			err = res.Body.Close()
+			assert.NoError(t, err)
 
-			//check answer code
+			// check answer code
 			t.Log("StatusCode test: ", tt.statusCode, " server: ", res.StatusCode)
 			assert.Equal(t, tt.statusCode, res.StatusCode)
 
-			//Unmarshal body
+			// Unmarshal body
 
 			if res.StatusCode != http.StatusNoContent {
 				var responses []model.OrderResponse
@@ -145,7 +143,6 @@ func TestOrders(t *testing.T) {
 
 			t.Log("StatusCode test: ", tt.statusCode, " server: ", res.StatusCode)
 			assert.Equal(t, tt.statusCode, res.StatusCode)
-
 		})
 	}
 }

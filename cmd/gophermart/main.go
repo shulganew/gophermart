@@ -14,7 +14,6 @@ import (
 )
 
 func main() {
-
 	app.InitLog()
 
 	ctx, cancel := app.InitContext()
@@ -28,9 +27,11 @@ func main() {
 		zap.S().Errorln("Can't connect to Database!", err)
 		panic(err)
 	}
-	defer db.Close()
-
-	//Init application
+	defer func() {
+		err := db.Close()
+		zap.S().Errorln("Could not close db connection", err)
+	}()
+	// Init application
 	calcSrv, userSrv, accSrv, orderSrv := app.InitApp(ctx, conf, db)
 
 	// Graceful shotdown
