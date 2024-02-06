@@ -6,7 +6,6 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
-	"github.com/shulganew/gophermart/db/tables"
 )
 
 func init() {
@@ -15,9 +14,9 @@ func init() {
 
 func upTables(ctx context.Context, tx *sql.Tx) error {
 	s := make([]string, 0)
-	s = append(s, tables.CreateENUM)
-	s = append(s, tables.CreateUser)
-	s = append(s, tables.CreateOrders)
+	s = append(s, CreateENUM)
+	s = append(s, CreateUser)
+	s = append(s, CreateOrders)
 
 	for _, q := range s {
 		_, err := tx.ExecContext(ctx, q)

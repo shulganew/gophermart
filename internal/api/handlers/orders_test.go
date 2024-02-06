@@ -13,10 +13,10 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
-	"github.com/shulganew/gophermart/internal/accrual"
 	"github.com/shulganew/gophermart/internal/app"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
+	"github.com/shulganew/gophermart/internal/ports/client"
 	"github.com/shulganew/gophermart/internal/services"
 	"github.com/shulganew/gophermart/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
@@ -76,9 +76,9 @@ func TestOrders(t *testing.T) {
 			userSrv := services.NewUserService(repoUser)
 			calcSrv := services.NewCalcService(repoCalc)
 			orderSrv := services.NewOrderService(repoOrder)
-			client := accrual.NewAccrualClient(conf)
+			client := client.NewAccrualClient(conf)
 
-			accSrv := services.NewAccrualService(repoAcc, conf, client)
+			accSrv := services.NewAccrualService(repoAcc, client)
 
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)

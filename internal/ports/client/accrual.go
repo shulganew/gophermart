@@ -1,4 +1,4 @@
-package accrual
+package client
 
 import (
 	"encoding/json"
@@ -12,16 +12,16 @@ import (
 	"go.uber.org/zap"
 )
 
-type AccrualClient struct {
+type Accrual struct {
 	conf *config.Config
 }
 
-func NewAccrualClient(conf *config.Config) *AccrualClient {
-	return &AccrualClient{conf: conf}
+func NewAccrualClient(conf *config.Config) *Accrual {
+	return &Accrual{conf: conf}
 }
 
 // Get data from Accrual system.
-func (a AccrualClient) GetOrderStatus(orderNr string) (*model.AccrualResponce, error) {
+func (a Accrual) GetOrderStatus(orderNr string) (*model.AccrualResponce, error) {
 	client := &http.Client{}
 
 	url, err := url.JoinPath(a.conf.Accrual, "api", "orders", orderNr)

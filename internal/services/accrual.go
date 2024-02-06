@@ -6,7 +6,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
-	"github.com/shulganew/gophermart/internal/accrual"
 	"github.com/shulganew/gophermart/internal/config"
 	"github.com/shulganew/gophermart/internal/model"
 	"go.uber.org/zap"
@@ -14,8 +13,7 @@ import (
 
 type AccrualService struct {
 	stor          AccrualRepo
-	conf          *config.Config
-	accrualClient *accrual.AccrualClient
+	accrualClient AccrualClient
 }
 
 type AccrualRepo interface {
@@ -25,8 +23,12 @@ type AccrualRepo interface {
 	AddBonuses(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) (err error)
 }
 
-func NewAccrualService(accRepo AccrualRepo, conf *config.Config, ac *accrual.AccrualClient) *AccrualService {
-	return &AccrualService{stor: accRepo, conf: conf, accrualClient: ac}
+type AccrualClient interface {
+	GetOrderStatus(orderNr string) (*model.AccrualResponce, error)
+}
+
+func NewAccrualService(accRepo AccrualRepo, ac AccrualClient) *AccrualService {
+	return &AccrualService{stor: accRepo, accrualClient: ac}
 }
 
 func (o *AccrualService) Run(ctx context.Context) {

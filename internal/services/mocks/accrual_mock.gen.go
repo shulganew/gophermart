@@ -93,3 +93,41 @@ func (mr *MockAccrualRepoMockRecorder) UpdateStatus(ctx, order, status interface
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockAccrualRepo)(nil).UpdateStatus), ctx, order, status)
 }
+
+// MockAccrualClient is a mock of AccrualClient interface.
+type MockAccrualClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockAccrualClientMockRecorder
+}
+
+// MockAccrualClientMockRecorder is the mock recorder for MockAccrualClient.
+type MockAccrualClientMockRecorder struct {
+	mock *MockAccrualClient
+}
+
+// NewMockAccrualClient creates a new mock instance.
+func NewMockAccrualClient(ctrl *gomock.Controller) *MockAccrualClient {
+	mock := &MockAccrualClient{ctrl: ctrl}
+	mock.recorder = &MockAccrualClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAccrualClient) EXPECT() *MockAccrualClientMockRecorder {
+	return m.recorder
+}
+
+// GetOrderStatus mocks base method.
+func (m *MockAccrualClient) GetOrderStatus(orderNr string) (*model.AccrualResponce, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrderStatus", orderNr)
+	ret0, _ := ret[0].(*model.AccrualResponce)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrderStatus indicates an expected call of GetOrderStatus.
+func (mr *MockAccrualClientMockRecorder) GetOrderStatus(orderNr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderStatus", reflect.TypeOf((*MockAccrualClient)(nil).GetOrderStatus), orderNr)
+}

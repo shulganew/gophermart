@@ -7,13 +7,13 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/shulganew/gophermart/internal/api/handlers"
 	"github.com/shulganew/gophermart/internal/api/middlewares"
-	"github.com/shulganew/gophermart/internal/config"
+	"github.com/shulganew/gophermart/internal/app"
 	"github.com/shulganew/gophermart/internal/model"
-	"github.com/shulganew/gophermart/internal/services"
 )
 
 // Chi Router for application.
-func RouteMarket(conf *config.Config, calcSrv *services.CalculationService, userSrv *services.UserService, accSrv *services.AccrualService, orderSrv *services.OrderService) (r *chi.Mux) {
+func RouteMarket(container *app.Container) (r *chi.Mux) {
+	conf := container.GetConfig()
 	r = chi.NewRouter()
 
 	r.Route("/", func(r chi.Router) {
@@ -25,19 +25,19 @@ func RouteMarket(conf *config.Config, calcSrv *services.CalculationService, user
 			})
 		})
 
-		userReg := handlers.NewHandlerRegister(conf, userSrv)
+		userReg := handlers.NewHandlerRegister(conf, container.GetUserService())
 		r.Post("/api/user/register", http.HandlerFunc(userReg.SetUser))
 
-		userLogin := handlers.NewHandlerLogin(conf, userSrv)
+		userLogin := handlers.NewHandlerLogin(conf, container.GetUserService())
 		r.Post("/api/user/login", http.HandlerFunc(userLogin.LoginUser))
 
 		r.Route("/api/user", func(r chi.Router) {
 			r.Use(middlewares.Auth)
-			orderHand := handlers.NewHandlerOrder(conf, calcSrv, accSrv, orderSrv)
+			orderHand := handlers.NewHandlerOrder(conf, container.GetCalculationService(), container.GetAccrualService(), container.GetOrderService())
 			r.Post("/orders", http.HandlerFunc(orderHand.AddOrder))
 			r.Get("/orders", http.HandlerFunc(orderHand.GetOrders))
 
-			balance := handlers.NewHandlerBalance(conf, calcSrv, orderSrv)
+			balance := handlers.NewHandlerBalance(conf, container.GetCalculationService(), container.GetOrderService())
 			r.Get("/balance", http.HandlerFunc(balance.GetBalance))
 			r.Post("/balance/withdraw", http.HandlerFunc(balance.SetWithdraw))
 			r.Get("/withdrawals", http.HandlerFunc(balance.GetWithdrawals))
