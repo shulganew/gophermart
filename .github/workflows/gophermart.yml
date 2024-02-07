@@ -10,7 +10,7 @@ on:
 
 env:
   GOOSE_DRIVER: postgres
-  GOOSE_DBSTRING: "postgresql://market:1@localhost/market"
+  GOOSE_DBSTRING: "postgresql://postgres:postgres@postgres/praktikum?sslmode=disable"
 
 jobs:
 
