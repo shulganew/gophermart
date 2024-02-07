@@ -13,8 +13,8 @@ import (
 )
 
 // Chi Router for application.
-func RouteMarket(container *app.Application) (r *chi.Mux) {
-	conf := container.GetConfig()
+func RouteMarket(application *app.Application) (r *chi.Mux) {
+	conf := application.GetConfig()
 	r = chi.NewRouter()
 
 	r.Route("/", func(r chi.Router) {
@@ -26,19 +26,19 @@ func RouteMarket(container *app.Application) (r *chi.Mux) {
 			})
 		})
 
-		userReg := handlers.NewHandlerRegister(conf, container.GetUserService())
+		userReg := handlers.NewHandlerRegister(conf, application.GetUserService())
 		r.Post("/api/user/register", http.HandlerFunc(userReg.SetUser))
 
-		userLogin := handlers.NewHandlerLogin(conf, container.GetUserService())
+		userLogin := handlers.NewHandlerLogin(conf, application.GetUserService())
 		r.Post("/api/user/login", http.HandlerFunc(userLogin.LoginUser))
 
 		r.Route("/api/user", func(r chi.Router) {
 			r.Use(middlewares.Auth)
-			orderHand := handlers.NewHandlerOrder(conf, container.GetCalculationService(), container.GetAccrualService(), container.GetOrderService())
+			orderHand := handlers.NewHandlerOrder(conf, application.GetCalculationService(), application.GetAccrualService(), application.GetOrderService())
 			r.Post("/orders", http.HandlerFunc(orderHand.AddOrder))
 			r.Get("/orders", http.HandlerFunc(orderHand.GetOrders))
 
-			balance := handlers.NewHandlerBalance(conf, container.GetCalculationService(), container.GetOrderService())
+			balance := handlers.NewHandlerBalance(conf, application.GetCalculationService(), application.GetOrderService())
 			r.Get("/balance", http.HandlerFunc(balance.GetBalance))
 			r.Post("/balance/withdraw", http.HandlerFunc(balance.SetWithdraw))
 			r.Get("/withdrawals", http.HandlerFunc(balance.GetWithdrawals))
