@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/shulganew/gophermart/internal/config"
-	"github.com/shulganew/gophermart/internal/model"
+	"github.com/shulganew/gophermart/internal/entities"
 	"github.com/shulganew/gophermart/internal/services"
 	"go.uber.org/zap"
 )
@@ -20,7 +20,7 @@ func NewHandlerLogin(conf *config.Config, userServ *services.UserService) *Handl
 }
 
 func (h *HandlerLogin) LoginUser(res http.ResponseWriter, req *http.Request) {
-	var user model.User
+	var user entities.User
 
 	if err := json.NewDecoder(req.Body).Decode(&user); err != nil {
 		// If can't decode 400

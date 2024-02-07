@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/lib/pq"
 	"github.com/shopspring/decimal"
-	"github.com/shulganew/gophermart/internal/model"
+	"github.com/shulganew/gophermart/internal/entities"
 )
 
 type OrderService struct {
@@ -18,7 +18,7 @@ type OrderService struct {
 
 type OrderRepo interface {
 	AddOrder(ctx context.Context, userID uuid.UUID, order string, isPreorder bool, withdraw decimal.Decimal) error
-	GetOrders(ctx context.Context, userID uuid.UUID) ([]model.Order, error)
+	GetOrders(ctx context.Context, userID uuid.UUID) ([]entities.Order, error)
 	IsExistForOtherUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error)
 	IsExist(ctx context.Context, order string) (isExist bool, err error)
 }
@@ -27,7 +27,7 @@ func NewOrderService(stor OrderRepo) *OrderService {
 	return &OrderService{stor: stor}
 }
 
-func (m *OrderService) AddOrder(ctx context.Context, isPreOrder bool, order *model.Order) (err error) {
+func (m *OrderService) AddOrder(ctx context.Context, isPreOrder bool, order *entities.Order) (err error) {
 	// Add order to the database.
 	err = m.stor.AddOrder(ctx, order.UserID, order.OrderNr, isPreOrder, order.Withdrawn)
 	if err != nil {
@@ -42,7 +42,7 @@ func (m *OrderService) AddOrder(ctx context.Context, isPreOrder bool, order *mod
 	return nil
 }
 
-func (m *OrderService) GetOrders(ctx context.Context, userID uuid.UUID) (orders []model.Order, err error) {
+func (m *OrderService) GetOrders(ctx context.Context, userID uuid.UUID) (orders []entities.Order, err error) {
 	orders, err = m.stor.GetOrders(ctx, userID)
 	if err != nil {
 		return nil, err

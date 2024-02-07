@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/shulganew/gophermart/internal/config"
-	"github.com/shulganew/gophermart/internal/model"
+	"github.com/shulganew/gophermart/internal/entities"
 	"go.uber.org/zap"
 )
 
@@ -21,7 +21,7 @@ func NewAccrualClient(conf *config.Config) *Accrual {
 }
 
 // Get data from Accrual system.
-func (a Accrual) GetOrderStatus(orderNr string) (*model.AccrualResponce, error) {
+func (a Accrual) GetOrderStatus(orderNr string) (*entities.AccrualResponce, error) {
 	client := &http.Client{}
 
 	url, err := url.JoinPath(a.conf.Accrual, "api", "orders", orderNr)
@@ -44,11 +44,12 @@ func (a Accrual) GetOrderStatus(orderNr string) (*model.AccrualResponce, error) 
 	}
 
 	//Load data to AccrualResponce from json
-	var accResp model.AccrualResponce
+	var accResp entities.AccrualResponce
 	err = json.NewDecoder(res.Body).Decode(&accResp)
 	if err != nil {
 		return nil, err
 	}
+	
 	defer func() {
 		err := res.Body.Close()
 		zap.S().Errorln("Can't close response body: ", err)

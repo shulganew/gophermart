@@ -11,7 +11,7 @@ import (
 	uuid "github.com/gofrs/uuid"
 	gomock "github.com/golang/mock/gomock"
 	decimal "github.com/shopspring/decimal"
-	model "github.com/shulganew/gophermart/internal/model"
+	model "github.com/shulganew/gophermart/internal/entities"
 )
 
 // MockAccrualRepo is a mock of AccrualRepo interface.

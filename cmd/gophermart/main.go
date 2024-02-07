@@ -7,31 +7,28 @@ import (
 
 	"github.com/shulganew/gophermart/internal/api/router"
 	"github.com/shulganew/gophermart/internal/app"
-	"github.com/shulganew/gophermart/internal/config"
-	_ "github.com/shulganew/gophermart/migrations"
 	"go.uber.org/zap"
 )
 
 func main() {
+	// Init application logging.
 	app.InitLog()
 
+	// Init application context.
 	ctx, cancel := app.InitContext()
 	defer cancel()
 
-	conf := config.InitConfig()
-
-	db, err := app.InitDB(ctx, conf)
+	// Init application.
+	application, err := app.InitApp(ctx)
 	if err != nil {
-		db = nil
-		zap.S().Errorln("Can't connect to Database!", err)
 		panic(err)
 	}
+
+	// Close DB connection
 	defer func() {
-		err := db.Close()
+		err := application.GetRepo().GetDB().Close()
 		zap.S().Errorln("Could not close db connection", err)
 	}()
-	// Init application
-	container := app.InitApp(ctx, conf, db)
 
 	// Graceful shotdown
 	go func(ctx context.Context) {
@@ -41,7 +38,7 @@ func main() {
 	}(ctx)
 
 	//start web
-	if err := http.ListenAndServe(conf.Address, router.RouteMarket(container)); err != nil {
+	if err := http.ListenAndServe(application.GetConfig().Address, router.RouteMarket(application)); err != nil {
 		panic(err)
 	}
 }

@@ -16,7 +16,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/app"
 	"github.com/shulganew/gophermart/internal/config"
-	"github.com/shulganew/gophermart/internal/model"
+	"github.com/shulganew/gophermart/internal/entities"
 	"github.com/shulganew/gophermart/internal/services"
 	"github.com/shulganew/gophermart/internal/services/mocks"
 
@@ -120,7 +120,7 @@ func TestWithdraw(t *testing.T) {
 
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
-			user := model.User{UUID: uuid, Login: "Test123", Password: "123456"}
+			user := entities.User{UUID: uuid, Login: "Test123", Password: "123456"}
 
 			_ = repoUser.EXPECT().
 				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -156,7 +156,7 @@ func TestWithdraw(t *testing.T) {
 			assert.NoError(t, err)
 			assert.False(t, exist)
 
-			wd := model.Withdraw{OrderNr: tt.Order, Withdrawn: tt.amount.InexactFloat64()}
+			wd := entities.Withdraw{OrderNr: tt.Order, Withdrawn: tt.amount.InexactFloat64()}
 
 			jsonWs, err := json.Marshal(wd)
 			if err != nil {
@@ -171,7 +171,7 @@ func TestWithdraw(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, tt.requestURL, body)
 
 			// add User and isRegister true tu context
-			ctxUser := context.WithValue(req.Context(), model.MiddlwDTO{}, model.NewMiddlwDTO(*userID, true))
+			ctxUser := context.WithValue(req.Context(), entities.MiddlwDTO{}, entities.NewMiddlwDTO(*userID, true))
 
 			req = req.WithContext(context.WithValue(ctxUser, chi.RouteCtxKey, rctx))
 
@@ -258,7 +258,7 @@ func TestBalance(t *testing.T) {
 
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
-			user := model.User{UUID: uuid, Login: "Test123", Password: "123"}
+			user := entities.User{UUID: uuid, Login: "Test123", Password: "123"}
 
 			_ = repoUser.EXPECT().
 				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -284,7 +284,7 @@ func TestBalance(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, tt.requestURL, nil)
 
 			// add User and isRegister true tu context
-			ctxUser := context.WithValue(req.Context(), model.MiddlwDTO{}, model.NewMiddlwDTO(*userID, true))
+			ctxUser := context.WithValue(req.Context(), entities.MiddlwDTO{}, entities.NewMiddlwDTO(*userID, true))
 
 			req = req.WithContext(context.WithValue(ctxUser, chi.RouteCtxKey, rctx))
 
@@ -312,7 +312,7 @@ func TestBalance(t *testing.T) {
 
 			// Unmarshal body
 
-			var balance model.UserBalance
+			var balance entities.UserBalance
 			err = json.NewDecoder(res.Body).Decode(&balance)
 			require.NoError(t, err)
 

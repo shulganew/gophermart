@@ -6,7 +6,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
-	"github.com/shulganew/gophermart/internal/model"
+	"github.com/shulganew/gophermart/internal/entities"
 )
 
 type CalculationService struct {
@@ -17,9 +17,9 @@ type CalcRepo interface {
 	GetBonuses(ctx context.Context, userID uuid.UUID) (accrual decimal.Decimal, err error)
 	GetWithdrawn(ctx context.Context, userID uuid.UUID) (accrual decimal.Decimal, err error)
 	GetWithdrawals(ctx context.Context, userID uuid.UUID) (withdrawn decimal.Decimal, err error)
-	Withdrawals(ctx context.Context, userID uuid.UUID) ([]model.Withdrawals, error)
+	Withdrawals(ctx context.Context, userID uuid.UUID) ([]entities.Withdrawals, error)
 	IsPreOrder(ctx context.Context, userID uuid.UUID, order string) (isPreOrder bool, err error)
-	MovePreOrder(ctx context.Context, order *model.Order) (err error)
+	MovePreOrder(ctx context.Context, order *entities.Order) (err error)
 	SetAccrual(ctx context.Context, order string, accrual decimal.Decimal) (err error)
 	MakeWithdrawn(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) error
 }
@@ -33,7 +33,7 @@ func (m *CalculationService) IsPreOrder(ctx context.Context, userID uuid.UUID, o
 }
 
 // Make preorder (created with withdrawals) regular order.
-func (m *CalculationService) MovePreOrder(ctx context.Context, order *model.Order) (err error) {
+func (m *CalculationService) MovePreOrder(ctx context.Context, order *entities.Order) (err error) {
 	err = m.stor.MovePreOrder(ctx, order)
 	if err != nil {
 		return fmt.Errorf("can't move preOrder to Oreder: %w", err)
@@ -79,7 +79,7 @@ func (m *CalculationService) CheckBalance(ctx context.Context, userID uuid.UUID,
 	return true, nil
 }
 
-func (m *CalculationService) GetWithdrawals(ctx context.Context, userID uuid.UUID) (wds []model.Withdrawals, err error) {
+func (m *CalculationService) GetWithdrawals(ctx context.Context, userID uuid.UUID) (wds []entities.Withdrawals, err error) {
 	wds, err = m.stor.Withdrawals(ctx, userID)
 	return
 }

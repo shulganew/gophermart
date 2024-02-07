@@ -7,7 +7,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/config"
-	"github.com/shulganew/gophermart/internal/model"
+	"github.com/shulganew/gophermart/internal/entities"
 	"go.uber.org/zap"
 )
 
@@ -17,14 +17,14 @@ type AccrualService struct {
 }
 
 type AccrualRepo interface {
-	LoadPocessing(ctx context.Context) ([]model.Order, error)
-	UpdateStatus(ctx context.Context, order string, status model.Status) (err error)
+	LoadPocessing(ctx context.Context) ([]entities.Order, error)
+	UpdateStatus(ctx context.Context, order string, status entities.Status) (err error)
 	SetAccrual(ctx context.Context, order string, accrual decimal.Decimal) (err error)
 	AddBonuses(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) (err error)
 }
 
 type AccrualClient interface {
-	GetOrderStatus(orderNr string) (*model.AccrualResponce, error)
+	GetOrderStatus(orderNr string) (*entities.AccrualResponce, error)
 }
 
 func NewAccrualService(accRepo AccrualRepo, ac AccrualClient) *AccrualService {
@@ -49,7 +49,7 @@ func (o *AccrualService) FetchAccrual(ctx context.Context) {
 
 	for _, order := range loadOrders {
 		// Set order status to PROCESSING in database
-		err := o.stor.UpdateStatus(ctx, order.OrderNr, model.Status(model.PROCESSING))
+		err := o.stor.UpdateStatus(ctx, order.OrderNr, entities.Status(entities.PROCESSING))
 		if err != nil {
 			zap.S().Errorln("Can't update status to PROCESSING in database", err)
 			continue
@@ -61,13 +61,13 @@ func (o *AccrualService) FetchAccrual(ctx context.Context) {
 			continue
 		}
 
-		status := model.Status(accResp.Status)
+		status := entities.Status(accResp.Status)
 		accrual := decimal.NewFromFloat(accResp.Accrual)
 
 		zap.S().Infoln("Get answer from Accrual system: ", "Order ", order, " status: ", status, " Accural: ", accrual)
 
 		//if status PROCESSED or INVALID - update db and remove from orders
-		if status == model.PROCESSED || status == model.INVALID {
+		if status == entities.PROCESSED || status == entities.INVALID {
 			err = o.stor.UpdateStatus(ctx, order.OrderNr, status)
 			if err != nil {
 				zap.S().Errorln("Get error during deleted poccessed order", err)

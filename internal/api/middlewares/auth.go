@@ -5,14 +5,14 @@ import (
 	"net/http"
 
 	"github.com/gofrs/uuid"
-	"github.com/shulganew/gophermart/internal/model"
+	"github.com/shulganew/gophermart/internal/entities"
 	"github.com/shulganew/gophermart/internal/services"
 	"go.uber.org/zap"
 )
 
 func Auth(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		passVal := req.Context().Value(model.CtxPassKey{})
+		passVal := req.Context().Value(entities.CtxPassKey{})
 		pass, ok := passVal.(string)
 		if !ok {
 			zap.S().Errorln("Can't git pass key from context.")
@@ -30,7 +30,7 @@ func Auth(h http.Handler) http.Handler {
 				isSet = false
 			}
 		}
-		ctx := context.WithValue(req.Context(), model.MiddlwDTO{}, model.NewMiddlwDTO(userID, isSet))
+		ctx := context.WithValue(req.Context(), entities.MiddlwDTO{}, entities.NewMiddlwDTO(userID, isSet))
 		h.ServeHTTP(res, req.WithContext(ctx))
 	})
 }

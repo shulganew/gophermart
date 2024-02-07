@@ -12,7 +12,7 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/lib/pq"
 	"github.com/shulganew/gophermart/internal/config"
-	"github.com/shulganew/gophermart/internal/model"
+	"github.com/shulganew/gophermart/internal/entities"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -24,7 +24,7 @@ type UserService struct {
 
 type UserRepo interface {
 	AddUser(ctx context.Context, login string, hash string) (*uuid.UUID, error)
-	GetByLogin(ctx context.Context, login string) (*model.User, error)
+	GetByLogin(ctx context.Context, login string) (*entities.User, error)
 }
 
 func NewUserService(stor UserRepo) *UserService {
@@ -91,7 +91,7 @@ func (r UserService) CheckPassword(password string, hashedPassword string) error
 
 // Create JWT token.
 func BuildJWTString(userID uuid.UUID, pass string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, model.Claims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, entities.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.TokenExp)),
 		},
@@ -108,7 +108,7 @@ func BuildJWTString(userID uuid.UUID, pass string) (string, error) {
 
 // Retrive user's UUID from JWT string.
 func GetUserIDJWT(tokenString string, pass string) (userID uuid.UUID, err error) {
-	claims := &model.Claims{}
+	claims := &entities.Claims{}
 	_, err = jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
 		return []byte(pass), nil
 	})
@@ -118,7 +118,7 @@ func GetUserIDJWT(tokenString string, pass string) (userID uuid.UUID, err error)
 
 // Create jwt token from string.
 func GetJWT(tokenString string, pass string) (token *jwt.Token, err error) {
-	claims := &model.Claims{}
+	claims := &entities.Claims{}
 	token, err = jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
 		return []byte(pass), nil
 	})

@@ -7,6 +7,7 @@ function check(){
 	if [ $2 -ne 0 ]; then res=$(echo "$1: {$res} Error! $2"); echo "ERROR!  Iter:" $res;exit 1; else res=$(echo "$1: ${res} PASS "); fi
 	echo "Iter:" $res
 }
+GOOSE_DRIVER=postgres GOOSE_DBSTRING="postgresql://postgres:postgres@postgres/praktikum" goose -dir ./migrations  up
 PGPASSWORD=postgres psql -h postgres -U postgres -d praktikum -c "truncate TABLE users cascade"
 
 go build -o ./cmd/gophermart/gophermart  ./cmd/gophermart/main.go

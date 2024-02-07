@@ -37,7 +37,14 @@ export ACCRUAL_SYSTEM_ADDRESS=localhost:8090
 ```bash
 make pg
 ```
-* Миграция
+* Миграция goose
+```bash
+https://github.com/pressly/goose
+GOOSE_DRIVER=postgres
+GOOSE_DBSTRING="postgresql://market:1@localhost/market"
+GOOSE_DRIVER=postgres GOOSE_DBSTRING="postgresql://market:1@localhost/market" goose up
+GOOSE_DRIVER=postgres GOOSE_DBSTRING="postgresql://postgres:postgres@postgres/praktikum" goose -dir ./migrations  up
+```
 ```bash
 make pg-up
 ```

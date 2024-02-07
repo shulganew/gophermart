@@ -15,7 +15,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/shulganew/gophermart/internal/app"
 	"github.com/shulganew/gophermart/internal/config"
-	"github.com/shulganew/gophermart/internal/model"
+	"github.com/shulganew/gophermart/internal/entities"
 	"github.com/shulganew/gophermart/internal/services"
 	"github.com/shulganew/gophermart/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
@@ -73,14 +73,14 @@ func TestUserlogin(t *testing.T) {
 			cPass, err := bcrypt.GenerateFromPassword([]byte(tt.passDB), bcrypt.DefaultCost)
 			assert.NoError(t, err)
 
-			dbUser := model.User{UUID: uuid, Login: tt.login, PassHash: string(cPass)}
+			dbUser := entities.User{UUID: uuid, Login: tt.login, PassHash: string(cPass)}
 
 			_ = repoUser.EXPECT().
 				GetByLogin(gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(&dbUser, nil)
 
-			loginUser := model.User{UUID: uuid, Login: tt.login, Password: tt.passLogin}
+			loginUser := entities.User{UUID: uuid, Login: tt.login, Password: tt.passLogin}
 
 			jsonWs, err := json.Marshal(loginUser)
 			if err != nil {

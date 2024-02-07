@@ -8,4 +8,3 @@ GRANT ALL PRIVILEGES ON DATABASE praktikum TO market;
 -- need for migrations (issue https://github.com/golang-migrate/migrate/issues/826)
 ALTER DATABASE market OWNER TO market;
 ALTER DATABASE praktikum OWNER TO market;
-

@@ -15,7 +15,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/app"
 	"github.com/shulganew/gophermart/internal/config"
-	"github.com/shulganew/gophermart/internal/model"
+	"github.com/shulganew/gophermart/internal/entities"
 	"github.com/shulganew/gophermart/internal/ports/client"
 	"github.com/shulganew/gophermart/internal/services"
 	"github.com/shulganew/gophermart/internal/services/mocks"
@@ -27,7 +27,7 @@ func TestOrders(t *testing.T) {
 	tests := []struct {
 		name       string
 		requestURL string
-		orders     []model.Order
+		orders     []entities.Order
 		statusCode int
 	}{
 		{
@@ -43,7 +43,7 @@ func TestOrders(t *testing.T) {
 			name: "No Orders",
 
 			requestURL: "http://localhost:8080/api/user/orders",
-			orders:     make([]model.Order, 0),
+			orders:     make([]entities.Order, 0),
 			statusCode: http.StatusNoContent,
 		},
 	}
@@ -82,7 +82,7 @@ func TestOrders(t *testing.T) {
 
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
-			user := model.User{UUID: uuid, Login: "Test123", Password: "123"}
+			user := entities.User{UUID: uuid, Login: "Test123", Password: "123"}
 
 			_ = repoUser.EXPECT().
 				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -103,7 +103,7 @@ func TestOrders(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, tt.requestURL, nil)
 
 			// add User and isRegister true tu context
-			ctxUser := context.WithValue(req.Context(), model.MiddlwDTO{}, model.NewMiddlwDTO(*userID, true))
+			ctxUser := context.WithValue(req.Context(), entities.MiddlwDTO{}, entities.NewMiddlwDTO(*userID, true))
 
 			req = req.WithContext(context.WithValue(ctxUser, chi.RouteCtxKey, rctx))
 
@@ -129,7 +129,7 @@ func TestOrders(t *testing.T) {
 			// Unmarshal body
 
 			if res.StatusCode != http.StatusNoContent {
-				var responses []model.OrderResponse
+				var responses []entities.OrderResponse
 				err = json.NewDecoder(res.Body).Decode(&responses)
 				require.NoError(t, err)
 
@@ -147,11 +147,11 @@ func TestOrders(t *testing.T) {
 	}
 }
 
-func getOrders() []model.Order {
+func getOrders() []entities.Order {
 	userID, err := uuid.DefaultGenerator.NewV7()
 	if err != nil {
 		log.Fatalln(err)
 	}
-	return []model.Order{*model.NewOrder(userID, goluhn.Generate(10), false, decimal.NewFromFloat(20), decimal.NewFromFloat(200)),
-		*model.NewOrder(userID, goluhn.Generate(10), false, decimal.NewFromFloat(5), decimal.NewFromFloat(100))}
+	return []entities.Order{*entities.NewOrder(userID, goluhn.Generate(10), false, decimal.NewFromFloat(20), decimal.NewFromFloat(200)),
+		*entities.NewOrder(userID, goluhn.Generate(10), false, decimal.NewFromFloat(5), decimal.NewFromFloat(100))}
 }

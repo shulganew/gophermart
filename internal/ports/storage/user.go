@@ -8,11 +8,11 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgerrcode"
 	"github.com/lib/pq"
-	"github.com/shulganew/gophermart/internal/model"
+	"github.com/shulganew/gophermart/internal/entities"
 	"go.uber.org/zap"
 )
 
-func (base *Repo) AddUser(ctx context.Context, login string, hash string) (*uuid.UUID, error) {
+func (r *Repo) AddUser(ctx context.Context, login string, hash string) (*uuid.UUID, error) {
 	query := `
 	INSERT INTO users (login, password_hash) 
 	VALUES ($1, $2)
@@ -20,7 +20,7 @@ func (base *Repo) AddUser(ctx context.Context, login string, hash string) (*uuid
 	`
 	userID := &uuid.UUID{}
 
-	err := base.master.GetContext(ctx, userID, query, login, hash)
+	err := r.db.GetContext(ctx, userID, query, login, hash)
 	if err != nil {
 		var pgErr *pq.Error
 		// if URL exist in DataBase
@@ -33,19 +33,17 @@ func (base *Repo) AddUser(ctx context.Context, login string, hash string) (*uuid
 }
 
 // Retrive User by login.
-func (base *Repo) GetByLogin(ctx context.Context, login string) (*model.User, error) {
+func (r *Repo) GetByLogin(ctx context.Context, login string) (*entities.User, error) {
 	query := `
 	SELECT user_id, password_hash 
 	FROM users 
 	WHERE login = $1
 	`
-	user := model.User{Login: login}
+	user := entities.User{Login: login}
 	zap.S().Infoln("user login: ", login)
-	err := base.master.GetContext(ctx, &user, query, login)
+	err := r.db.GetContext(ctx, &user, query, login)
 	if err != nil {
 		return nil, fmt.Errorf("error during get user by login from storage. User not valid: %w", err)
 	}
 	return &user, nil
 }
-
-

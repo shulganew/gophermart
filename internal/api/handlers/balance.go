@@ -7,7 +7,7 @@ import (
 	"github.com/ShiraazMoollatjie/goluhn"
 	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/config"
-	"github.com/shulganew/gophermart/internal/model"
+	"github.com/shulganew/gophermart/internal/entities"
 	"github.com/shulganew/gophermart/internal/services"
 	"go.uber.org/zap"
 )
@@ -24,8 +24,8 @@ func NewHandlerBalance(conf *config.Config, calc *services.CalculationService, o
 
 func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) {
 	// get UserID from cxt values
-	ctxConfigVal := req.Context().Value(model.MiddlwDTO{})
-	ctxConfig, ok := ctxConfigVal.(model.MiddlwDTO)
+	ctxConfigVal := req.Context().Value(entities.MiddlwDTO{})
+	ctxConfig, ok := ctxConfigVal.(entities.MiddlwDTO)
 	if !ok {
 		errt := "Cat't get MiddlwDTO from context."
 		zap.S().Errorln(errt)
@@ -58,7 +58,7 @@ func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	userBalance := model.NewUserBalance(bonuses, withdrawn)
+	userBalance := entities.NewUserBalance(bonuses, withdrawn)
 
 	jsonBalance, err := json.Marshal(userBalance)
 	if err != nil {
@@ -79,8 +79,8 @@ func (u *HandlerBalance) GetBalance(res http.ResponseWriter, req *http.Request) 
 
 func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request) {
 	// get UserID from cxt values
-	ctxConfigVal := req.Context().Value(model.MiddlwDTO{})
-	ctxConfig, ok := ctxConfigVal.(model.MiddlwDTO)
+	ctxConfigVal := req.Context().Value(entities.MiddlwDTO{})
+	ctxConfig, ok := ctxConfigVal.(entities.MiddlwDTO)
 	if !ok {
 		errt := "Cat't get MiddlwDTO from context."
 		zap.S().Errorln(errt)
@@ -95,7 +95,7 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 
 	userID := ctxConfig.GetUserID()
 
-	var wd model.Withdraw
+	var wd entities.Withdraw
 	if err := json.NewDecoder(req.Body).Decode(&wd); err != nil {
 		// If can't decode 400
 		http.Error(res, err.Error(), http.StatusBadRequest)
@@ -130,7 +130,7 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 	}
 
 	// Create preorder with withdrawal and add storage with mark preoreder bool = true
-	order := model.NewOrder(userID, wd.OrderNr, true, amount, decimal.Zero)
+	order := entities.NewOrder(userID, wd.OrderNr, true, amount, decimal.Zero)
 	existed, err := u.orderSrv.IsExist(req.Context(), order.OrderNr)
 	if err != nil {
 		// 500
@@ -176,8 +176,8 @@ func (u *HandlerBalance) SetWithdraw(res http.ResponseWriter, req *http.Request)
 
 func (u *HandlerBalance) GetWithdrawals(res http.ResponseWriter, req *http.Request) {
 	// get UserID from cxt values
-	ctxConfigVal := req.Context().Value(model.MiddlwDTO{})
-	ctxConfig, ok := ctxConfigVal.(model.MiddlwDTO)
+	ctxConfigVal := req.Context().Value(entities.MiddlwDTO{})
+	ctxConfig, ok := ctxConfigVal.(entities.MiddlwDTO)
 	if !ok {
 		errt := "Cat't get MiddlwDTO from context."
 		zap.S().Errorln(errt)

@@ -8,7 +8,8 @@ import (
 )
 
 // A container pattern.
-type Container struct {
+type Application struct {
+	stor     *storage.Repo
 	calcSrv  *services.CalculationService
 	client   *client.Accrual
 	userSrv  *services.UserService
@@ -17,37 +18,43 @@ type Container struct {
 	conf     *config.Config
 }
 
-func NewContainer(conf *config.Config, stor *storage.Repo) *Container {
-	container := &Container{}
-	container.conf = conf
-	container.calcSrv = services.NewCalcService(stor)
-	container.userSrv = services.NewUserService(stor)
-	container.client = client.NewAccrualClient(conf)
-	container.accSrv = services.NewAccrualService(stor, container.client)
-	container.orderSrv = services.NewOrderService(stor)
-	return container
+func NewApp(conf *config.Config, stor *storage.Repo) *Application {
+	application := &Application{}
+	application.conf = conf
+	application.calcSrv = services.NewCalcService(stor)
+	application.userSrv = services.NewUserService(stor)
+	application.client = client.NewAccrualClient(conf)
+	application.accSrv = services.NewAccrualService(stor, application.client)
+	application.orderSrv = services.NewOrderService(stor)
+	application.stor = stor
+
+	return application
 }
 
-func (c *Container) GetCalculationService() *services.CalculationService {
+func (c *Application) GetCalculationService() *services.CalculationService {
 	return c.calcSrv
 }
 
-func (c *Container) GetAccrual() *client.Accrual {
+func (c *Application) GetAccrual() *client.Accrual {
 	return c.client
 }
 
-func (c *Container) GetUserService() *services.UserService {
+func (c *Application) GetUserService() *services.UserService {
 	return c.userSrv
 }
 
-func (c *Container) GetAccrualService() *services.AccrualService {
+func (c *Application) GetAccrualService() *services.AccrualService {
 	return c.accSrv
 }
 
-func (c *Container) GetOrderService() *services.OrderService {
+func (c *Application) GetOrderService() *services.OrderService {
 	return c.orderSrv
 }
 
-func (c *Container) GetConfig() *config.Config {
+func (c *Application) GetConfig() *config.Config {
 	return c.conf
+}
+
+func (c *Application) GetRepo() *storage.Repo {
+	return c.stor
 }

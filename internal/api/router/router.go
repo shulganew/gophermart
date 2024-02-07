@@ -8,11 +8,12 @@ import (
 	"github.com/shulganew/gophermart/internal/api/handlers"
 	"github.com/shulganew/gophermart/internal/api/middlewares"
 	"github.com/shulganew/gophermart/internal/app"
-	"github.com/shulganew/gophermart/internal/model"
+
+	"github.com/shulganew/gophermart/internal/entities"
 )
 
 // Chi Router for application.
-func RouteMarket(container *app.Container) (r *chi.Mux) {
+func RouteMarket(container *app.Application) (r *chi.Mux) {
 	conf := container.GetConfig()
 	r = chi.NewRouter()
 
@@ -20,7 +21,7 @@ func RouteMarket(container *app.Container) (r *chi.Mux) {
 		// send password for enctription to middlewares
 		r.Use(func(h http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				ctx := context.WithValue(r.Context(), model.CtxPassKey{}, conf.PassJWT)
+				ctx := context.WithValue(r.Context(), entities.CtxPassKey{}, conf.PassJWT)
 				h.ServeHTTP(w, r.WithContext(ctx))
 			})
 		})

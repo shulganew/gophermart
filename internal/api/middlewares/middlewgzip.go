@@ -27,7 +27,7 @@ func MidlewZip(h http.Handler) http.Handler {
 		uri := r.RequestURI
 		method := r.Method
 
-		//check if client send compressed content in the body (gzip only)
+		// check if client send compressed content in the body (gzip only)
 		if strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
 			var reader io.Reader
 			gz, err := gzip.NewReader(r.Body)
@@ -49,16 +49,16 @@ func MidlewZip(h http.Handler) http.Handler {
 				return
 			}
 
-			//update body with unzipped file
+			// update body with unzipped file
 			read := bytes.NewReader(body)
 			readCloser := io.NopCloser(read)
 
-			//send to ServeHTTP without encoding
+			// send to ServeHTTP without encoding
 			r.Header.Del("Content-Encoding")
 			r.Body = readCloser
 		}
 
-		//check if client support gzip
+		// check if client support gzip
 		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 			h.ServeHTTP(w, r)
 			return

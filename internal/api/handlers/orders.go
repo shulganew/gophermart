@@ -7,7 +7,7 @@ import (
 
 	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/config"
-	"github.com/shulganew/gophermart/internal/model"
+	"github.com/shulganew/gophermart/internal/entities"
 	"github.com/shulganew/gophermart/internal/services"
 	"go.uber.org/zap"
 )
@@ -25,8 +25,8 @@ func NewHandlerOrder(conf *config.Config, calc *services.CalculationService, acc
 
 func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 	// Get UserID from cxt values.
-	ctxConfigVal := req.Context().Value(model.MiddlwDTO{})
-	ctxConfig, ok := ctxConfigVal.(model.MiddlwDTO)
+	ctxConfigVal := req.Context().Value(entities.MiddlwDTO{})
+	ctxConfig, ok := ctxConfigVal.(entities.MiddlwDTO)
 	if !ok {
 		errt := "Cat't get MiddlwDTO from context."
 		zap.S().Errorln(errt)
@@ -52,7 +52,7 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 	orderNr := string(body)
 	zap.S().Infoln("Set Order for user: ", userID, " Order: ", orderNr)
 	// Create order
-	order := model.NewOrder(userID, orderNr, false, decimal.Zero, decimal.Zero)
+	order := entities.NewOrder(userID, orderNr, false, decimal.Zero, decimal.Zero)
 
 	isValid := order.IsValid()
 	if !isValid {
@@ -139,8 +139,8 @@ func (u *HandlerOrder) AddOrder(res http.ResponseWriter, req *http.Request) {
 
 func (u *HandlerOrder) GetOrders(res http.ResponseWriter, req *http.Request) {
 	// get UserID from cxt values
-	ctxConfigVal := req.Context().Value(model.MiddlwDTO{})
-	ctxConfig, ok := ctxConfigVal.(model.MiddlwDTO)
+	ctxConfigVal := req.Context().Value(entities.MiddlwDTO{})
+	ctxConfig, ok := ctxConfigVal.(entities.MiddlwDTO)
 	if !ok {
 		errt := "Cat't get MiddlwDTO from context."
 		zap.S().Errorln(errt)

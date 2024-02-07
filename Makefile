@@ -7,7 +7,7 @@
 pg: 
 	docker run --rm \
 		--name=marketdb_v2 \
-		-v $(abspath ./db/init/):/docker-entrypoint-initdb.d \
+		-v $(abspath ./docker/init/):/docker-entrypoint-initdb.d \
 		-e POSTGRES_PASSWORD="postgres" \
 		-d \
 		-p 5432:5432 \
@@ -17,9 +17,6 @@ pg:
 .PHONY: pg-stop
 pg-stop:
 	docker stop marketdb_v2
-
-
-
 
 #Linter 
 

@@ -17,7 +17,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/shulganew/gophermart/internal/app"
 	"github.com/shulganew/gophermart/internal/config"
-	"github.com/shulganew/gophermart/internal/model"
+	"github.com/shulganew/gophermart/internal/entities"
 	"github.com/shulganew/gophermart/internal/services"
 	"github.com/shulganew/gophermart/internal/services/mocks"
 	"github.com/stretchr/testify/assert"
@@ -75,7 +75,7 @@ func TestUser(t *testing.T) {
 			uuid, err := uuid.NewV7()
 			assert.NoError(t, err)
 
-			user := model.User{UUID: uuid, Login: tt.login, Password: string(tt.passLogin)}
+			user := entities.User{UUID: uuid, Login: tt.login, Password: string(tt.passLogin)}
 
 			_ = repoUser.EXPECT().
 				AddUser(gomock.Any(), gomock.Any(), gomock.Any()).

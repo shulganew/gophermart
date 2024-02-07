@@ -10,7 +10,7 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	gomock "github.com/golang/mock/gomock"
-	model "github.com/shulganew/gophermart/internal/model"
+	model "github.com/shulganew/gophermart/internal/entities"
 )
 
 // MockUserRepo is a mock of UserRepo interface.
