@@ -8,6 +8,10 @@ on:
       - main
       - master
 
+env:
+  GOOSE_DRIVER: postgres
+  GOOSE_DBSTRING: "postgresql://market:1@localhost/market"
+
 jobs:
 
   build:
@@ -20,8 +24,6 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: praktikum
-          GOOSE_DRIVER: postgres
-          GOOSE_DBSTRING: "postgresql://market:1@localhost/market"
         options: >-
           --health-cmd pg_isready
           --health-interval 5s
@@ -55,7 +57,7 @@ jobs:
       - name: Install Goose package and make migration
         run: |
           go install github.com/pressly/goose/v3/cmd/goose@latest
-          GOOSE_DRIVER=postgres GOOSE_DBSTRING="postgresql://postgres:postgres@postgres/praktikum" goose -dir ./migrations up
+          goose -dir ./migrations up
 
       - name: Test
         run: |

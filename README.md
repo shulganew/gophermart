@@ -44,6 +44,8 @@ GOOSE_DRIVER=postgres
 GOOSE_DBSTRING="postgresql://market:1@localhost/market"
 GOOSE_DRIVER=postgres GOOSE_DBSTRING="postgresql://market:1@localhost/market" goose up
 GOOSE_DRIVER=postgres GOOSE_DBSTRING="postgresql://postgres:postgres@postgres/praktikum" goose -dir ./migrations  up
+export GOOSE_DRIVER=postgres
+export GOOSE_DBSTRING="postgresql://postgres:postgres@postgres/praktikum"
 ```
 ```bash
 make pg-up
