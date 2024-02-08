@@ -1,37 +1,41 @@
 package main
 
 import (
-	"net/http"
+	"context"
+	"os"
 
-	"github.com/shulganew/gophermart/internal/api/router"
 	"github.com/shulganew/gophermart/internal/app"
-	"github.com/shulganew/gophermart/internal/config"
-	"github.com/shulganew/gophermart/internal/storage"
+	"github.com/shulganew/gophermart/internal/app/server"
 	"go.uber.org/zap"
 )
 
 func main() {
-
+	// Init application logging.
 	app.InitLog()
 
+	// Init application context.
 	ctx, cancel := app.InitContext()
 	defer cancel()
 
-	conf := config.InitConfig()
-
-	db, err := storage.InitDB(ctx, conf.DSN)
+	// Init application.
+	application, err := app.InitApp(ctx)
 	if err != nil {
-		db = nil
-		zap.S().Errorln("Can't connect to Database!", err)
 		panic(err)
 	}
-	defer db.Close(ctx)
 
-	//Init application
-	market, register := app.InitApp(ctx, *conf, db)
+	// Close DB connection.
+	defer func() {
+		err := application.Repo().DB().Close()
+		zap.S().Errorln("Could not close db connection", err)
+	}()
 
-	//start web
-	if err := http.ListenAndServe(conf.Address, router.RouteShear(conf, market, register)); err != nil {
-		panic(err)
-	}
+	// Graceful shotdown.
+	go func(ctx context.Context) {
+		<-ctx.Done()
+		zap.S().Infoln("Graceful shutdown...")
+		os.Exit(0)
+	}(ctx)
+
+	// Run server.
+	server.NewMarket(application).Run()
 }

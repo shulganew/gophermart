@@ -6,33 +6,41 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/shulganew/gophermart/internal/config"
-	"github.com/shulganew/gophermart/internal/services"
-	"github.com/shulganew/gophermart/internal/storage"
+	"github.com/jmoiron/sqlx"
+
+	"github.com/shulganew/gophermart/internal/app/config"
+	"github.com/shulganew/gophermart/internal/ports/storage"
 	"go.uber.org/zap"
 )
 
-func InitApp(ctx context.Context, conf config.Config, db *pgx.Conn) (*services.Market, *services.Register) {
+func InitApp(ctx context.Context) (application *Application, err error) {
+	// Get application config.
+	conf := config.InitConfig()
 
-	// Load storage
-	stor, err := storage.NewRepo(ctx, db)
+	// Connection for Gophermart.
+	db, err := sqlx.Connect(config.DataBaseType, conf.DSN)
 	if err != nil {
-		zap.S().Errorln("Error connect to DB from env: ", err)
-
+		return nil, err
 	}
 
-	market := services.NewMarket(stor)
+	// Load storage.
+	stor, err := storage.NewRepo(ctx, db)
+	if err != nil {
+		return nil, err
+	}
 
-	register := services.NewRegister()
+	// Create config Container
+	application = NewApp(conf, stor)
+
+	// Run observe status of orderses in Accrual service.
+	accSrv := application.AccrualService()
+	accSrv.Run(ctx)
 
 	zap.S().Infoln("Application init complite")
-
-	return market, register
-
+	return application, nil
 }
 
-// Init context from graceful shutdown. Send to all function for return by syscall.SIGINT, syscall.SIGTERM
+// Init context from graceful shutdown. Send to all function for return by syscall.SIGINT, syscall.SIGTERM.
 func InitContext() (ctx context.Context, cancel context.CancelFunc) {
 	exit := make(chan os.Signal, 1)
 	ctx, cancel = context.WithCancel(context.Background())
@@ -40,7 +48,6 @@ func InitContext() (ctx context.Context, cancel context.CancelFunc) {
 	go func() {
 		<-exit
 		cancel()
-
 	}()
 	return
 }
@@ -48,14 +55,18 @@ func InitContext() (ctx context.Context, cancel context.CancelFunc) {
 func InitLog() zap.SugaredLogger {
 	logger, err := zap.NewDevelopment()
 	if err != nil {
-
 		panic(err)
 	}
+
 	zap.ReplaceGlobals(logger)
-	defer logger.Sync()
+	defer func() {
+		_ = logger.Sync()
+	}()
 
 	sugar := *logger.Sugar()
 
-	defer sugar.Sync()
+	defer func() {
+		_ = sugar.Sync()
+	}()
 	return sugar
 }
