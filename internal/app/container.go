@@ -31,7 +31,7 @@ func NewApp(conf *config.Config, stor *storage.Repo) *Application {
 	return application
 }
 
-func (c *Application) GetCalculationService() *services.CalculationService {
+func (c *Application) CalculationService() *services.CalculationService {
 	return c.calcSrv
 }
 
