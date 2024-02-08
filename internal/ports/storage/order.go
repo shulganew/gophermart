@@ -13,7 +13,7 @@ import (
 	"github.com/shulganew/gophermart/internal/entities"
 )
 
-func (r *Repo) AddOrder(ctx context.Context, userID uuid.UUID, order string, isPreOrder bool, withdrawn decimal.Decimal) error {
+func (r *Repo) AddOrder(ctx context.Context, data entities.AddOrder) error {
 	query := `
 	INSERT INTO orders (user_id, order_number, is_preorder, uploaded, withdrawn) 
 	VALUES ($1, $2, $3, $4, $5)
