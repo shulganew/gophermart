@@ -128,7 +128,7 @@ func TestWithdraw(t *testing.T) {
 				Return(&user.UUID, nil)
 
 			_ = repoOrder.EXPECT().
-				AddOrder(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				AddOrder(gomock.Any(), gomock.Any()).
 				AnyTimes().
 				Return(nil)
 

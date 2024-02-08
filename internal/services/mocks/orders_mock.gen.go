@@ -10,8 +10,7 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	gomock "github.com/golang/mock/gomock"
-	decimal "github.com/shopspring/decimal"
-	model "github.com/shulganew/gophermart/internal/entities"
+	entities "github.com/shulganew/gophermart/internal/entities"
 )
 
 // MockOrderRepo is a mock of OrderRepo interface.
@@ -38,24 +37,24 @@ func (m *MockOrderRepo) EXPECT() *MockOrderRepoMockRecorder {
 }
 
 // AddOrder mocks base method.
-func (m *MockOrderRepo) AddOrder(ctx context.Context, userID uuid.UUID, order string, isPreorder bool, withdraw decimal.Decimal) error {
+func (m *MockOrderRepo) AddOrder(ctx context.Context, data *entities.AddOrder) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddOrder", ctx, userID, order, isPreorder, withdraw)
+	ret := m.ctrl.Call(m, "AddOrder", ctx, data)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddOrder indicates an expected call of AddOrder.
-func (mr *MockOrderRepoMockRecorder) AddOrder(ctx, userID, order, isPreorder, withdraw interface{}) *gomock.Call {
+func (mr *MockOrderRepoMockRecorder) AddOrder(ctx, data interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddOrder", reflect.TypeOf((*MockOrderRepo)(nil).AddOrder), ctx, userID, order, isPreorder, withdraw)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddOrder", reflect.TypeOf((*MockOrderRepo)(nil).AddOrder), ctx, data)
 }
 
 // GetOrders mocks base method.
-func (m *MockOrderRepo) GetOrders(ctx context.Context, userID uuid.UUID) ([]model.Order, error) {
+func (m *MockOrderRepo) GetOrders(ctx context.Context, userID uuid.UUID) ([]entities.Order, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOrders", ctx, userID)
-	ret0, _ := ret[0].([]model.Order)
+	ret0, _ := ret[0].([]entities.Order)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

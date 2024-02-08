@@ -33,7 +33,7 @@ func InitApp(ctx context.Context) (application *Application, err error) {
 	application = NewApp(conf, stor)
 
 	// Run observe status of orderses in Accrual service.
-	accSrv := application.GetAccrualService()
+	accSrv := application.AccrualService()
 	accSrv.Run(ctx)
 
 	zap.S().Infoln("Application init complite")

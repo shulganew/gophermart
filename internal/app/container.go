@@ -35,26 +35,26 @@ func (c *Application) CalculationService() *services.CalculationService {
 	return c.calcSrv
 }
 
-func (c *Application) GetAccrual() *client.Accrual {
+func (c *Application) Accrual() *client.Accrual {
 	return c.client
 }
 
-func (c *Application) GetUserService() *services.UserService {
+func (c *Application) UserService() *services.UserService {
 	return c.userSrv
 }
 
-func (c *Application) GetAccrualService() *services.AccrualService {
+func (c *Application) AccrualService() *services.AccrualService {
 	return c.accSrv
 }
 
-func (c *Application) GetOrderService() *services.OrderService {
+func (c *Application) OrderService() *services.OrderService {
 	return c.orderSrv
 }
 
-func (c *Application) GetConfig() *config.Config {
+func (c *Application) Config() *config.Config {
 	return c.conf
 }
 
-func (c *Application) GetRepo() *storage.Repo {
+func (c *Application) Repo() *storage.Repo {
 	return c.stor
 }

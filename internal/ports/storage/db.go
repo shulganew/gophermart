@@ -25,6 +25,6 @@ func (r *Repo) Start(ctx context.Context) error {
 	return err
 }
 
-func (r *Repo) GetDB() *sqlx.DB {
+func (r *Repo) DB() *sqlx.DB {
 	return r.db
 }

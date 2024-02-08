@@ -11,7 +11,7 @@ import (
 	uuid "github.com/gofrs/uuid"
 	gomock "github.com/golang/mock/gomock"
 	decimal "github.com/shopspring/decimal"
-	model "github.com/shulganew/gophermart/internal/entities"
+	entities "github.com/shulganew/gophermart/internal/entities"
 )
 
 // MockCalcRepo is a mock of CalcRepo interface.
@@ -112,7 +112,7 @@ func (mr *MockCalcRepoMockRecorder) MakeWithdrawn(ctx, userID, amount interface{
 }
 
 // MovePreOrder mocks base method.
-func (m *MockCalcRepo) MovePreOrder(ctx context.Context, order *model.Order) error {
+func (m *MockCalcRepo) MovePreOrder(ctx context.Context, order *entities.Order) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MovePreOrder", ctx, order)
 	ret0, _ := ret[0].(error)
@@ -140,10 +140,10 @@ func (mr *MockCalcRepoMockRecorder) SetAccrual(ctx, order, accrual interface{}) 
 }
 
 // Withdrawals mocks base method.
-func (m *MockCalcRepo) Withdrawals(ctx context.Context, userID uuid.UUID) ([]model.Withdrawals, error) {
+func (m *MockCalcRepo) Withdrawals(ctx context.Context, userID uuid.UUID) ([]entities.Withdrawals, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Withdrawals", ctx, userID)
-	ret0, _ := ret[0].([]model.Withdrawals)
+	ret0, _ := ret[0].([]entities.Withdrawals)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

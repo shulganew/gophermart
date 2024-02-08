@@ -26,7 +26,7 @@ func main() {
 
 	// Close DB connection
 	defer func() {
-		err := application.GetRepo().GetDB().Close()
+		err := application.Repo().DB().Close()
 		zap.S().Errorln("Could not close db connection", err)
 	}()
 
@@ -38,7 +38,7 @@ func main() {
 	}(ctx)
 
 	//start web
-	if err := http.ListenAndServe(application.GetConfig().Address, router.RouteMarket(application)); err != nil {
+	if err := http.ListenAndServe(application.Config().Address, router.RouteMarket(application)); err != nil {
 		panic(err)
 	}
 }

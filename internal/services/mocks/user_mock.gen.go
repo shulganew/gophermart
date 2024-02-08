@@ -10,7 +10,7 @@ import (
 
 	uuid "github.com/gofrs/uuid"
 	gomock "github.com/golang/mock/gomock"
-	model "github.com/shulganew/gophermart/internal/entities"
+	entities "github.com/shulganew/gophermart/internal/entities"
 )
 
 // MockUserRepo is a mock of UserRepo interface.
@@ -52,10 +52,10 @@ func (mr *MockUserRepoMockRecorder) AddUser(ctx, login, hash interface{}) *gomoc
 }
 
 // GetByLogin mocks base method.
-func (m *MockUserRepo) GetByLogin(ctx context.Context, login string) (*model.User, error) {
+func (m *MockUserRepo) GetByLogin(ctx context.Context, login string) (*entities.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByLogin", ctx, login)
-	ret0, _ := ret[0].(*model.User)
+	ret0, _ := ret[0].(*entities.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

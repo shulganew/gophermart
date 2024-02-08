@@ -13,12 +13,12 @@ import (
 	"github.com/shulganew/gophermart/internal/entities"
 )
 
-func (r *Repo) AddOrder(ctx context.Context, data entities.AddOrder) error {
+func (r *Repo) AddOrder(ctx context.Context, data *entities.AddOrder) error {
 	query := `
 	INSERT INTO orders (user_id, order_number, is_preorder, uploaded, withdrawn) 
 	VALUES ($1, $2, $3, $4, $5)
 	`
-	_, err := r.db.ExecContext(ctx, query, userID, order, isPreOrder, time.Now(), withdrawn)
+	_, err := r.db.ExecContext(ctx, query, data.UserID, data.OrderNr, data.IsPreOrder, time.Now(), data.Withdrawn)
 	if err != nil {
 		var pgErr *pq.Error
 		// if order exist in DataBase

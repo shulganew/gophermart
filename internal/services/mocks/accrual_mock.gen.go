@@ -11,7 +11,7 @@ import (
 	uuid "github.com/gofrs/uuid"
 	gomock "github.com/golang/mock/gomock"
 	decimal "github.com/shopspring/decimal"
-	model "github.com/shulganew/gophermart/internal/entities"
+	entities "github.com/shulganew/gophermart/internal/entities"
 )
 
 // MockAccrualRepo is a mock of AccrualRepo interface.
@@ -52,10 +52,10 @@ func (mr *MockAccrualRepoMockRecorder) AddBonuses(ctx, userID, amount interface{
 }
 
 // LoadPocessing mocks base method.
-func (m *MockAccrualRepo) LoadPocessing(ctx context.Context) ([]model.Order, error) {
+func (m *MockAccrualRepo) LoadPocessing(ctx context.Context) ([]entities.Order, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LoadPocessing", ctx)
-	ret0, _ := ret[0].([]model.Order)
+	ret0, _ := ret[0].([]entities.Order)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -81,7 +81,7 @@ func (mr *MockAccrualRepoMockRecorder) SetAccrual(ctx, order, accrual interface{
 }
 
 // UpdateStatus mocks base method.
-func (m *MockAccrualRepo) UpdateStatus(ctx context.Context, order string, status model.Status) error {
+func (m *MockAccrualRepo) UpdateStatus(ctx context.Context, order string, status entities.Status) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateStatus", ctx, order, status)
 	ret0, _ := ret[0].(error)
@@ -118,10 +118,10 @@ func (m *MockAccrualClient) EXPECT() *MockAccrualClientMockRecorder {
 }
 
 // GetOrderStatus mocks base method.
-func (m *MockAccrualClient) GetOrderStatus(orderNr string) (*model.AccrualResponce, error) {
+func (m *MockAccrualClient) GetOrderStatus(orderNr string) (*entities.AccrualResponce, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOrderStatus", orderNr)
-	ret0, _ := ret[0].(*model.AccrualResponce)
+	ret0, _ := ret[0].(*entities.AccrualResponce)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
