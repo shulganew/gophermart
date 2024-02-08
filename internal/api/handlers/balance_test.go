@@ -15,7 +15,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
 	"github.com/shulganew/gophermart/internal/app"
-	"github.com/shulganew/gophermart/internal/config"
+	"github.com/shulganew/gophermart/internal/app/config"
 	"github.com/shulganew/gophermart/internal/entities"
 	"github.com/shulganew/gophermart/internal/services"
 	"github.com/shulganew/gophermart/internal/services/mocks"

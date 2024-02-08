@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/shulganew/gophermart/internal/config"
+	"github.com/shulganew/gophermart/internal/app/config"
 	"github.com/shulganew/gophermart/internal/ports/client"
 	"github.com/shulganew/gophermart/internal/ports/storage"
 	"github.com/shulganew/gophermart/internal/services"

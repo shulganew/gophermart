@@ -8,7 +8,6 @@ import (
 	"github.com/shulganew/gophermart/internal/api/handlers"
 	"github.com/shulganew/gophermart/internal/api/middlewares"
 	"github.com/shulganew/gophermart/internal/app"
-
 	"github.com/shulganew/gophermart/internal/entities"
 )
 

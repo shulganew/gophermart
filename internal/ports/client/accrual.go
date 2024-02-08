@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/shulganew/gophermart/internal/config"
+	"github.com/shulganew/gophermart/internal/app/config"
 	"github.com/shulganew/gophermart/internal/entities"
 	"go.uber.org/zap"
 )
@@ -49,7 +49,7 @@ func (a Accrual) GetOrderStatus(orderNr string) (*entities.AccrualResponce, erro
 	if err != nil {
 		return nil, err
 	}
-	
+
 	defer func() {
 		err := res.Body.Close()
 		zap.S().Errorln("Can't close response body: ", err)

@@ -8,7 +8,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"github.com/shulganew/gophermart/internal/config"
+	"github.com/shulganew/gophermart/internal/app/config"
 	"github.com/shulganew/gophermart/internal/ports/storage"
 	"go.uber.org/zap"
 )

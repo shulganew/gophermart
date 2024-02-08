@@ -5,7 +5,7 @@ import (
 
 	"net/http"
 
-	"github.com/shulganew/gophermart/internal/config"
+	"github.com/shulganew/gophermart/internal/app/config"
 	"github.com/shulganew/gophermart/internal/entities"
 	"github.com/shulganew/gophermart/internal/services"
 	"go.uber.org/zap"

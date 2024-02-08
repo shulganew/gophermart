@@ -11,7 +11,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jackc/pgerrcode"
 	"github.com/lib/pq"
-	"github.com/shulganew/gophermart/internal/config"
+	"github.com/shulganew/gophermart/internal/app/config"
 	"github.com/shulganew/gophermart/internal/entities"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -132,6 +132,5 @@ func GetHeaderJWT(header http.Header) (jwt string, isSet bool) {
 	if auth == "" {
 		return "", false
 	}
-
 	return auth, true
 }
