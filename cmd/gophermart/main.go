@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
-	"net/http"
 	"os"
 
-	"github.com/shulganew/gophermart/internal/api/router"
 	"github.com/shulganew/gophermart/internal/app"
+	"github.com/shulganew/gophermart/internal/app/server"
 	"go.uber.org/zap"
 )
 
@@ -24,21 +23,19 @@ func main() {
 		panic(err)
 	}
 
-	// Close DB connection
+	// Close DB connection.
 	defer func() {
 		err := application.Repo().DB().Close()
 		zap.S().Errorln("Could not close db connection", err)
 	}()
 
-	// Graceful shotdown
+	// Graceful shotdown.
 	go func(ctx context.Context) {
 		<-ctx.Done()
 		zap.S().Infoln("Graceful shutdown...")
 		os.Exit(0)
 	}(ctx)
 
-	//start web
-	if err := http.ListenAndServe(application.Config().Address, router.RouteMarket(application)); err != nil {
-		panic(err)
-	}
+	// Run server.
+	server.NewMarket(application).Run()
 }
