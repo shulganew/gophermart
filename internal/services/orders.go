@@ -12,17 +12,17 @@ import (
 )
 
 type OrderService struct {
-	stor OrderRepo
+	stor orderRepo
 }
 
-type OrderRepo interface {
+type orderRepo interface {
 	AddOrder(ctx context.Context, data *entities.AddOrder) error
 	GetOrders(ctx context.Context, userID uuid.UUID) ([]entities.Order, error)
 	IsExistForOtherUser(ctx context.Context, userID uuid.UUID, order string) (isExist bool, err error)
 	IsExist(ctx context.Context, order string) (isExist bool, err error)
 }
 
-func NewOrderService(stor OrderRepo) *OrderService {
+func NewOrderService(stor orderRepo) *OrderService {
 	return &OrderService{stor: stor}
 }
 

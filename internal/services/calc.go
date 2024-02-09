@@ -10,10 +10,10 @@ import (
 )
 
 type CalculationService struct {
-	stor CalcRepo
+	stor calcRepo
 }
 
-type CalcRepo interface {
+type calcRepo interface {
 	GetBonuses(ctx context.Context, userID uuid.UUID) (accrual decimal.Decimal, err error)
 	GetWithdrawn(ctx context.Context, userID uuid.UUID) (accrual decimal.Decimal, err error)
 	GetWithdrawals(ctx context.Context, userID uuid.UUID) (withdrawn decimal.Decimal, err error)
@@ -24,7 +24,7 @@ type CalcRepo interface {
 	MakeWithdrawn(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) error
 }
 
-func NewCalcService(stor CalcRepo) *CalculationService {
+func NewCalcService(stor calcRepo) *CalculationService {
 	return &CalculationService{stor: stor}
 }
 

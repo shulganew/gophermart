@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func InitApp(ctx context.Context) (application *Application, err error) {
+func InitApp(ctx context.Context) (application *UseCases, err error) {
 	// Get application config.
 	conf := config.InitConfig()
 
@@ -30,7 +30,7 @@ func InitApp(ctx context.Context) (application *Application, err error) {
 	}
 
 	// Create config Container
-	application = NewApp(conf, stor)
+	application = NewUseCases(conf, stor)
 
 	// Run observe status of orderses in Accrual service.
 	accSrv := application.AccrualService()

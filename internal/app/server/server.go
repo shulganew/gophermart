@@ -8,10 +8,10 @@ import (
 )
 
 type Market struct {
-	application *app.Application
+	application *app.UseCases
 }
 
-func NewMarket(appl *app.Application) *Market {
+func NewMarket(appl *app.UseCases) *Market {
 	return &Market{application: appl}
 }
 

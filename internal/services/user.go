@@ -19,15 +19,15 @@ import (
 
 // User creation, registration, validation and autentification service.
 type UserService struct {
-	stor UserRepo
+	stor userRepo
 }
 
-type UserRepo interface {
+type userRepo interface {
 	AddUser(ctx context.Context, login string, hash string) (*uuid.UUID, error)
 	GetByLogin(ctx context.Context, login string) (*entities.User, error)
 }
 
-func NewUserService(stor UserRepo) *UserService {
+func NewUserService(stor userRepo) *UserService {
 	return &UserService{stor: stor}
 }
 

@@ -12,11 +12,11 @@ import (
 )
 
 type AccrualService struct {
-	stor          AccrualRepo
+	stor          accrualRepo
 	accrualClient AccrualClient
 }
 
-type AccrualRepo interface {
+type accrualRepo interface {
 	LoadPocessing(ctx context.Context) ([]entities.Order, error)
 	UpdateStatus(ctx context.Context, order string, status entities.Status) (err error)
 	SetAccrual(ctx context.Context, order string, accrual decimal.Decimal) (err error)
@@ -27,7 +27,7 @@ type AccrualClient interface {
 	GetOrderStatus(orderNr string) (*entities.AccrualResponce, error)
 }
 
-func NewAccrualService(accRepo AccrualRepo, ac AccrualClient) *AccrualService {
+func NewAccrualService(accRepo accrualRepo, ac AccrualClient) *AccrualService {
 	return &AccrualService{stor: accRepo, accrualClient: ac}
 }
 

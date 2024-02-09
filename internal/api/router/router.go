@@ -12,7 +12,7 @@ import (
 )
 
 // Chi Router for application.
-func RouteMarket(application *app.Application) (r *chi.Mux) {
+func RouteMarket(application *app.UseCases) (r *chi.Mux) {
 	conf := application.Config()
 	r = chi.NewRouter()
 
